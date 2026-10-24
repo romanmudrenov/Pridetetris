@@ -1,243 +1,141 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>PRIDE Corporate Game Portal & 3D Tetris</title>
-  <!-- Подключение Three.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <!-- SDK Битрикс24 -->
-  <script src="https://api.bitrix24.com/api/v1/" async></script>
-  <!-- Стили портала -->
-  <link rel="stylesheet" href="./css/main.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PridetetrisADV 3D — Рекламный Тетрис PRIDE</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="stylesheet" href="./css/main.css">
 </head>
 <body>
 
-  <!-- ВЕРХНЯЯ НАВИГАЦИЯ КОРПОРАТИВНОГО ПОРТАЛА -->
-  <header class="portal-topbar">
-    <div class="brand-box">
-      <svg class="logo-svg" viewBox="0 0 64 64">
-        <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="#ff007a" stroke-width="4" fill="#120924"/>
-        <path d="M20,25 L32,14 L44,25 L39,44 L25,44 Z" stroke="#00f0ff" stroke-width="3" fill="none"/>
-        <circle cx="27" cy="28" r="2.5" fill="#fcee09"/>
-        <circle cx="37" cy="28" r="2.5" fill="#fcee09"/>
-        <path d="M27,36 L32,39 L37,36" stroke="#fff" stroke-width="2.5" fill="none"/>
-      </svg>
-      <div class="avatar-badge" id="headerAvatar">🦁</div>
-      <div>
-        <div class="brand-name">PRIDE // GAME PORTAL</div>
-        <div class="brand-sub" id="bxUserStatus">Корпоративный портал • Локальный режим</div>
-      </div>
-    </div>
-
-    <div class="portal-actions">
-      <button class="btn-menu" id="btnMenu">⚙ НАСТРОЙКИ ИГРЫ</button>
-    </div>
-  </header>
-
-  <!-- ГЛАВНАЯ СЕТКА ПОРТАЛА: СЛЕВА ИГРА, СПРАВА ТУРНИРЫ И ЧАТ -->
-  <main class="portal-layout">
-    
-    <!-- ЛЕВАЯ КОЛОНКА: ИГРОВОЙ МОДУЛЬ (PridetetrisADV 3D) -->
-    <section class="game-column">
-      <!-- Музыкальный плеер -->
-      <div class="music-player-bar">
-        <div class="player-controls">
-          <button class="p-btn" id="btnPrevTrack" title="Предыдущий трек">⏮</button>
-          <button class="p-btn play-main" id="btnPlayPause" title="Play / Pause">▶</button>
-          <button class="p-btn" id="btnNextTrack" title="Следующий трек">⏭</button>
-        </div>
-        <div class="track-info-wrap">
-          <div class="track-title" id="playerTrackTitle">1. Korobeiniki Remix (Synth)</div>
-          <div class="track-status">
-            <div class="eq-bars" id="eqBars">
-              <div class="eq-bar"></div>
-              <div class="eq-bar"></div>
-              <div class="eq-bar"></div>
-            </div>
-            <span id="playerStatusText">Нажми ▶ для старта музыки</span>
-          </div>
-        </div>
-        <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="70" title="Громкость">
-      </div>
-
-      <!-- Игровое поле + статистика партии -->
-      <div class="game-area">
-        <div class="board-wrap" id="boardWrap">
-          <canvas id="board" width="220" height="440"></canvas>
-          <div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
-          <div id="banner">WOW-ЭФФЕКТ!</div>
-        </div>
-
-        <div class="side">
-          <div class="box">
-            <div class="lbl">Бюджет (Очки)</div>
-            <div class="val" id="scoreVal">0 ₽</div>
-          </div>
-          <div class="box">
-            <div class="lbl">Сдано проектов</div>
-            <div class="val" id="linesVal" style="color:#00f0ff;">0</div>
-          </div>
-          <div class="box">
-            <div class="lbl">Difficulty Mode</div>
-            <div class="val" id="modeVal" style="font-size:12px; color:#fcee09;">ASAP (Medium)</div>
-          </div>
-          <div class="box">
-            <div class="lbl">Фигура сейчас:</div>
-            <div class="service-tag" id="serviceName">Т-фигура</div>
-          </div>
-          <div class="box">
-            <div class="lbl">Следующий заказ:</div>
-            <canvas id="nextCanvas" width="88" height="66" style="display:block; margin:4px auto 0;"></canvas>
-          </div>
-          <div class="box">
-            <div class="lbl">Заказ «Под ключ»</div>
-            <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
-            <button class="btn-ult" id="btnUlt">⚡ ПОД КЛЮЧ (100%)</button>
-          </div>
-          <button class="btn-menu" id="btnRestart" style="background:#251d3d; border:1px solid #00f0ff; width:100%;">🔄 ЗАНОВО</button>
-        </div>
-      </div>
-
-      <!-- Кнопки управления -->
-      <div class="controls">
-        <button class="c-btn" id="btnLeft">◀</button>
-        <button class="c-btn" id="btnRot">↻</button>
-        <button class="c-btn" id="btnDown">▼</button>
-        <button class="c-btn" id="btnRight">▶</button>
-        <button class="c-btn wide" id="btnDrop">🚀 СДАТЬ МАКЕТ В ПЕЧАТЬ (СБРОС)</button>
-      </div>
-    </section>
-
-    <!-- ПРАВАЯ КОЛОНКА: ТУРНИРНАЯ ТАБЛИЦА + КОРПОРАТИВНЫЙ ЧАТ + КАТАЛОГ ИГР -->
-    <aside class="hub-column">
-      <div class="hub-tabs">
-        <button class="hub-tab active" data-tab="tabLeaderboard">🏆 Турнир</button>
-        <button class="hub-tab" data-tab="tabChat">💬 Корп. Чат</button>
-        <button class="hub-tab" data-tab="tabGames">🎮 Игры (1/3)</button>
-      </div>
-
-      <!-- Вкладка 1: Турнирная таблица -->
-      <div class="hub-panel active" id="tabLeaderboard">
-        <div class="panel-header">
-          <span>🏆 Кубок агентства PRIDE</span>
-          <span class="badge-live">LIVE БИТРИКС24</span>
-        </div>
-        <div class="leaderboard-list" id="leaderboardList"></div>
-      </div>
-
-      <!-- Вкладка 2: Корпоративный чат -->
-      <div class="hub-panel" id="tabChat">
-        <div class="panel-header">
-          <span>💬 Прямой эфир сотрудников</span>
-        </div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <form class="chat-input-row" id="chatForm">
-          <input type="text" id="chatInput" placeholder="Написать коллегам..." maxlength="140" autocomplete="off">
-          <button type="submit">➤</button>
-        </form>
-      </div>
-
-      <!-- Вкладка 3: Будущие игры портала -->
-      <div class="hub-panel" id="tabGames">
-        <div class="panel-header"><span>🎮 Каталог игр PRIDE</span></div>
-        <div class="games-catalog">
-          <div class="game-card active-game">
-            <div class="g-icon">🧱</div>
-            <div>
-              <div class="g-title">PridetetrisADV 3D</div>
-              <div class="g-desc">Рекламный тетрис • Активна сейчас</div>
-            </div>
-          </div>
-          <div class="game-card locked">
-            <div class="g-icon">🏎️</div>
-            <div>
-              <div class="g-title">Курьер Дедлайна 3D</div>
-              <div class="g-desc">В разработке (Слот под модуль №2)</div>
-            </div>
-          </div>
-          <div class="game-card locked">
-            <div class="g-icon">🎯</div>
-            <div>
-              <div class="g-title">Тендерный Снайпер</div>
-              <div class="g-desc">В разработке (Слот под модуль №3)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-  </main>
-
-  <!-- МОДАЛЬНОЕ МЕНЮ НАСТРОЕК -->
-  <div class="modal" id="menuModal">
-    <div class="modal-box">
-      <h3>🦁 НАСТРОЙКИ // PRIDE ADV 3D</h3>
-
-      <div class="sec-title">Имя сотрудника (или из Битрикс24):</div>
-      <input type="text" id="playerNameInput" class="name-input" value="Лев Прайдов" maxlength="24">
-
-      <div class="sec-title">1. Difficulty Mode (Speed):</div>
-      <div class="mode-list">
-        <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
-          <b>Redline</b> <span>Easy Mode</span>
-        </button>
-        <button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480">
-          <b>ASAP</b> <span>Medium Mode</span>
-        </button>
-        <button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240">
-          <b>Deadline</b> <span>Hard Mode</span>
-        </button>
-      </div>
-
-      <div class="sec-title">2. Создание Аватара:</div>
-      <div class="avatar-creator">
-        <div class="avatar-big-preview" id="menuAvatarPreview">🦁</div>
-        <div class="animal-grid">
-          <button class="animal-opt selected" data-animal="🦁">🦁</button>
-          <button class="animal-opt" data-animal="🐯">🐯</button>
-          <button class="animal-opt" data-animal="🐺">🐺</button>
-          <button class="animal-opt" data-animal="🦊">🦊</button>
-          <button class="animal-opt" data-animal="🐻">🐻</button>
-          <button class="animal-opt" data-animal="🐼">🐼</button>
-          <button class="animal-opt" data-animal="🦅">🦅</button>
-          <button class="animal-opt" data-animal="🦈">🦈</button>
-          <button class="animal-opt" data-animal="🐲">🐲</button>
-          <button class="animal-opt" data-animal="🦍">🦍</button>
-        </div>
-        <div class="color-row">
-          <div class="color-dot" style="background:#ff007a;" data-color="#ff007a"></div>
-          <div class="color-dot" style="background:#00f0ff;" data-color="#00f0ff"></div>
-          <div class="color-dot" style="background:#00ff9d;" data-color="#00ff9d"></div>
-          <div class="color-dot" style="background:#fcee09;" data-color="#fcee09"></div>
-          <div class="color-dot" style="background:#b829ff;" data-color="#b829ff"></div>
-          <div class="color-dot" style="background:#ff8800;" data-color="#ff8800"></div>
-        </div>
-      </div>
-
-      <div class="sec-title">3. Выбор Трека (Бесплатные Ресурсы):</div>
-      <div class="music-box">
-        <div class="track-grid" id="menuTrackList">
-          <button class="track-btn active" data-idx="0"><span>🎹 1. Tetris Korobeiniki (Built-in Synth)</span> <span>100% Online</span></button>
-          <button class="track-btn" data-idx="1"><span>🎵 2. Electro Korobeiniki (Wikimedia Free)</span> <span>OGG/MP3</span></button>
-          <button class="track-btn" data-idx="2"><span>🎵 3. Cyber Arcade Tune (Archive Org)</span> <span>MP3</span></button>
-          <button class="track-btn" data-idx="3"><span>🎵 4. Techno Drive (SoundHelix Free)</span> <span>MP3</span></button>
-          <button class="track-btn" data-idx="4"><span>🎵 5. Neon House (SoundHelix Free)</span> <span>MP3</span></button>
-          <button class="track-btn" data-idx="5"><span>📻 6. Chiptune Radio Stream (Nightride)</span> <span>LIVE</span></button>
-        </div>
-        <div class="sfx-row">
-          <span>🔊 Звуковые эффекты игры (SFX):</span>
-          <button class="track-btn active" id="btnToggleSfx" style="width:auto; padding:5px 14px;">ВКЛ</button>
-        </div>
-      </div>
-
-      <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:#00f0ff; color:#000; font-size:13px;">ВЕРНУТЬСЯ В ИГРУ</button>
+<div class="header">
+  <div class="brand-box">
+    <svg class="logo-svg" viewBox="0 0 64 64">
+      <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="#ff007a" stroke-width="4" fill="#120924"/>
+      <path d="M20,25 L32,14 L44,25 L39,44 L25,44 Z" stroke="#00f0ff" stroke-width="3" fill="none"/>
+      <circle cx="27" cy="28" r="2.5" fill="#fcee09"/>
+      <circle cx="37" cy="28" r="2.5" fill="#fcee09"/>
+      <path d="M27,36 L32,39 L37,36" stroke="#fff" stroke-width="2.5" fill="none"/>
+    </svg>
+    <div class="avatar-badge" id="headerAvatar">🦁</div>
+    <div>
+      <div class="brand-name">PridetetrisADV</div>
+      <div class="brand-sub">PRIDE // 3D Agency</div>
     </div>
   </div>
+  <button class="btn-menu" id="btnMenu">МЕНЮ</button>
+</div>
 
-  <audio id="bgAudio" loop preload="auto"></audio>
+<div class="game-area">
+  <div class="board-wrap" id="boardWrap">
+    <canvas id="board" width="220" height="440"></canvas>
+    <div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
+    <div id="banner">WOW-ЭФФЕКТ!</div>
+  </div>
 
-  <!-- ПОДКЛЮЧЕНИЕ ГЛАВНОГО МОДУЛЯ -->
-  <script type="module" src="./src/main.js"></script>
+  <div class="side">
+    <div class="box">
+      <div class="lbl">Бюджет (Очки)</div>
+      <div class="val" id="scoreVal">0 ₽</div>
+    </div>
+    <div class="box">
+      <div class="lbl">Сдано проектов</div>
+      <div class="val" id="linesVal" style="color:#00f0ff;">0</div>
+    </div>
+    <div class="box">
+      <div class="lbl">Difficulty Mode</div>
+      <div class="val" id="modeVal" style="font-size:12px; color:#fcee09;">ASAP (Medium)</div>
+    </div>
+    <div class="box">
+      <div class="lbl">Фигура сейчас:</div>
+      <div class="service-tag" id="serviceName">Т-фигура</div>
+    </div>
+    <div class="box">
+      <div class="lbl">Следующий заказ:</div>
+      <canvas id="nextCanvas" width="88" height="66" style="display:block; margin:4px auto 0;"></canvas>
+    </div>
+    <div class="box">
+      <div class="lbl">Заказ «Под ключ»</div>
+      <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
+      <button class="btn-ult" id="btnUlt">⚡ ПОД КЛЮЧ (100%)</button>
+    </div>
+    <button class="btn-menu" id="btnRestart" style="background:#251d3d; border:1px solid #00f0ff; width:100%;">🔄 ЗАНОВО</button>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="c-btn" id="btnLeft">◀</button>
+  <button class="c-btn" id="btnRot">↻</button>
+  <button class="c-btn" id="btnDown">▼</button>
+  <button class="c-btn" id="btnRight">▶</button>
+  <button class="c-btn wide" id="btnDrop">🚀 СДАТЬ МАКЕТ В ПЕЧАТЬ (СБРОС)</button>
+</div>
+
+<!-- МЕНЮ: СЛОЖНОСТЬ, АВАТАР, МУЗЫКА -->
+<div class="modal" id="menuModal">
+  <div class="modal-box">
+    <h3>🦁 МЕНЮ // PRIDE ADV 3D</h3>
+
+    <div class="sec-title">1. Difficulty Mode (Speed):</div>
+    <div class="mode-list">
+      <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
+        <b>Redline</b> <span>Easy Mode</span>
+      </button>
+      <button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480">
+        <b>ASAP</b> <span>Medium Mode</span>
+      </button>
+      <button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240">
+        <b>Deadline</b> <span>Hard Mode</span>
+      </button>
+    </div>
+
+    <div class="sec-title">2. Создание Аватара:</div>
+    <div class="avatar-creator">
+      <div class="avatar-big-preview" id="menuAvatarPreview">🦁</div>
+      <div class="animal-grid" id="animalGrid">
+        <button class="animal-opt selected" data-animal="🦁">🦁</button>
+        <button class="animal-opt" data-animal="🐯">🐯</button>
+        <button class="animal-opt" data-animal="🐺">🐺</button>
+        <button class="animal-opt" data-animal="🦊">🦊</button>
+        <button class="animal-opt" data-animal="🐻">🐻</button>
+        <button class="animal-opt" data-animal="🐼">🐼</button>
+        <button class="animal-opt" data-animal="🦅">🦅</button>
+        <button class="animal-opt" data-animal="🦈">🦈</button>
+        <button class="animal-opt" data-animal="🐲">🐲</button>
+        <button class="animal-opt" data-animal="🦍">🦍</button>
+      </div>
+      <div class="color-row" id="colorRow">
+        <div class="color-dot" style="background:#ff007a;" data-color="#ff007a"></div>
+        <div class="color-dot" style="background:#00f0ff;" data-color="#00f0ff"></div>
+        <div class="color-dot" style="background:#00ff9d;" data-color="#00ff9d"></div>
+        <div class="color-dot" style="background:#fcee09;" data-color="#fcee09"></div>
+        <div class="color-dot" style="background:#b829ff;" data-color="#b829ff"></div>
+        <div class="color-dot" style="background:#ff8800;" data-color="#ff8800"></div>
+      </div>
+    </div>
+
+    <div class="sec-title">3. Фоновая Музыка и Звуки:</div>
+    <div class="music-box">
+      <div class="track-grid">
+        <button class="track-btn" data-track="1">🎵 Cyber Pride (MP3)</button>
+        <button class="track-btn" data-track="2">🎵 Neon Agency (MP3)</button>
+        <button class="track-btn" data-track="3">🎵 Techno Rush (MP3)</button>
+        <button class="track-btn active" data-track="synth">🎹 8-Bit Synth (Auto)</button>
+        <button class="track-btn" data-track="off" style="grid-column: span 2;">🔇 Выключить музыку</button>
+      </div>
+      <div class="sfx-row">
+        <span>🔊 Звуковые эффекты (SFX):</span>
+        <button class="track-btn active" id="btnToggleSfx" style="padding:4px 12px;">ВКЛ</button>
+      </div>
+    </div>
+
+    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:#00f0ff; color:#000; font-size:13px;">ИГРАТЬ</button>
+  </div>
+</div>
+
+<audio id="bgAudio" loop preload="none" crossorigin="anonymous"></audio>
+
+<script src="./js/game.js"></script>
 </body>
 </html>
