@@ -1,108 +1,142 @@
-export class PortalHub {
-  constructor(bitrixService) {
-    this.bx = bitrixService;
-    this.leaderboard = JSON.parse(localStorage.getItem('pride_leaderboard')) || [
-      { name: "Анна (Арт-директор)", avatar: "🦊", score: 14500, mode: "Deadline (Hard)" },
-      { name: "Максим (Отдел продаж)", avatar: "🐯", score: 11200, mode: "ASAP (Medium)" },
-      { name: "Игорь (Печатный цех)", avatar: "🐻", score: 8400, mode: "ASAP (Medium)" }
-    ];
+window.PrideCore = window.PrideCore || {};
 
-    this.messages = JSON.parse(localStorage.getItem('pride_chat_msgs')) || [
-      { author: "Система PRIDE", avatar: "⚡", text: "Добро пожаловать в корпоративный турнир PRIDE!", time: "10:00", sys: true }
-    ];
+(function() {
+  function storeGet(key, def) {
+    try { return localStorage.getItem(key) || def; } catch (e) { return def; }
+  }
+  function storeSet(key, val) {
+    try { localStorage.setItem(key, val); } catch (e) {}
   }
 
-  init() {
-    this.renderLeaderboard();
-    this.renderChat();
-    this.bindTabs();
-    this.bindChatForm();
+  var playerName = storeGet('pride_player_name', "Лев Прайдов");
+  var avatarEmoji = storeGet('pride_avatar_emoji', "🦁");
+  var avatarColor = storeGet('pride_avatar_color', "#ff007a");
+
+  function setPlayerName(name) {
+    playerName = (name || "").trim() || "Лев Прайдов";
+    storeSet('pride_player_name', playerName);
+    var hName = document.getElementById('headerPlayerName');
+    var wInp = document.getElementById('welcomeNameInput');
+    var mInp = document.getElementById('menuNameInput');
+    if (hName) hName.innerText = playerName;
+    if (wInp) wInp.value = playerName;
+    if (mInp) mInp.value = playerName;
   }
 
-  bindTabs() {
-    const tabs = document.querySelectorAll('.hub-tab');
-    const panels = document.querySelectorAll('.hub-panel');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        panels.forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        const target = document.getElementById(tab.getAttribute('data-tab'));
-        if (target) target.classList.add('active');
-      });
-    });
+  function setAvatarAnimal(emoji) {
+    avatarEmoji = emoji;
+    storeSet('pride_avatar_emoji', emoji);
+    var wPrev = document.getElementById('welcomeAvatarPreview');
+    var mPrev = document.getElementById('menuAvatarPreview');
+    var hAva = document.getElementById('headerAvatar');
+    if (wPrev) wPrev.innerText = emoji;
+    if (mPrev) mPrev.innerText = emoji;
+    if (hAva) hAva.innerText = emoji;
+
+    var allAnimalBtns = document.querySelectorAll('.animal-opt');
+    for (var i = 0; i < allAnimalBtns.length; i++) {
+      allAnimalBtns[i].classList.toggle('selected', allAnimalBtns[i].getAttribute('data-animal') === emoji);
+    }
   }
 
-  bindChatForm() {
-    const form = document.getElementById('chatForm');
-    const input = document.getElementById('chatInput');
-    if (!form || !input) return;
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const txt = input.value.trim();
-      if (!txt) return;
-      this.addChatMessage(this.bx.user.name, this.bx.user.avatar, txt, false);
-      input.value = '';
-    });
+  function setAvatarColor(col) {
+    avatarColor = col;
+    storeSet('pride_avatar_color', col);
+    var wPrev = document.getElementById('welcomeAvatarPreview');
+    var mPrev = document.getElementById('menuAvatarPreview');
+    var hAva = document.getElementById('headerAvatar');
+    if (wPrev) wPrev.style.background = col;
+    if (mPrev) mPrev.style.background = col;
+    if (hAva) hAva.style.background = col;
   }
 
-  addChatMessage(author, avatar, text, isSystem = false) {
-    const time = new Date().toTimeString().slice(0, 5);
-    this.messages.push({ author, avatar, text, time, sys: isSystem });
-    localStorage.setItem('pride_chat_msgs', JSON.stringify(this.messages));
-    this.renderChat();
+  function initPortalUI(callbacks) {
+    var Audio = window.PrideCore.Audio;
+    setPlayerName(playerName);
+    setAvatarAnimal(avatarEmoji);
+    setAvatarColor(avatarColor);
+
+    var welcomeModal = document.getElementById('welcomeModal');
+    var btnWelcomeMusicOn = document.getElementById('btnWelcomeMusicOn');
+    var btnWelcomeMusicOff = document.getElementById('btnWelcomeMusicOff');
+    var welcomeTrackPanel = document.getElementById('welcomeTrackPanel');
+
+    if (btnWelcomeMusicOn && btnWelcomeMusicOff) {
+      btnWelcomeMusicOn.onclick = function(e) {
+        e.stopPropagation();
+        Audio.ensureAudio();
+        btnWelcomeMusicOn.classList.add('active');
+        btnWelcomeMusicOff.classList.remove('active');
+        welcomeTrackPanel.style.display = 'block';
+        Audio.startMusic(Audio.getLastActiveTrack() || 's1');
+      };
+
+      btnWelcomeMusicOff.onclick = function(e) {
+        e.stopPropagation();
+        btnWelcomeMusicOff.classList.add('active');
+        btnWelcomeMusicOn.classList.remove('active');
+        welcomeTrackPanel.style.display = 'none';
+        Audio.startMusic('off');
+      };
+    }
+
+    var btnStartWelcome = document.getElementById('btnStartWelcome');
+    if (btnStartWelcome) {
+      btnStartWelcome.onclick = function(e) {
+        e.stopPropagation();
+        Audio.ensureAudio();
+        var wInp = document.getElementById('welcomeNameInput');
+        if (wInp) setPlayerName(wInp.value);
+        if (welcomeModal) welcomeModal.style.display = 'none';
+        if (callbacks && callbacks.onWelcomeComplete) {
+          callbacks.onWelcomeComplete(playerName);
+        }
+      };
+    }
+
+    var animalOpts = document.querySelectorAll('.animal-opt');
+    for (var a = 0; a < animalOpts.length; a++) {
+      animalOpts[a].onclick = function(e) {
+        e.stopPropagation();
+        Audio.ensureAudio();
+        setAvatarAnimal(this.getAttribute('data-animal'));
+        Audio.playSfx('rotate');
+      };
+    }
+
+    var colorDots = document.querySelectorAll('.color-dot');
+    for (var c = 0; c < colorDots.length; c++) {
+      colorDots[c].onclick = function(e) {
+        e.stopPropagation();
+        Audio.ensureAudio();
+        setAvatarColor(this.getAttribute('data-color'));
+        Audio.playSfx('move');
+      };
+    }
+
+    var trackBtns = document.querySelectorAll('.track-btn[data-track]');
+    for (var t = 0; t < trackBtns.length; t++) {
+      trackBtns[t].onclick = function(e) {
+        e.stopPropagation();
+        Audio.ensureAudio();
+        Audio.startMusic(this.getAttribute('data-track'));
+      };
+    }
+
+    var btnToggleSfx = document.getElementById('btnToggleSfx');
+    if (btnToggleSfx) {
+      btnToggleSfx.onclick = function(e) {
+        e.stopPropagation();
+        var state = Audio.toggleSfx();
+        this.innerText = state ? "ВКЛ" : "ВЫКЛ";
+        this.classList.toggle('active', state);
+      };
+    }
   }
 
-  submitScore(score, lines, mode) {
-    if (score <= 0) return;
-    this.leaderboard.push({
-      name: this.bx.user.name,
-      avatar: this.bx.user.avatar,
-      score,
-      mode
-    });
-    this.leaderboard.sort((a, b) => b.score - a.score);
-    this.leaderboard = this.leaderboard.slice(0, 10);
-    localStorage.setItem('pride_leaderboard', JSON.stringify(this.leaderboard));
-    this.renderLeaderboard();
-
-    this.addChatMessage(
-      "Турнирный Бот",
-      "🏆",
-      `${this.bx.user.avatar} ${this.bx.user.name} закрыл тендер на ${score} ₽ (${lines} линий)!`,
-      true
-    );
-  }
-
-  renderLeaderboard() {
-    const el = document.getElementById('leaderboardList');
-    if (!el) return;
-    el.innerHTML = this.leaderboard.map((item, idx) => `
-      <div class="lb-row ${idx === 0 ? 'top1' : ''}">
-        <div class="lb-rank">#${idx + 1}</div>
-        <div class="lb-avatar">${item.avatar}</div>
-        <div class="lb-info">
-          <div class="lb-name">${item.name}</div>
-          <div class="lb-mode">${item.mode}</div>
-        </div>
-        <div class="lb-score">${item.score} ₽</div>
-      </div>
-    `).join('');
-  }
-
-  renderChat() {
-    const el = document.getElementById('chatMessages');
-    if (!el) return;
-    el.innerHTML = this.messages.map(m => `
-      <div class="chat-msg ${m.sys ? 'sys-msg' : ''}">
-        <span class="c-ava">${m.avatar}</span>
-        <div class="c-body">
-          <div class="c-meta"><b>${m.author}</b> <span>${m.time}</span></div>
-          <div class="c-text">${m.text}</div>
-        </div>
-      </div>
-    `).join('');
-    el.scrollTop = el.scrollHeight;
-  }
-}
+  window.PrideCore.Hub = {
+    initPortalUI: initPortalUI,
+    getPlayerName: function() { return playerName; },
+    setPlayerName: setPlayerName
+  };
+})();
