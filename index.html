@@ -24,7 +24,10 @@
       <div class="brand-sub">PRIDE // 3D Agency</div>
     </div>
   </div>
-  <button class="btn-menu" id="btnMenu">МЕНЮ</button>
+  <div class="header-btns">
+    <button class="btn-pause" id="btnPause">⏸ ПАУЗА</button>
+    <button class="btn-menu" id="btnMenu">МЕНЮ</button>
+  </div>
 </div>
 
 <div class="game-area">
@@ -36,31 +39,45 @@
 
   <div class="side">
     <div class="box">
-      <div class="lbl">Бюджет (Очки)</div>
+      <div class="lbl">Бюджет</div>
       <div class="val" id="scoreVal">0 ₽</div>
     </div>
     <div class="box">
-      <div class="lbl">Сдано проектов</div>
+      <div class="lbl">Проекты</div>
       <div class="val" id="linesVal" style="color:#00f0ff;">0</div>
     </div>
     <div class="box">
-      <div class="lbl">Difficulty Mode</div>
-      <div class="val" id="modeVal" style="font-size:12px; color:#fcee09;">ASAP (Medium)</div>
+      <div class="lbl">Режим</div>
+      <div class="val" id="modeVal" style="font-size:10px; color:#fcee09;">ASAP (Med)</div>
     </div>
     <div class="box">
-      <div class="lbl">Фигура сейчас:</div>
+      <div class="lbl">Сейчас:</div>
       <div class="service-tag" id="serviceName">Т-фигура</div>
     </div>
     <div class="box">
-      <div class="lbl">Следующий заказ:</div>
-      <canvas id="nextCanvas" width="88" height="66" style="display:block; margin:4px auto 0;"></canvas>
+      <div class="lbl">След.:</div>
+      <canvas id="nextCanvas" width="68" height="48" style="display:block; margin:2px auto 0;"></canvas>
     </div>
+
+    <!-- Мини-плеер на боковой панели -->
     <div class="box">
-      <div class="lbl">Заказ «Под ключ»</div>
-      <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
-      <button class="btn-ult" id="btnUlt">⚡ ПОД КЛЮЧ (100%)</button>
+      <div class="lbl" id="sideTrackLbl">🎵 8-Bit Synth</div>
+      <div class="mini-player">
+        <button class="mp-btn" id="btnPrevTrack" title="Предыдущий">⏮</button>
+        <button class="mp-btn" id="btnPlayPauseTrack" title="Пуск/Стоп">⏯</button>
+        <button class="mp-btn" id="btnNextTrack" title="Следующий">⏭</button>
+      </div>
     </div>
-    <button class="btn-menu" id="btnRestart" style="background:#251d3d; border:1px solid #00f0ff; width:100%;">🔄 ЗАНОВО</button>
+
+    <div class="box">
+      <div class="lbl">«Под ключ»</div>
+      <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
+      <button class="btn-ult" id="btnUlt">⚡ УЛЬТА</button>
+    </div>
+
+    <!-- Кнопка сброса перенесена на боковую панель -->
+    <button class="btn-side-drop" id="btnDrop">🚀 СБРОС ВНИЗ</button>
+    <button class="btn-side-restart" id="btnRestart">🔄 ЗАНОВО</button>
   </div>
 </div>
 
@@ -69,7 +86,6 @@
   <button class="c-btn" id="btnRot">↻</button>
   <button class="c-btn" id="btnDown">▼</button>
   <button class="c-btn" id="btnRight">▶</button>
-  <button class="c-btn wide" id="btnDrop">🚀 СДАТЬ МАКЕТ В ПЕЧАТЬ (СБРОС)</button>
 </div>
 
 <div class="modal" id="menuModal">
