@@ -81,7 +81,7 @@ body {
 
 .game-area {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   max-width: 420px;
   justify-content: center;
@@ -90,6 +90,9 @@ body {
 
 .board-wrap {
   position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  aspect-ratio: 12 / 20;
   border: 3px solid #00f0ff;
   border-radius: 10px;
   background: #05060a;
@@ -107,9 +110,12 @@ body {
   box-shadow: 0 0 40px #fcee09, inset 0 0 30px #ff8800;
 }
 canvas#board {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: block;
-  width: 220px;
-  height: 440px;
   background: #05060a;
 }
 .tap-hint {
@@ -118,7 +124,7 @@ canvas#board {
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 9px;
+  font-size: 8px;
   color: rgba(255, 255, 255, 0.35);
   pointer-events: none;
   letter-spacing: 0.5px;
@@ -148,7 +154,8 @@ canvas#board {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 140px;
+  width: 110px;
+  flex-shrink: 0;
 }
 .box {
   background: #141024;
