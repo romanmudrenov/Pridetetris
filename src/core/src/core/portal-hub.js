@@ -1,13 +1,24 @@
 window.PrideCore = window.PrideCore || {};
 
 (function() {
-  var playerName = localStorage.getItem('pride_player_name') || "Лев Прайдов";
-  var avatarEmoji = localStorage.getItem('pride_avatar_emoji') || "🦁";
-  var avatarColor = localStorage.getItem('pride_avatar_color') || "#ff007a";
+  function storeGet(key, def) {
+    try { return localStorage.getItem(key) || def; } catch (e) { return def; }
+  }
+  function storeSet(key, val) {
+    try { localStorage.setItem(key, val); } catch (e) {}
+  }
+
+  if (!window.PrideCore.Audio) {
+    alert("audio-player.js не загрузился или в нём ошибка");
+  }
+
+  var playerName = storeGet('pride_player_name', "Лев Прайдов");
+  var avatarEmoji = storeGet('pride_avatar_emoji', "🦁");
+  var avatarColor = storeGet('pride_avatar_color', "#ff007a");
 
   function setPlayerName(name) {
     playerName = (name || "").trim() || "Лев Прайдов";
-    localStorage.setItem('pride_player_name', playerName);
+    storeSet('pride_player_name', playerName);
     var hName = document.getElementById('headerPlayerName');
     var wInp = document.getElementById('welcomeNameInput');
     var mInp = document.getElementById('menuNameInput');
@@ -18,7 +29,7 @@ window.PrideCore = window.PrideCore || {};
 
   function setAvatarAnimal(emoji) {
     avatarEmoji = emoji;
-    localStorage.setItem('pride_avatar_emoji', emoji);
+    storeSet('pride_avatar_emoji', emoji);
     var wPrev = document.getElementById('welcomeAvatarPreview');
     var mPrev = document.getElementById('menuAvatarPreview');
     var hAva = document.getElementById('headerAvatar');
@@ -34,7 +45,7 @@ window.PrideCore = window.PrideCore || {};
 
   function setAvatarColor(col) {
     avatarColor = col;
-    localStorage.setItem('pride_avatar_color', col);
+    storeSet('pride_avatar_color', col);
     var wPrev = document.getElementById('welcomeAvatarPreview');
     var mPrev = document.getElementById('menuAvatarPreview');
     var hAva = document.getElementById('headerAvatar');
