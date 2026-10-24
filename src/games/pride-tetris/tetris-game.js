@@ -24,35 +24,107 @@
   var cur = null;
   var nextP = null;
   var over = false;
-  var paused = false;
+  var paused = true; // Игра ждёт, пока человек закроет стартовое окно приветствия
   var timer = null;
 
+  var playerName = "Лев Прайдов";
   var currentModeName = "ASAP (Medium)";
   var baseDelay = 480;
   var speedBoostLevel = 0;
 
+  // --- РАСШИРЕННЫЙ МУЗЫКАЛЬНЫЙ ДВИЖОК: 12 ТРЕКОВ (УДВОЕННЫЕ SYNTH-МЕЛОДИИ + MP3) ---
   var audioCtx = null;
   var sfxEnabled = true;
-  var currentTrack = "synth";
-  var lastActiveTrack = "synth";
+  var currentTrack = "s1";
+  var lastActiveTrack = "s1";
   var synthInterval = null;
   var synthStep = 0;
-  var musicStarted = false;
   var bgAudio = document.getElementById('bgAudio');
 
-  var TRACK_ORDER = ["synth", "1", "2", "3"];
+  var TRACK_ORDER = ["s1", "s2", "s3", "s4", "s5", "s6", "m1", "m2", "m3", "m4", "m5", "m6"];
+
   var TRACK_NAMES = {
-    "synth": "🎹 8-Bit Synth",
-    "1": "🎵 Cyber Pride",
-    "2": "🎵 Neon Agency",
-    "3": "🎵 Techno Rush",
+    "s1": "🎹 1. Cyber Bass",
+    "s2": "🎹 2. Korobeiniki",
+    "s3": "🎹 3. Neon Arp",
+    "s4": "🎹 4. Overdrive",
+    "s5": "🎹 5. Synthwave",
+    "s6": "🎹 6. Matrix Boss",
+    "m1": "🎵 7. Cyber Pride",
+    "m2": "🎵 8. Neon Agency",
+    "m3": "🎵 9. Techno Rush",
+    "m4": "🎵 10. Horizon",
+    "m5": "🎵 11. Print Shop",
+    "m6": "🎵 12. Billboard",
     "off": "🔇 Выкл"
   };
 
+  // Все синтезаторные мелодии увеличены минимум в 2 раза (по 32–36 шагов с развитием партии!)
+  var SYNTH_PATTERNS = {
+    "s1": {
+      wave: "sawtooth", tempo: 210,
+      notes: [
+        110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83,
+        130.81, 130.81, 164.81, 196.00, 146.83, 146.83, 220.00, 196.00,
+        110, 146.83, 164.81, 220.00, 196.00, 164.81, 146.83, 130.81,
+        123.47, 146.83, 185.00, 220.00, 164.81, 146.83, 130.81, 110
+      ]
+    },
+    "s2": {
+      wave: "square", tempo: 185,
+      notes: [
+        329.63, 246.94, 261.63, 293.66, 261.63, 246.94, 220.00, 220.00,
+        261.63, 329.63, 293.66, 261.63, 246.94, 246.94, 261.63, 293.66,
+        329.63, 261.63, 220.00, 220.00, 293.66, 349.23, 440.00, 392.00,
+        349.23, 329.63, 261.63, 329.63, 293.66, 261.63, 246.94, 293.66,
+        329.63, 261.63, 220.00, 220.00
+      ]
+    },
+    "s3": {
+      wave: "triangle", tempo: 165,
+      notes: [
+        220, 261.63, 329.63, 440, 329.63, 261.63, 196, 246.94,
+        293.66, 392, 293.66, 246.94, 174.61, 220, 261.63, 349.23,
+        261.63, 220, 164.81, 196, 246.94, 329.63, 246.94, 196,
+        220, 277.18, 329.63, 440, 392, 329.63, 261.63, 220
+      ]
+    },
+    "s4": {
+      wave: "sawtooth", tempo: 150,
+      notes: [
+        146.83, 146.83, 293.66, 146.83, 174.61, 146.83, 220.00, 196.00,
+        146.83, 146.83, 329.63, 146.83, 261.63, 220.00, 196.00, 174.61,
+        164.81, 164.81, 329.63, 164.81, 196.00, 164.81, 246.94, 220.00,
+        130.81, 164.81, 196.00, 261.63, 246.94, 220.00, 196.00, 164.81
+      ]
+    },
+    "s5": {
+      wave: "sawtooth", tempo: 220,
+      notes: [
+        98.00, 196.00, 146.83, 196.00, 110.00, 220.00, 164.81, 220.00,
+        130.81, 261.63, 196.00, 261.63, 146.83, 293.66, 220.00, 293.66,
+        164.81, 329.63, 246.94, 329.63, 146.83, 293.66, 220.00, 293.66,
+        130.81, 261.63, 196.00, 246.94, 110.00, 220.00, 146.83, 196.00
+      ]
+    },
+    "s6": {
+      wave: "square", tempo: 170,
+      notes: [
+        130.81, 196.00, 261.63, 196.00, 155.56, 233.08, 311.13, 233.08,
+        174.61, 261.63, 349.23, 261.63, 146.83, 220.00, 293.66, 220.00,
+        130.81, 261.63, 311.13, 392.00, 349.23, 311.13, 261.63, 233.08,
+        196.00, 233.08, 261.63, 311.13, 293.66, 261.63, 196.00, 130.81
+      ]
+    }
+  };
+
   var FREE_TRACKS = {
-    "1": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    "2": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
-    "3": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    "m1": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    "m2": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
+    "m3": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    "m4": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    "m5": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+    "m6": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
   };
 
   function ensureAudio() {
@@ -62,9 +134,6 @@
     }
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
-    }
-    if (!musicStarted && currentTrack === 'synth') {
-      startMusic('synth');
     }
   }
 
@@ -135,15 +204,14 @@
   function updateTrackUI() {
     var lbl = document.getElementById('sideTrackLbl');
     if (lbl) lbl.innerText = TRACK_NAMES[currentTrack] || "🎵 Музыка";
-    var trackBtns = document.querySelectorAll('.track-grid .track-btn');
-    for (var k = 0; k < trackBtns.length; k++) {
-      var tk = trackBtns[k].getAttribute('data-track');
-      trackBtns[k].classList.toggle('active', tk === currentTrack);
+    var allTrackBtns = document.querySelectorAll('.track-btn[data-track]');
+    for (var k = 0; k < allTrackBtns.length; k++) {
+      var tk = allTrackBtns[k].getAttribute('data-track');
+      allTrackBtns[k].classList.toggle('active', tk === currentTrack);
     }
   }
 
   function startMusic(trackKey) {
-    musicStarted = true;
     currentTrack = trackKey;
     if (trackKey !== 'off') lastActiveTrack = trackKey;
 
@@ -156,29 +224,28 @@
 
     if (trackKey === 'off') return;
 
-    if (trackKey === 'synth') {
-      if (!audioCtx) {
-        var AC = window.AudioContext || window.webkitAudioContext;
-        if (AC) audioCtx = new AC();
-      }
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      var bassNotes = [110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83];
+    if (SYNTH_PATTERNS[trackKey]) {
+      ensureAudio();
+      var pat = SYNTH_PATTERNS[trackKey];
+      synthStep = 0;
       synthInterval = setInterval(function() {
-        if (paused || over || !audioCtx || audioCtx.state !== 'running') return;
+        // Разрешаем играть музыку во время выбора трека в приветственном окне
+        var welcomeOpen = document.getElementById('welcomeModal').style.display !== 'none';
+        if ((paused && !welcomeOpen) || over || !audioCtx || audioCtx.state !== 'running') return;
         var now = audioCtx.currentTime;
-        var freq = bassNotes[synthStep % bassNotes.length];
+        var freq = pat.notes[synthStep % pat.notes.length];
         synthStep++;
         var osc = audioCtx.createOscillator();
         var gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
+        osc.type = pat.wave;
         osc.frequency.setValueAtTime(freq, now);
-        gain.gain.setValueAtTime(0.035, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (pat.tempo / 1000) * 0.9);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start(now);
-        osc.stop(now + 0.2);
-      }, 240);
+        osc.stop(now + (pat.tempo / 1000) * 0.9);
+      }, pat.tempo);
     } else if (FREE_TRACKS[trackKey]) {
       bgAudio.src = FREE_TRACKS[trackKey];
       bgAudio.volume = 0.45;
@@ -195,7 +262,7 @@
 
   function togglePlayPauseMusic() {
     if (currentTrack === 'off') {
-      startMusic(lastActiveTrack || 'synth');
+      startMusic(lastActiveTrack || 's1');
     } else {
       startMusic('off');
     }
@@ -665,7 +732,7 @@
 
     if (hits(cur, 0, 0)) {
       over = true;
-      notify("ТЕНДЕР ОКОНЧЕН! БЮДЖЕТ: " + score + " ₽");
+      notify("ТЕНДЕР ОКОНЧЕН, " + playerName + "! БЮДЖЕТ: " + score + " ₽");
     }
     scheduleTick();
   }
@@ -704,7 +771,6 @@
     draw();
   }
 
-  // Улучшенный поворот с поддержкой стен и потолка для палки (I), зигзага (Z/S) и всех фигур
   function rotate() {
     if (over || paused || !cur) return;
     var s = cur.shape;
@@ -717,7 +783,6 @@
       rot.push(newRow);
     }
 
-    // Смещения (wall kicks), чтобы длинная палка и зигзаг всегда проворачивались у краёв и наверху
     var kicks = [
       [0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0],
       [0, -1], [0, 1], [-1, -1], [1, -1]
@@ -759,7 +824,7 @@
       b.innerText = "⏸ ПАУЗА";
       b.style.display = 'block';
     } else {
-      if (currentTrack !== 'off' && currentTrack !== 'synth' && FREE_TRACKS[currentTrack]) {
+      if (FREE_TRACKS[currentTrack]) {
         bgAudio.play().catch(function() {});
       }
       if (btnP) {
@@ -801,24 +866,49 @@
     }, delay);
   }
 
-  function startGame() {
+  function startGame(keepPaused) {
     makeGrid();
     score = 0;
     lines = 0;
     speedBoostLevel = 0;
     over = false;
-    paused = false;
+    paused = !!keepPaused;
     var btnP = document.getElementById('btnPause');
     if (btnP) {
-      btnP.innerText = "⏸ ПАУЗА";
-      btnP.classList.remove('paused');
+      btnP.innerText = paused ? "▶ ПУСК" : "⏸ ПАУЗА";
+      btnP.classList.toggle('paused', paused);
     }
     setUlt(0);
     updateUI();
     nextP = randPiece();
     spawn();
     draw();
-    notify("🚀 MODE: " + currentModeName);
+    if (!paused) {
+      notify("🚀 ВПЕРЁД, " + playerName + "!");
+    }
+  }
+
+  function setAvatarAnimal(emoji) {
+    document.getElementById('welcomeAvatarPreview').innerText = emoji;
+    document.getElementById('menuAvatarPreview').innerText = emoji;
+    document.getElementById('headerAvatar').innerText = emoji;
+    var allAnimalBtns = document.querySelectorAll('.animal-opt');
+    for (var i = 0; i < allAnimalBtns.length; i++) {
+      allAnimalBtns[i].classList.toggle('selected', allAnimalBtns[i].getAttribute('data-animal') === emoji);
+    }
+  }
+
+  function setAvatarColor(col) {
+    document.getElementById('welcomeAvatarPreview').style.background = col;
+    document.getElementById('menuAvatarPreview').style.background = col;
+    document.getElementById('headerAvatar').style.background = col;
+  }
+
+  function setPlayerName(name) {
+    playerName = (name || "").trim() || "Лев Прайдов";
+    document.getElementById('headerPlayerName').innerText = playerName;
+    document.getElementById('welcomeNameInput').value = playerName;
+    document.getElementById('menuNameInput').value = playerName;
   }
 
   function bindBtn(id, fn) {
@@ -844,16 +934,13 @@
   bindBtn('btnRot', function() { rotate(); });
   bindBtn('btnDrop', function() { dropFast(); });
   bindBtn('btnUlt', function() { useUlt(); });
-  bindBtn('btnRestart', function() { startGame(); });
+  bindBtn('btnRestart', function() { startGame(false); });
   bindBtn('btnPause', function() { togglePause(); });
 
-  // Кнопки мини-плеера на боковой панели
   bindBtn('btnPrevTrack', function() { cycleTrack(-1); });
   bindBtn('btnPlayPauseTrack', function() { togglePlayPauseMusic(); });
   bindBtn('btnNextTrack', function() { cycleTrack(1); });
 
-  // Сенсорное управление по полю: предотвращаем двойное срабатывание (touch + click),
-  // из-за которого палка и зигзаг проворачивались дважды подряд и возвращались в исходное положение!
   var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
   var lastDragX = 0, lastDragY = 0, wasDragged = false;
   var lastTouchEndTime = 0;
@@ -907,12 +994,54 @@
   }, {passive: true});
 
   boardWrap.addEventListener('click', function() {
-    // Если только что был touchend на телефоне — игнорируем синтетический click браузера!
     if (Date.now() - lastTouchEndTime < 450) return;
     ensureAudio();
     if (!over && !paused) rotate();
   });
 
+  // --- ЛОГИКА СТАРТОВОГО ОКНА ПРИВЕТСТВИЯ ---
+  var welcomeModal = document.getElementById('welcomeModal');
+  var btnWelcomeMusicOn = document.getElementById('btnWelcomeMusicOn');
+  var btnWelcomeMusicOff = document.getElementById('btnWelcomeMusicOff');
+  var welcomeTrackPanel = document.getElementById('welcomeTrackPanel');
+
+  btnWelcomeMusicOn.onclick = function(e) {
+    e.stopPropagation();
+    ensureAudio();
+    btnWelcomeMusicOn.classList.add('active');
+    btnWelcomeMusicOff.classList.remove('active');
+    welcomeTrackPanel.style.display = 'block';
+    startMusic(lastActiveTrack || 's1');
+  };
+
+  btnWelcomeMusicOff.onclick = function(e) {
+    e.stopPropagation();
+    btnWelcomeMusicOff.classList.add('active');
+    btnWelcomeMusicOn.classList.remove('active');
+    welcomeTrackPanel.style.display = 'none';
+    startMusic('off');
+  };
+
+  document.getElementById('btnStartWelcome').onclick = function(e) {
+    e.stopPropagation();
+    ensureAudio();
+    setPlayerName(document.getElementById('welcomeNameInput').value);
+    welcomeModal.style.display = 'none';
+    paused = false;
+    var btnP = document.getElementById('btnPause');
+    if (btnP) {
+      btnP.innerText = "⏸ ПАУЗА";
+      btnP.classList.remove('paused');
+    }
+    if (currentTrack !== 'off') {
+      startMusic(currentTrack);
+    }
+    triggerSpeedSparksExplosion();
+    notify("🦁 В ИГРЕ: " + playerName + "!");
+    scheduleTick();
+  };
+
+  // --- ЛОГИКА ИГРОВОГО МЕНЮ ---
   var menuModal = document.getElementById('menuModal');
   document.getElementById('btnMenu').onclick = function(e) {
     e.stopPropagation();
@@ -925,6 +1054,7 @@
   document.getElementById('btnCloseMenu').onclick = function(e) {
     e.stopPropagation();
     ensureAudio();
+    setPlayerName(document.getElementById('menuNameInput').value);
     menuModal.style.display = 'none';
     paused = false;
     var btnP = document.getElementById('btnPause');
@@ -932,7 +1062,6 @@
       btnP.innerText = "⏸ ПАУЗА";
       btnP.classList.remove('paused');
     }
-    if (currentTrack === 'synth' && !synthInterval) startMusic('synth');
     scheduleTick();
   };
 
@@ -954,15 +1083,13 @@
     };
   }
 
+  // Выбор животного и цвета (работает синхронно и в приветствии, и в меню)
   var animalOpts = document.querySelectorAll('.animal-opt');
   for (var a = 0; a < animalOpts.length; a++) {
     animalOpts[a].onclick = function(e) {
       e.stopPropagation();
-      for (var b = 0; b < animalOpts.length; b++) animalOpts[b].classList.remove('selected');
-      this.classList.add('selected');
-      var emoji = this.getAttribute('data-animal');
-      document.getElementById('menuAvatarPreview').innerText = emoji;
-      document.getElementById('headerAvatar').innerText = emoji;
+      ensureAudio();
+      setAvatarAnimal(this.getAttribute('data-animal'));
       playSfx('rotate');
     };
   }
@@ -971,14 +1098,14 @@
   for (var c = 0; c < colorDots.length; c++) {
     colorDots[c].onclick = function(e) {
       e.stopPropagation();
-      var col = this.getAttribute('data-color');
-      document.getElementById('menuAvatarPreview').style.background = col;
-      document.getElementById('headerAvatar').style.background = col;
+      ensureAudio();
+      setAvatarColor(this.getAttribute('data-color'));
       playSfx('move');
     };
   }
 
-  var trackBtns = document.querySelectorAll('.track-grid .track-btn');
+  // Выбор любого из 12 треков
+  var trackBtns = document.querySelectorAll('.track-btn[data-track]');
   for (var t = 0; t < trackBtns.length; t++) {
     trackBtns[t].onclick = function(e) {
       e.stopPropagation();
@@ -998,6 +1125,7 @@
   };
 
   document.addEventListener('keydown', function(e) {
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (e.key === 'ArrowLeft') moveX(-1);
     else if (e.key === 'ArrowRight') moveX(1);
     else if (e.key === 'ArrowDown') stepDown();
@@ -1006,8 +1134,6 @@
     else if (e.key === 'p' || e.key === 'P') togglePause();
   });
 
-  document.addEventListener('touchend', ensureAudio, {passive: true});
-  document.addEventListener('click', ensureAudio);
-
-  startGame();
+  // Запускаем генерацию поля на паузе, пока открыто окно приветствия
+  startGame(true);
 })();
