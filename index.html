@@ -20,7 +20,7 @@
     </svg>
     <div class="avatar-badge" id="headerAvatar">🦁</div>
     <div>
-      <div class="brand-name">PridetetrisADV</div>
+      <div class="brand-name" id="headerPlayerName">PridetetrisADV</div>
       <div class="brand-sub">PRIDE // 3D Agency</div>
     </div>
   </div>
@@ -61,7 +61,7 @@
 
     <!-- Мини-плеер на боковой панели -->
     <div class="box">
-      <div class="lbl" id="sideTrackLbl">🎵 8-Bit Synth</div>
+      <div class="lbl" id="sideTrackLbl">🎹 1. Cyber Bass</div>
       <div class="mini-player">
         <button class="mp-btn" id="btnPrevTrack" title="Предыдущий">⏮</button>
         <button class="mp-btn" id="btnPlayPauseTrack" title="Пуск/Стоп">⏯</button>
@@ -75,7 +75,6 @@
       <button class="btn-ult" id="btnUlt">⚡ УЛЬТА</button>
     </div>
 
-    <!-- Кнопка сброса перенесена на боковую панель -->
     <button class="btn-side-drop" id="btnDrop">🚀 СБРОС ВНИЗ</button>
     <button class="btn-side-restart" id="btnRestart">🔄 ЗАНОВО</button>
   </div>
@@ -88,6 +87,69 @@
   <button class="c-btn" id="btnRight">▶</button>
 </div>
 
+<!-- ПАНЕЛЬ ПРИВЕТСТВИЯ ПРИ ОТКРЫТИИ ИГРЫ -->
+<div class="modal" id="welcomeModal" style="display: flex;">
+  <div class="modal-box welcome-box">
+    <div class="welcome-badge">PRIDE // 3D AGENCY</div>
+    <h3>👋 ДОБРО ПОЖАЛОВАТЬ В PRIDETETRIS 3D!</h3>
+    <p class="welcome-sub">Создай свой профиль, выбери саундтрек и закрывай рекламные проекты с максимальным бюджетом!</p>
+
+    <div class="sec-title">1. Создать аватар и имя пользователя:</div>
+    <div class="avatar-creator">
+      <input type="text" id="welcomeNameInput" class="name-input" placeholder="Введи своё имя или ник..." value="Лев Прайдов" maxlength="20">
+      <div class="avatar-big-preview" id="welcomeAvatarPreview">🦁</div>
+      <div class="animal-grid" id="welcomeAnimalGrid">
+        <button class="animal-opt selected" data-animal="🦁">🦁</button>
+        <button class="animal-opt" data-animal="🐯">🐯</button>
+        <button class="animal-opt" data-animal="🐺">🐺</button>
+        <button class="animal-opt" data-animal="🦊">🦊</button>
+        <button class="animal-opt" data-animal="🐻">🐻</button>
+        <button class="animal-opt" data-animal="🐼">🐼</button>
+        <button class="animal-opt" data-animal="🦅">🦅</button>
+        <button class="animal-opt" data-animal="🦈">🦈</button>
+        <button class="animal-opt" data-animal="🐲">🐲</button>
+        <button class="animal-opt" data-animal="🦍">🦍</button>
+      </div>
+      <div class="color-row" id="welcomeColorRow">
+        <div class="color-dot" style="background:#ff007a;" data-color="#ff007a"></div>
+        <div class="color-dot" style="background:#00f0ff;" data-color="#00f0ff"></div>
+        <div class="color-dot" style="background:#00ff9d;" data-color="#00ff9d"></div>
+        <div class="color-dot" style="background:#fcee09;" data-color="#fcee09"></div>
+        <div class="color-dot" style="background:#b829ff;" data-color="#b829ff"></div>
+        <div class="color-dot" style="background:#ff8800;" data-color="#ff8800"></div>
+      </div>
+    </div>
+
+    <div class="sec-title">2. Фоновая музыка в игре:</div>
+    <div class="music-choice-row">
+      <button class="music-toggle-btn active" id="btnWelcomeMusicOn">🔊 ВКЛЮЧИТЬ МУЗЫКУ</button>
+      <button class="music-toggle-btn" id="btnWelcomeMusicOff">🔇 БЕЗ МУЗЫКИ</button>
+    </div>
+
+    <!-- Блок выбора из 12 треков (показывается, если выбрано "Включить музыку") -->
+    <div class="music-box" id="welcomeTrackPanel">
+      <div class="lbl" style="margin-bottom:6px; color:#00f0ff;">Выбери трек (прослушивание сразу):</div>
+      <div class="track-grid welcome-tracks" id="welcomeTrackGrid">
+        <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass (Synth x2)</button>
+        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit (Synth x2)</button>
+        <button class="track-btn" data-track="s3">🎹 3. Neon Arpeggio (Synth x2)</button>
+        <button class="track-btn" data-track="s4">🎹 4. Deadline Overdrive (Synth x2)</button>
+        <button class="track-btn" data-track="s5">🎹 5. Agency Synthwave (Synth x2)</button>
+        <button class="track-btn" data-track="s6">🎹 6. Retro Matrix Boss (Synth x2)</button>
+        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride (MP3 Mix)</button>
+        <button class="track-btn" data-track="m2">🎵 8. Neon Agency (MP3 Mix)</button>
+        <button class="track-btn" data-track="m3">🎵 9. Techno Rush (MP3 Mix)</button>
+        <button class="track-btn" data-track="m4">🎵 10. Digital Horizon (MP3 Mix)</button>
+        <button class="track-btn" data-track="m5">🎵 11. Night Print Shop (MP3 Mix)</button>
+        <button class="track-btn" data-track="m6">🎵 12. Mega Billboard (MP3 Mix)</button>
+      </div>
+    </div>
+
+    <button class="btn-start-game" id="btnStartWelcome">🚀 НАЧАТЬ ИГРУ!</button>
+  </div>
+</div>
+
+<!-- ОБЫЧНОЕ МЕНЮ НАСТРОЕК ВО ВРЕМЯ ИГРЫ -->
 <div class="modal" id="menuModal">
   <div class="modal-box">
     <h3>🦁 МЕНЮ // PRIDE ADV 3D</h3>
@@ -105,8 +167,9 @@
       </button>
     </div>
 
-    <div class="sec-title">2. Создание Аватара:</div>
+    <div class="sec-title">2. Профиль и Аватар:</div>
     <div class="avatar-creator">
+      <input type="text" id="menuNameInput" class="name-input" placeholder="Введи своё имя..." value="Лев Прайдов" maxlength="20">
       <div class="avatar-big-preview" id="menuAvatarPreview">🦁</div>
       <div class="animal-grid" id="animalGrid">
         <button class="animal-opt selected" data-animal="🦁">🦁</button>
@@ -130,13 +193,21 @@
       </div>
     </div>
 
-    <div class="sec-title">3. Фоновая Музыка и Звуки:</div>
+    <div class="sec-title">3. Плейлист (12 Треков) и Звуки:</div>
     <div class="music-box">
-      <div class="track-grid">
-        <button class="track-btn" data-track="1">🎵 Cyber Pride (MP3)</button>
-        <button class="track-btn" data-track="2">🎵 Neon Agency (MP3)</button>
-        <button class="track-btn" data-track="3">🎵 Techno Rush (MP3)</button>
-        <button class="track-btn active" data-track="synth">🎹 8-Bit Synth (Auto)</button>
+      <div class="track-grid" id="menuTrackGrid">
+        <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass</button>
+        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit</button>
+        <button class="track-btn" data-track="s3">🎹 3. Neon Arpeggio</button>
+        <button class="track-btn" data-track="s4">🎹 4. Deadline Overdrive</button>
+        <button class="track-btn" data-track="s5">🎹 5. Agency Synthwave</button>
+        <button class="track-btn" data-track="s6">🎹 6. Retro Matrix Boss</button>
+        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride MP3</button>
+        <button class="track-btn" data-track="m2">🎵 8. Neon Agency MP3</button>
+        <button class="track-btn" data-track="m3">🎵 9. Techno Rush MP3</button>
+        <button class="track-btn" data-track="m4">🎵 10. Digital Horizon</button>
+        <button class="track-btn" data-track="m5">🎵 11. Night Print Shop</button>
+        <button class="track-btn" data-track="m6">🎵 12. Mega Billboard</button>
         <button class="track-btn" data-track="off" style="grid-column: span 2;">🔇 Выключить музыку</button>
       </div>
       <div class="sfx-row">
@@ -145,7 +216,7 @@
       </div>
     </div>
 
-    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:#00f0ff; color:#000; font-size:13px;">ИГРАТЬ</button>
+    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:#00f0ff; color:#000; font-size:13px;">ПРОДОЛЖИТЬ ИГРУ</button>
   </div>
 </div>
 
