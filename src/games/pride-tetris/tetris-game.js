@@ -34,10 +34,20 @@
   var audioCtx = null;
   var sfxEnabled = true;
   var currentTrack = "synth";
+  var lastActiveTrack = "synth";
   var synthInterval = null;
   var synthStep = 0;
   var musicStarted = false;
   var bgAudio = document.getElementById('bgAudio');
+
+  var TRACK_ORDER = ["synth", "1", "2", "3"];
+  var TRACK_NAMES = {
+    "synth": "🎹 8-Bit Synth",
+    "1": "🎵 Cyber Pride",
+    "2": "🎵 Neon Agency",
+    "3": "🎵 Techno Rush",
+    "off": "🔇 Выкл"
+  };
 
   var FREE_TRACKS = {
     "1": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
@@ -122,19 +132,36 @@
     }
   }
 
+  function updateTrackUI() {
+    var lbl = document.getElementById('sideTrackLbl');
+    if (lbl) lbl.innerText = TRACK_NAMES[currentTrack] || "🎵 Музыка";
+    var trackBtns = document.querySelectorAll('.track-grid .track-btn');
+    for (var k = 0; k < trackBtns.length; k++) {
+      var tk = trackBtns[k].getAttribute('data-track');
+      trackBtns[k].classList.toggle('active', tk === currentTrack);
+    }
+  }
+
   function startMusic(trackKey) {
     musicStarted = true;
     currentTrack = trackKey;
+    if (trackKey !== 'off') lastActiveTrack = trackKey;
+
     if (synthInterval) {
       clearInterval(synthInterval);
       synthInterval = null;
     }
     bgAudio.pause();
+    updateTrackUI();
 
     if (trackKey === 'off') return;
 
     if (trackKey === 'synth') {
-      ensureAudio();
+      if (!audioCtx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audioCtx = new AC();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
       var bassNotes = [110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83];
       synthInterval = setInterval(function() {
         if (paused || over || !audioCtx || audioCtx.state !== 'running') return;
@@ -156,6 +183,21 @@
       bgAudio.src = FREE_TRACKS[trackKey];
       bgAudio.volume = 0.45;
       bgAudio.play().catch(function() {});
+    }
+  }
+
+  function cycleTrack(dir) {
+    var idx = TRACK_ORDER.indexOf(currentTrack === 'off' ? lastActiveTrack : currentTrack);
+    if (idx === -1) idx = 0;
+    var nextIdx = (idx + dir + TRACK_ORDER.length) % TRACK_ORDER.length;
+    startMusic(TRACK_ORDER[nextIdx]);
+  }
+
+  function togglePlayPauseMusic() {
+    if (currentTrack === 'off') {
+      startMusic(lastActiveTrack || 'synth');
+    } else {
+      startMusic('off');
     }
   }
 
@@ -218,7 +260,6 @@
       edgeGeo = new THREE.EdgesGeometry(cubeGeo);
       edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 });
 
-      // Камера сама подгоняется под размер рамки, чтобы поле целиком помещалось
       var fitBoard = function() {
         var w = boardWrap.clientWidth;
         var h = boardWrap.clientHeight;
@@ -226,8 +267,8 @@
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         var t = Math.tan(camera.fov * Math.PI / 360);
-        var zH = (ROWS / 2 + 1.0) / t;
-        var zW = (COLS / 2 + 1.0) / (t * camera.aspect);
+        var zH = (ROWS / 2 + 0.65) / t;
+        var zW = (COLS / 2 + 0.65) / (t * camera.aspect);
         camera.position.set(0, 0, Math.max(zH, zW));
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
@@ -373,7 +414,7 @@
   function draw3DBlock2D(context, x, y, color, s) {
     var px = x * s;
     var py = y * s;
-    var d = Math.max(3, Math.floor(s * 0.2));
+    var d = Math.max(2, Math.floor(s * 0.2));
     context.fillStyle = color;
     context.fillRect(px + 1, py + d, s - d - 1, s - d - 1);
     context.strokeStyle = "rgba(255,255,255,0.45)";
@@ -512,7 +553,7 @@
     for (var dy = 0; dy < nextP.shape.length; dy++) {
       for (var dx = 0; dx < nextP.shape[dy].length; dx++) {
         if (nextP.shape[dy][dx]) {
-          draw3DBlock2D(nextCtx, dx + 0.4, dy + 0.4, nextP.color, 18);
+          draw3DBlock2D(nextCtx, dx + 0.3, dy + 0.3, nextP.color, 14);
         }
       }
     }
@@ -663,6 +704,7 @@
     draw();
   }
 
+  // Улучшенный поворот с поддержкой стен и потолка для палки (I), зигзага (Z/S) и всех фигур
   function rotate() {
     if (over || paused || !cur) return;
     var s = cur.shape;
@@ -674,13 +716,59 @@
       }
       rot.push(newRow);
     }
-    if (!hits(cur, 0, 0, rot)) cur.shape = rot;
-    else if (!hits(cur, -1, 0, rot)) { cur.x--; cur.shape = rot; }
-    else if (!hits(cur, 1, 0, rot)) { cur.x++; cur.shape = rot; }
-    targetRotY = 0.16;
-    playSfx('rotate');
-    spawnFallingTrail();
-    draw();
+
+    // Смещения (wall kicks), чтобы длинная палка и зигзаг всегда проворачивались у краёв и наверху
+    var kicks = [
+      [0, 0], [-1, 0], [1, 0], [-2, 0], [2, 0],
+      [0, -1], [0, 1], [-1, -1], [1, -1]
+    ];
+
+    var rotated = false;
+    for (var i = 0; i < kicks.length; i++) {
+      var ox = kicks[i][0];
+      var oy = kicks[i][1];
+      if (!hits(cur, ox, oy, rot)) {
+        cur.x += ox;
+        cur.y += oy;
+        cur.shape = rot;
+        rotated = true;
+        break;
+      }
+    }
+
+    if (rotated) {
+      targetRotY = 0.16;
+      playSfx('rotate');
+      spawnFallingTrail();
+      draw();
+    }
+  }
+
+  function togglePause() {
+    if (over) return;
+    paused = !paused;
+    var btnP = document.getElementById('btnPause');
+    if (paused) {
+      if (timer) clearTimeout(timer);
+      if (bgAudio && !bgAudio.paused) bgAudio.pause();
+      if (btnP) {
+        btnP.innerText = "▶ ПУСК";
+        btnP.classList.add('paused');
+      }
+      var b = document.getElementById('banner');
+      b.innerText = "⏸ ПАУЗА";
+      b.style.display = 'block';
+    } else {
+      if (currentTrack !== 'off' && currentTrack !== 'synth' && FREE_TRACKS[currentTrack]) {
+        bgAudio.play().catch(function() {});
+      }
+      if (btnP) {
+        btnP.innerText = "⏸ ПАУЗА";
+        btnP.classList.remove('paused');
+      }
+      document.getElementById('banner').style.display = 'none';
+      scheduleTick();
+    }
   }
 
   function useUlt() {
@@ -720,6 +808,11 @@
     speedBoostLevel = 0;
     over = false;
     paused = false;
+    var btnP = document.getElementById('btnPause');
+    if (btnP) {
+      btnP.innerText = "⏸ ПАУЗА";
+      btnP.classList.remove('paused');
+    }
     setUlt(0);
     updateUI();
     nextP = randPiece();
@@ -752,9 +845,18 @@
   bindBtn('btnDrop', function() { dropFast(); });
   bindBtn('btnUlt', function() { useUlt(); });
   bindBtn('btnRestart', function() { startGame(); });
+  bindBtn('btnPause', function() { togglePause(); });
 
+  // Кнопки мини-плеера на боковой панели
+  bindBtn('btnPrevTrack', function() { cycleTrack(-1); });
+  bindBtn('btnPlayPauseTrack', function() { togglePlayPauseMusic(); });
+  bindBtn('btnNextTrack', function() { cycleTrack(1); });
+
+  // Сенсорное управление по полю: предотвращаем двойное срабатывание (touch + click),
+  // из-за которого палка и зигзаг проворачивались дважды подряд и возвращались в исходное положение!
   var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
   var lastDragX = 0, lastDragY = 0, wasDragged = false;
+  var lastTouchEndTime = 0;
 
   boardWrap.addEventListener('touchstart', function(e) {
     ensureAudio();
@@ -775,12 +877,12 @@
     var dx = t.clientX - lastDragX;
     var dy = t.clientY - lastDragY;
 
-    if (Math.abs(dx) > 20) {
+    if (Math.abs(dx) > 22) {
       moveX(dx > 0 ? 1 : -1);
       lastDragX = t.clientX;
       wasDragged = true;
     }
-    if (dy > 24) {
+    if (dy > 26) {
       stepDown();
       lastDragY = t.clientY;
       wasDragged = true;
@@ -788,8 +890,9 @@
   }, {passive: false});
 
   boardWrap.addEventListener('touchend', function(e) {
+    lastTouchEndTime = Date.now();
     if (over || paused) return;
-    var dt = Date.now() - touchStartTime;
+    var dt = lastTouchEndTime - touchStartTime;
     var ch = e.changedTouches[0];
     var totalDx = Math.abs(ch.clientX - touchStartX);
     var totalDy = ch.clientY - touchStartY;
@@ -798,12 +901,14 @@
       dropFast();
       return;
     }
-    if (!wasDragged && totalDx < 15 && Math.abs(totalDy) < 15) {
+    if (!wasDragged && totalDx < 30 && Math.abs(totalDy) < 30) {
       rotate();
     }
   }, {passive: true});
 
   boardWrap.addEventListener('click', function() {
+    // Если только что был touchend на телефоне — игнорируем синтетический click браузера!
+    if (Date.now() - lastTouchEndTime < 450) return;
     ensureAudio();
     if (!over && !paused) rotate();
   });
@@ -822,6 +927,11 @@
     ensureAudio();
     menuModal.style.display = 'none';
     paused = false;
+    var btnP = document.getElementById('btnPause');
+    if (btnP) {
+      btnP.innerText = "⏸ ПАУЗА";
+      btnP.classList.remove('paused');
+    }
     if (currentTrack === 'synth' && !synthInterval) startMusic('synth');
     scheduleTick();
   };
@@ -873,8 +983,6 @@
     trackBtns[t].onclick = function(e) {
       e.stopPropagation();
       ensureAudio();
-      for (var k = 0; k < trackBtns.length; k++) trackBtns[k].classList.remove('active');
-      this.classList.add('active');
       var tr = this.getAttribute('data-track');
       startMusic(tr);
     };
@@ -895,6 +1003,7 @@
     else if (e.key === 'ArrowDown') stepDown();
     else if (e.key === 'ArrowUp') rotate();
     else if (e.key === ' ') { e.preventDefault(); dropFast(); }
+    else if (e.key === 'p' || e.key === 'P') togglePause();
   });
 
   document.addEventListener('touchend', ensureAudio, {passive: true});
