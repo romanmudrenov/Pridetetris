@@ -3,8 +3,6 @@
   var boardWrap = document.getElementById('boardWrap');
   var nextCan = document.getElementById('nextCanvas');
   var nextCtx = nextCan.getContext('2d');
-  var pauseOverlay = document.getElementById('pauseOverlay');
-  var btnPause = document.getElementById('btnPause');
 
   var COLS = 12;
   var ROWS = 20;
@@ -27,9 +25,7 @@
   var nextP = null;
   var over = false;
   var paused = false;
-  var userPaused = false;
   var timer = null;
-  var pieceId = 0;
 
   var currentModeName = "ASAP (Medium)";
   var baseDelay = 480;
@@ -47,14 +43,6 @@
     "1": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     "2": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
     "3": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-  };
-  var TRACK_ORDER = ["synth", "1", "2", "3"];
-  var TRACK_NAMES = {
-    "synth": "8-Bit Synth",
-    "1": "Cyber Pride",
-    "2": "Neon Agency",
-    "3": "Techno Rush",
-    "off": "Музыка выключена"
   };
 
   function ensureAudio() {
@@ -167,57 +155,18 @@
     } else if (FREE_TRACKS[trackKey]) {
       bgAudio.src = FREE_TRACKS[trackKey];
       bgAudio.volume = 0.45;
-      if (!paused) bgAudio.play().catch(function() {});
+      bgAudio.play().catch(function() {});
     }
-  }
-
-  function syncTrackButtons() {
-    var btns = document.querySelectorAll('.track-grid .track-btn');
-    for (var i = 0; i < btns.length; i++) {
-      btns[i].classList.toggle('active', btns[i].getAttribute('data-track') === currentTrack);
-    }
-  }
-
-  function switchTrack(dir) {
-    ensureAudio();
-    var idx = TRACK_ORDER.indexOf(currentTrack);
-    if (idx === -1) idx = (dir > 0) ? -1 : 0;
-    idx = (idx + dir + TRACK_ORDER.length) % TRACK_ORDER.length;
-    var key = TRACK_ORDER[idx];
-    startMusic(key);
-    syncTrackButtons();
-    notify("🎵 " + TRACK_NAMES[key]);
   }
 
   var useThree = (typeof window.THREE !== 'undefined');
   var renderer, scene, camera, boardGroup, blocksGroup, vfxGroup, pieceLight;
-  var fitCamera = null;
   var targetRotY = 0, currentRotY = 0;
   var cubeGeo, edgeGeo, edgeMat;
   var materialCache = {};
   var particles = [];
   var lasers = [];
   var shockwaves = [];
-
-  // Размер поля подгоняется под экран: максимум по ширине и высоте
-function layoutBoard() {
-    var vw = document.documentElement.clientWidth || window.innerWidth;
-    var vh = window.innerHeight;
-    var area = document.getElementById('gameArea');
-    var top = area.getBoundingClientRect().top;
-    if (top < 0) top = 0;
-    var availW = Math.min(vw, 480) - 78 - 6 - 8 - 6;
-    var availH = vh - top - 20;
-    var cell = Math.floor(Math.min(availW / COLS, availH / ROWS));
-    if (!(cell >= 8)) cell = 8;
-    if (cell > 40) cell = 40;
-    boardWrap.style.width = (cell * COLS + 6) + 'px';
-    boardWrap.style.height = (cell * ROWS + 6) + 'px';
-  }
-  function relayout() {
-    layoutBoard();
-    if (fitCamera) fitCamera();
-  }
 
   if (useThree) {
     try {
@@ -269,30 +218,27 @@ function layoutBoard() {
       edgeGeo = new THREE.EdgesGeometry(cubeGeo);
       edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 });
 
-      fitCamera = function() {
+      // Камера сама подгоняется под размер рамки, чтобы поле целиком помещалось
+      var fitBoard = function() {
         var w = boardWrap.clientWidth;
         var h = boardWrap.clientHeight;
         if (!w || !h) return;
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         var t = Math.tan(camera.fov * Math.PI / 360);
-        var zH = (ROWS / 2 + 0.35) / t;
-        var zW = (COLS / 2 + 0.35) / (t * camera.aspect);
+        var zH = (ROWS / 2 + 1.0) / t;
+        var zW = (COLS / 2 + 1.0) / (t * camera.aspect);
         camera.position.set(0, 0, Math.max(zH, zW));
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
       };
+      fitBoard();
+      window.addEventListener('resize', fitBoard);
+      window.addEventListener('orientationchange', function() { setTimeout(fitBoard, 200); });
     } catch (e) {
       useThree = false;
-      fitCamera = null;
     }
   }
-
-  relayout();
-  window.addEventListener('resize', relayout);
-  window.addEventListener('orientationchange', function() { setTimeout(relayout, 250); });
-  window.addEventListener('load', relayout);
-  setTimeout(relayout, 300);
 
   function gridToWorldX(gx) { return gx - COLS / 2 + 0.5; }
   function gridToWorldY(gy) { return (ROWS / 2 - 0.5) - gy; }
@@ -566,7 +512,7 @@ function layoutBoard() {
     for (var dy = 0; dy < nextP.shape.length; dy++) {
       for (var dx = 0; dx < nextP.shape[dy].length; dx++) {
         if (nextP.shape[dy][dx]) {
-          draw3DBlock2D(nextCtx, dx + 0.4, dy + 0.4, nextP.color, 12);
+          draw3DBlock2D(nextCtx, dx + 0.4, dy + 0.4, nextP.color, 18);
         }
       }
     }
@@ -669,7 +615,6 @@ function layoutBoard() {
   }
 
   function spawn() {
-    pieceId++;
     cur = nextP || randPiece();
     nextP = randPiece();
     var tag = document.getElementById('serviceName');
@@ -688,7 +633,7 @@ function layoutBoard() {
     if (over || paused || !cur) return;
     if (!hits(cur, dir, 0)) {
       cur.x += dir;
-      targetRotY = dir * 0.06;
+      targetRotY = dir * 0.12;
       playSfx('move');
       spawnFallingTrail();
       draw();
@@ -729,20 +674,13 @@ function layoutBoard() {
       }
       rot.push(newRow);
     }
-    // пробуем повернуть с небольшими сдвигами (у стен и у дна)
-    var kicks = [[0,0],[-1,0],[1,0],[-2,0],[2,0],[0,-1],[-1,-1],[1,-1]];
-    for (var i = 0; i < kicks.length; i++) {
-      if (!hits(cur, kicks[i][0], kicks[i][1], rot)) {
-        cur.x += kicks[i][0];
-        cur.y += kicks[i][1];
-        cur.shape = rot;
-        targetRotY = 0.08;
-        playSfx('rotate');
-        spawnFallingTrail();
-        draw();
-        return;
-      }
-    }
+    if (!hits(cur, 0, 0, rot)) cur.shape = rot;
+    else if (!hits(cur, -1, 0, rot)) { cur.x--; cur.shape = rot; }
+    else if (!hits(cur, 1, 0, rot)) { cur.x++; cur.shape = rot; }
+    targetRotY = 0.16;
+    playSfx('rotate');
+    spawnFallingTrail();
+    draw();
   }
 
   function useUlt() {
@@ -775,30 +713,6 @@ function layoutBoard() {
     }, delay);
   }
 
-  // Пауза: silent = true для меню (без надписи «ПАУЗА»)
-  function setPaused(v, silent) {
-    paused = v;
-    userPaused = v && !silent;
-    pauseOverlay.style.display = userPaused ? 'flex' : 'none';
-    btnPause.innerText = userPaused ? '▶' : '⏸';
-    if (v) {
-      if (timer) clearTimeout(timer);
-      bgAudio.pause();
-    } else {
-      if (musicStarted && currentTrack !== 'synth' && currentTrack !== 'off') {
-        bgAudio.play().catch(function() {});
-      }
-      scheduleTick();
-    }
-  }
-
-  function togglePause() {
-    if (over) return;
-    if (document.getElementById('menuModal').style.display === 'flex') return;
-    ensureAudio();
-    setPaused(!paused, false);
-  }
-
   function startGame() {
     makeGrid();
     score = 0;
@@ -806,9 +720,6 @@ function layoutBoard() {
     speedBoostLevel = 0;
     over = false;
     paused = false;
-    userPaused = false;
-    pauseOverlay.style.display = 'none';
-    btnPause.innerText = '⏸';
     setUlt(0);
     updateUI();
     nextP = randPiece();
@@ -817,11 +728,10 @@ function layoutBoard() {
     notify("🚀 MODE: " + currentModeName);
   }
 
-  // Кнопки: срабатывают на отпускание пальца (так работает и звук), без двойных нажатий
   function bindBtn(id, fn) {
     var el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener('touchend', function(e) {
+    el.addEventListener('touchstart', function(e) {
       e.preventDefault();
       e.stopPropagation();
       ensureAudio();
@@ -835,111 +745,75 @@ function layoutBoard() {
     });
   }
 
+  bindBtn('btnLeft', function() { moveX(-1); });
+  bindBtn('btnRight', function() { moveX(1); });
+  bindBtn('btnDown', function() { stepDown(); });
+  bindBtn('btnRot', function() { rotate(); });
+  bindBtn('btnDrop', function() { dropFast(); });
   bindBtn('btnUlt', function() { useUlt(); });
   bindBtn('btnRestart', function() { startGame(); });
-  bindBtn('btnPause', function() { togglePause(); });
-  bindBtn('btnPrevTrack', function() { switchTrack(-1); });
-  bindBtn('btnNextTrack', function() { switchTrack(1); });
 
-  // ===== Сенсорное управление полем =====
-  var g = { active: false, id: null, sx: 0, sy: 0, lx: 0, ly: 0, t: 0, moved: false, pid: 0 };
-
-  function cellPx() { return boardWrap.clientWidth / COLS; }
-
-  function findTouch(list) {
-    for (var i = 0; i < list.length; i++) {
-      if (list[i].identifier === g.id) return list[i];
-    }
-    return null;
-  }
+  var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+  var lastDragX = 0, lastDragY = 0, wasDragged = false;
 
   boardWrap.addEventListener('touchstart', function(e) {
-    e.preventDefault();
     ensureAudio();
-    if (userPaused) { setPaused(false, false); return; }
-    if (over || paused || g.active) return;
-    var t = e.changedTouches[0];
-    g.active = true;
-    g.id = t.identifier;
-    g.sx = g.lx = t.clientX;
-    g.sy = g.ly = t.clientY;
-    g.t = Date.now();
-    g.moved = false;
-    g.pid = pieceId;
-  }, {passive: false});
+    if (over || paused) return;
+    var t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    lastDragX = touchStartX;
+    lastDragY = touchStartY;
+    touchStartTime = Date.now();
+    wasDragged = false;
+  }, {passive: true});
 
   boardWrap.addEventListener('touchmove', function(e) {
-    if (!g.active) return;
-    e.preventDefault();
     if (over || paused) return;
-    var t = findTouch(e.changedTouches);
-    if (!t) return;
+    e.preventDefault();
+    var t = e.touches[0];
+    var dx = t.clientX - lastDragX;
+    var dy = t.clientY - lastDragY;
 
-    var cell = cellPx();
-    var stepX = cell * 0.85;
-    var stepY = cell * 0.9;
-
-    if (Math.abs(t.clientX - g.sx) > 10 || Math.abs(t.clientY - g.sy) > 10) g.moved = true;
-
-    while (t.clientX - g.lx >= stepX) { moveX(1); g.lx += stepX; }
-    while (g.lx - t.clientX >= stepX) { moveX(-1); g.lx -= stepX; }
-
-    if (t.clientY < g.ly) g.ly = t.clientY;
-    if (g.pid === pieceId) {
-      var stepped = false;
-      while (g.pid === pieceId && t.clientY - g.ly >= stepY) {
-        stepDown();
-        score += 1;
-        g.ly += stepY;
-        stepped = true;
-      }
-      if (stepped) updateUI();
-    } else {
-      g.ly = t.clientY;
+    if (Math.abs(dx) > 20) {
+      moveX(dx > 0 ? 1 : -1);
+      lastDragX = t.clientX;
+      wasDragged = true;
+    }
+    if (dy > 24) {
+      stepDown();
+      lastDragY = t.clientY;
+      wasDragged = true;
     }
   }, {passive: false});
 
-  function endTouch(e) {
-    if (!g.active) return;
-    e.preventDefault();
-    var t = findTouch(e.changedTouches);
-    if (!t) return;
-    g.active = false;
-    if (e.type === 'touchcancel' || over || paused) return;
+  boardWrap.addEventListener('touchend', function(e) {
+    if (over || paused) return;
+    var dt = Date.now() - touchStartTime;
+    var ch = e.changedTouches[0];
+    var totalDx = Math.abs(ch.clientX - touchStartX);
+    var totalDy = ch.clientY - touchStartY;
 
-    var dt = Date.now() - g.t;
-    var dx = t.clientX - g.sx;
-    var dy = t.clientY - g.sy;
-    var cell = cellPx();
-
-    // быстрый свайп вниз: мгновенный сброс
-    if (dy > cell * 5 && dt < 300 && Math.abs(dx) < dy * 0.6 && g.pid === pieceId) {
+    if (totalDy > 90 && dt < 220) {
       dropFast();
       return;
     }
-    // обычный тап: поворот
-    if (!g.moved && dt < 500) {
+    if (!wasDragged && totalDx < 15 && Math.abs(totalDy) < 15) {
       rotate();
     }
-  }
-  boardWrap.addEventListener('touchend', endTouch, {passive: false});
-  boardWrap.addEventListener('touchcancel', endTouch, {passive: false});
+  }, {passive: true});
 
-  // для компьютера: клик мышью = поворот
-  if (!('ontouchstart' in window)) {
-    boardWrap.addEventListener('click', function() {
-      ensureAudio();
-      if (userPaused) { setPaused(false, false); return; }
-      if (!over && !paused) rotate();
-    });
-  }
+  boardWrap.addEventListener('click', function() {
+    ensureAudio();
+    if (!over && !paused) rotate();
+  });
 
-  // ===== Меню =====
   var menuModal = document.getElementById('menuModal');
   document.getElementById('btnMenu').onclick = function(e) {
     e.stopPropagation();
     ensureAudio();
-    setPaused(true, true);
+    paused = true;
+    if (timer) clearTimeout(timer);
     menuModal.style.display = 'flex';
   };
 
@@ -947,8 +821,9 @@ function layoutBoard() {
     e.stopPropagation();
     ensureAudio();
     menuModal.style.display = 'none';
+    paused = false;
     if (currentTrack === 'synth' && !synthInterval) startMusic('synth');
-    setPaused(false, false);
+    scheduleTick();
   };
 
   var modeBtns = document.querySelectorAll('.mode-btn');
@@ -962,9 +837,10 @@ function layoutBoard() {
       baseDelay = parseInt(this.getAttribute('data-speed'), 10);
       updateUI();
       menuModal.style.display = 'none';
-      setPaused(false, false);
+      paused = false;
       triggerSpeedSparksExplosion();
       notify("💥 SPEED MODE: " + currentModeName);
+      scheduleTick();
     };
   }
 
@@ -997,9 +873,10 @@ function layoutBoard() {
     trackBtns[t].onclick = function(e) {
       e.stopPropagation();
       ensureAudio();
+      for (var k = 0; k < trackBtns.length; k++) trackBtns[k].classList.remove('active');
+      this.classList.add('active');
       var tr = this.getAttribute('data-track');
       startMusic(tr);
-      syncTrackButtons();
     };
   }
 
@@ -1017,7 +894,6 @@ function layoutBoard() {
     else if (e.key === 'ArrowRight') moveX(1);
     else if (e.key === 'ArrowDown') stepDown();
     else if (e.key === 'ArrowUp') rotate();
-    else if (e.key === 'p' || e.key === 'P') togglePause();
     else if (e.key === ' ') { e.preventDefault(); dropFast(); }
   });
 
