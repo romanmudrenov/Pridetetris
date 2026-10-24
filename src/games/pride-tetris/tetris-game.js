@@ -1,93 +1,192 @@
-import { BOARD_CONFIG } from './config.js';
+import { BOARD_CONFIG, SERVICES } from './config.js';
+import { Engine3D } from './engine-3d.js';
 
-export class Engine3D {
-  constructor(canvas) {
+export class PrideTetrisGame {
+  constructor({ audio, onGameOver }) {
+    this.audio = audio;
+    this.onGameOver = onGameOver;
     this.COLS = BOARD_CONFIG.COLS;
     this.ROWS = BOARD_CONFIG.ROWS;
-    this.useThree = typeof window.THREE !== 'undefined';
-    this.materialCache = {};
-    this.particles = [];
-    this.targetRotY = 0;
-    this.currentRotY = 0;
+    this.engine3d = new Engine3D(document.getElementById('board'));
+    this.nextCan = document.getElementById('nextCanvas');
+    this.nextCtx = this.nextCan.getContext('2d');
 
-    if (this.useThree) {
-      this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-      this.renderer.setSize(220, 440, false);
-      this.renderer.setClearColor(0x05060a, 1);
+    this.grid = [];
+    this.score = 0;
+    this.lines = 0;
+    this.ult = 0;
+    this.cur = null;
+    this.nextP = null;
+    this.over = false;
+    this.paused = false;
+    this.timer = null;
+    this.currentModeName = "ASAP (Medium)";
+    this.baseDelay = 480;
 
-      this.scene = new THREE.Scene();
-      this.camera = new THREE.PerspectiveCamera(40, 220 / 440, 0.1, 100);
-      this.camera.position.set(0, -0.6, 26.2);
-      this.camera.lookAt(0, -0.2, 0);
-
-      this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
-      dirLight.position.set(8, 16, 18);
-      this.scene.add(dirLight);
-
-      this.boardGroup = new THREE.Group();
-      this.scene.add(this.boardGroup);
-
-      this.blocksGroup = new THREE.Group();
-      this.boardGroup.add(this.blocksGroup);
-
-      this.cubeGeo = new THREE.BoxGeometry(0.92, 0.92, 0.92);
-      this.animate();
-    }
+    this.bindControls();
   }
 
-  gridToWorldX(gx) { return gx - this.COLS / 2 + 0.5; }
-  gridToWorldY(gy) { return (this.ROWS / 2 - 0.5) - gy; }
-
-  getMaterial(colorHex, isGhost) {
-    const key = colorHex + (isGhost ? '_g' : '');
-    if (!this.materialCache[key]) {
-      this.materialCache[key] = new THREE.MeshPhongMaterial({
-        color: colorHex,
-        emissive: colorHex,
-        emissiveIntensity: isGhost ? 0.1 : 0.22,
-        transparent: !!isGhost,
-        opacity: isGhost ? 0.22 : 1.0
-      });
-    }
-    return this.materialCache[key];
+  makeGrid() {
+    this.grid = Array.from({ length: this.ROWS }, () => Array(this.COLS).fill(null));
   }
 
-  addCube(gx, gy, colorHex, isGhost) {
-    const mesh = new THREE.Mesh(this.cubeGeo, this.getMaterial(colorHex, isGhost));
-    mesh.position.set(this.gridToWorldX(gx), this.gridToWorldY(gy), isGhost ? -0.15 : 0);
-    this.blocksGroup.add(mesh);
+  randPiece() {
+    const s = SERVICES[Math.floor(Math.random() * SERVICES.length)];
+    return {
+      name: s.name,
+      color: s.color,
+      type: s.type,
+      shape: s.shape.map(row => [...row]),
+      x: Math.floor(this.COLS / 2) - Math.ceil(s.shape[0].length / 2),
+      y: 0
+    };
   }
 
-  renderState(grid, cur, ghostY) {
-    if (!this.useThree) return;
-    while (this.blocksGroup.children.length > 0) {
-      this.blocksGroup.remove(this.blocksGroup.children[0]);
-    }
-    for (let r = 0; r < this.ROWS; r++) {
-      for (let c = 0; c < this.COLS; c++) {
-        if (grid[r][c]) this.addCube(c, r, grid[r][c].color, false);
+  hits(p, ox, oy, mat) {
+    const m = mat || p.shape;
+    for (let r = 0; r < m.length; r++) {
+      for (let c = 0; c < m[r].length; c++) {
+        if (!m[r][c]) continue;
+        const nx = p.x + c + ox;
+        const ny = p.y + r + oy;
+        if (nx < 0 || nx >= this.COLS || ny >= this.ROWS) return true;
+        if (ny >= 0 && this.grid[ny][nx]) return true;
       }
     }
-    if (cur) {
-      for (let dy = 0; dy < cur.shape.length; dy++) {
-        for (let dx = 0; dx < cur.shape[dy].length; dx++) {
-          if (cur.shape[dy][dx]) {
-            if (ghostY !== cur.y) this.addCube(cur.x + dx, ghostY + dy, cur.color, true);
-            this.addCube(cur.x + dx, cur.y + dy, cur.color, false);
-          }
+    return false;
+  }
+
+  getGhostY() {
+    if (!this.cur) return 0;
+    let gy = this.cur.y;
+    while (!this.hits(this.cur, 0, gy - this.cur.y + 1)) gy++;
+    return gy;
+  }
+
+  draw() {
+    this.engine3d.renderState(this.grid, this.cur, this.getGhostY());
+  }
+
+  spawn() {
+    this.cur = this.nextP || this.randPiece();
+    this.nextP = this.randPiece();
+    const tag = document.getElementById('serviceName');
+    if (tag) tag.innerText = this.cur.name;
+
+    if (this.hits(this.cur, 0, 0)) {
+      this.over = true;
+      if (this.onGameOver) this.onGameOver(this.score, this.lines, this.currentModeName);
+      return;
+    }
+    this.scheduleTick();
+  }
+
+  stepDown() {
+    if (this.over || this.paused || !this.cur) return;
+    if (!this.hits(this.cur, 0, 1)) {
+      this.cur.y++;
+    } else {
+      this.lockPiece();
+    }
+    this.draw();
+  }
+
+  lockPiece() {
+    this.audio.playSfx('drop');
+    for (let dy = 0; dy < this.cur.shape.length; dy++) {
+      for (let dx = 0; dx < this.cur.shape[dy].length; dx++) {
+        if (this.cur.shape[dy][dx] && this.cur.y + dy >= 0) {
+          this.grid[this.cur.y + dy][this.cur.x + dx] = { color: this.cur.color, type: this.cur.type };
         }
       }
     }
+    this.checkLines();
+    this.spawn();
   }
 
-  animate() {
-    if (this.useThree) {
-      this.currentRotY += (this.targetRotY - this.currentRotY) * 0.15;
-      this.targetRotY *= 0.9;
-      this.boardGroup.rotation.y = this.currentRotY;
-      this.renderer.render(this.scene, this.camera);
+  checkLines() {
+    let count = 0;
+    for (let r = this.ROWS - 1; r >= 0; r--) {
+      if (this.grid[r].every(cell => cell !== null)) {
+        this.grid.splice(r, 1);
+        this.grid.unshift(Array(this.COLS).fill(null));
+        count++;
+        r++;
+      }
     }
-    requestAnimationFrame(() => this.animate());
+    if (count > 0) {
+      this.audio.playSfx('laser');
+      this.score += count * 300 * count;
+      this.lines += count;
+      document.getElementById('scoreVal').innerText = `${this.score} ₽`;
+      document.getElementById('linesVal').innerText = this.lines;
+    }
+  }
+
+  moveX(dir) {
+    if (this.over || this.paused || !this.cur) return;
+    if (!this.hits(this.cur, dir, 0)) {
+      this.cur.x += dir;
+      this.engine3d.targetRotY = dir * 0.12;
+      this.audio.playSfx('move');
+      this.draw();
+    }
+  }
+
+  rotate() {
+    if (this.over || this.paused || !this.cur) return;
+    const s = this.cur.shape;
+    const rot = s[0].map((_, c) => s.map(row => row[c]).reverse());
+    if (!this.hits(this.cur, 0, 0, rot)) {
+      this.cur.shape = rot;
+      this.audio.playSfx('rotate');
+      this.draw();
+    }
+  }
+
+  dropFast() {
+    if (this.over || this.paused || !this.cur) return;
+    while (!this.hits(this.cur, 0, 1)) {
+      this.cur.y++;
+      this.score += 5;
+    }
+    this.lockPiece();
+    document.getElementById('scoreVal').innerText = `${this.score} ₽`;
+    this.draw();
+  }
+
+  scheduleTick() {
+    if (this.timer) clearTimeout(this.timer);
+    if (this.over || this.paused) return;
+    this.timer = setTimeout(() => {
+      this.stepDown();
+      this.scheduleTick();
+    }, this.baseDelay);
+  }
+
+  bindControls() {
+    const bind = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el) el.onclick = () => { this.audio.unlockOnFirstTouch(); fn(); };
+    };
+    bind('btnLeft', () => this.moveX(-1));
+    bind('btnRight', () => this.moveX(1));
+    bind('btnDown', () => this.stepDown());
+    bind('btnRot', () => this.rotate());
+    bind('btnDrop', () => this.dropFast());
+    bind('btnRestart', () => this.start());
+    bind('btnPlayPause', () => this.audio.togglePlayPause());
+    bind('btnPrevTrack', () => this.audio.loadAndPlayTrack(this.audio.currentTrackIndex - 1));
+    bind('btnNextTrack', () => this.audio.loadAndPlayTrack(this.audio.currentTrackIndex + 1));
+  }
+
+  start() {
+    this.makeGrid();
+    this.score = 0;
+    this.lines = 0;
+    this.over = false;
+    this.nextP = this.randPiece();
+    this.spawn();
+    this.draw();
   }
 }
