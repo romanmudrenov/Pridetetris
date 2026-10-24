@@ -2,158 +2,275 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PridetetrisADV 3D — Корпоративный Игровой Портал PRIDE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+<title>PRIDE — Корпоративный Игровой Портал</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="./css/main.css?v=7">
+<link rel="stylesheet" href="./css/main.css?v=8">
 </head>
 <body>
 
-<div class="header">
-  <div class="brand-box">
-    <svg class="logo-svg" viewBox="0 0 64 64">
+<!-- ============ ЭКРАН 1: ПРИВЕТСТВИЕ ============ -->
+<div class="screen active" id="scrWelcome">
+  <div class="screen-inner center-inner">
+    <svg class="big-logo" viewBox="0 0 64 64">
       <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="#ff007a" stroke-width="4" fill="#120924"/>
       <path d="M20,25 L32,14 L44,25 L39,44 L25,44 Z" stroke="#00f0ff" stroke-width="3" fill="none"/>
       <circle cx="27" cy="28" r="2.5" fill="#fcee09"/>
       <circle cx="37" cy="28" r="2.5" fill="#fcee09"/>
       <path d="M27,36 L32,39 L37,36" stroke="#fff" stroke-width="2.5" fill="none"/>
     </svg>
-    <div class="avatar-badge" id="headerAvatar">🦁</div>
-    <div>
-      <div class="brand-name" id="headerPlayerName">Лев Прайдов</div>
-      <div class="brand-sub">PRIDE // Game Portal</div>
-    </div>
-  </div>
-  <div class="header-btns">
-    <button class="btn-pause" id="btnPause">⏸ ПАУЗА</button>
-    <button class="btn-menu" id="btnMenu">МЕНЮ</button>
-  </div>
-</div>
-
-<div class="game-area">
-  <div class="board-wrap" id="boardWrap">
-    <canvas id="board" width="264" height="440"></canvas>
-    <div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
-    <div id="banner">WOW-ЭФФЕКТ!</div>
-  </div>
-
-  <div class="side">
-    <div class="box">
-      <div class="lbl">Бюджет</div>
-      <div class="val" id="scoreVal">0 ₽</div>
-    </div>
-    <div class="box">
-      <div class="lbl">Проекты</div>
-      <div class="val" id="linesVal" style="color:#00f0ff;">0</div>
-    </div>
-    <div class="box">
-      <div class="lbl">Режим</div>
-      <div class="val" id="modeVal" style="font-size:10px; color:#fcee09;">ASAP (Med)</div>
-    </div>
-    <div class="box">
-      <div class="lbl">Сейчас:</div>
-      <div class="service-tag" id="serviceName">Т-фигура</div>
-    </div>
-    <div class="box">
-      <div class="lbl">След.:</div>
-      <canvas id="nextCanvas" width="68" height="48" style="display:block; margin:2px auto 0;"></canvas>
-    </div>
-
-    <!-- Мини-плеер на боковой панели -->
-    <div class="box">
-      <div class="lbl" id="sideTrackLbl">🎹 1. Cyber Bass</div>
-      <div class="mini-player">
-        <button class="mp-btn" id="btnPrevTrack" title="Предыдущий">⏮</button>
-        <button class="mp-btn" id="btnPlayPauseTrack" title="Пуск/Стоп">⏯</button>
-        <button class="mp-btn" id="btnNextTrack" title="Следующий">⏭</button>
-      </div>
-    </div>
-
-    <div class="box">
-      <div class="lbl">«Под ключ»</div>
-      <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
-      <button class="btn-ult" id="btnUlt">⚡ УЛЬТА</button>
-    </div>
-
-    <button class="btn-side-drop" id="btnDrop">🚀 СБРОС ВНИЗ</button>
-    <button class="btn-side-restart" id="btnRestart">🔄 ЗАНОВО</button>
-  </div>
-</div>
-
-<div class="controls">
-  <button class="c-btn" id="btnLeft">◀</button>
-  <button class="c-btn" id="btnRot">↻</button>
-  <button class="c-btn" id="btnDown">▼</button>
-  <button class="c-btn" id="btnRight">▶</button>
-</div>
-
-<!-- ПАНЕЛЬ ПРИВЕТСТВИЯ ПРИ ОТКРЫТИИ ИГРЫ -->
-<div class="modal" id="welcomeModal" style="display: flex;">
-  <div class="modal-box welcome-box">
     <div class="welcome-badge">PRIDE // GAME PORTAL</div>
-    <h3>👋 ДОБРО ПОЖАЛОВАТЬ В PRIDE!</h3>
-    <p class="welcome-sub">Создай единый профиль игрока, выбери саундтрек и ставь рекорды в играх компании!</p>
-
-    <div class="sec-title">1. Создать аватар и имя пользователя:</div>
-    <div class="avatar-creator">
-      <input type="text" id="welcomeNameInput" class="name-input" placeholder="Введи своё имя или ник..." value="Лев Прайдов" maxlength="20">
-      <div class="avatar-big-preview" id="welcomeAvatarPreview">🦁</div>
-      <div class="animal-grid" id="welcomeAnimalGrid">
-        <button class="animal-opt selected" data-animal="🦁">🦁</button>
-        <button class="animal-opt" data-animal="🐯">🐯</button>
-        <button class="animal-opt" data-animal="🐺">🐺</button>
-        <button class="animal-opt" data-animal="🦊">🦊</button>
-        <button class="animal-opt" data-animal="🐻">🐻</button>
-        <button class="animal-opt" data-animal="🐼">🐼</button>
-        <button class="animal-opt" data-animal="🦅">🦅</button>
-        <button class="animal-opt" data-animal="🦈">🦈</button>
-        <button class="animal-opt" data-animal="🐲">🐲</button>
-        <button class="animal-opt" data-animal="🦍">🦍</button>
-      </div>
-      <div class="color-row" id="welcomeColorRow">
-        <div class="color-dot" style="background:#ff007a;" data-color="#ff007a"></div>
-        <div class="color-dot" style="background:#00f0ff;" data-color="#00f0ff"></div>
-        <div class="color-dot" style="background:#00ff9d;" data-color="#00ff9d"></div>
-        <div class="color-dot" style="background:#fcee09;" data-color="#fcee09"></div>
-        <div class="color-dot" style="background:#b829ff;" data-color="#b829ff"></div>
-        <div class="color-dot" style="background:#ff8800;" data-color="#ff8800"></div>
-      </div>
-    </div>
-
-    <div class="sec-title">2. Фоновая музыка в игре:</div>
-    <div class="music-choice-row">
-      <button class="music-toggle-btn active" id="btnWelcomeMusicOn">🔊 ВКЛЮЧИТЬ МУЗЫКУ</button>
-      <button class="music-toggle-btn" id="btnWelcomeMusicOff">🔇 БЕЗ МУЗЫКИ</button>
-    </div>
-
-    <div class="music-box" id="welcomeTrackPanel">
-      <div class="lbl" style="margin-bottom:6px; color:#00f0ff;">Выбери трек (12 треков удвоенной длины):</div>
-      <div class="track-grid welcome-tracks" id="welcomeTrackGrid">
-        <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass (Synth x2)</button>
-        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit (Synth x2)</button>
-        <button class="track-btn" data-track="s3">🎹 3. Neon Arpeggio (Synth x2)</button>
-        <button class="track-btn" data-track="s4">🎹 4. Deadline Overdrive (Synth x2)</button>
-        <button class="track-btn" data-track="s5">🎹 5. Agency Synthwave (Synth x2)</button>
-        <button class="track-btn" data-track="s6">🎹 6. Retro Matrix Boss (Synth x2)</button>
-        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride (MP3 Mix)</button>
-        <button class="track-btn" data-track="m2">🎵 8. Neon Agency (MP3 Mix)</button>
-        <button class="track-btn" data-track="m3">🎵 9. Techno Rush (MP3 Mix)</button>
-        <button class="track-btn" data-track="m4">🎵 10. Digital Horizon (MP3 Mix)</button>
-        <button class="track-btn" data-track="m5">🎵 11. Night Print Shop (MP3 Mix)</button>
-        <button class="track-btn" data-track="m6">🎵 12. Mega Billboard (MP3 Mix)</button>
-      </div>
-    </div>
-
-    <button class="btn-start-game" id="btnStartWelcome">🚀 НАЧАТЬ ИГРУ!</button>
+    <h1 class="hero-title">Добро пожаловать на портал PRIDE</h1>
+    <p class="hero-sub">Играй, ставь рекорды, слушай музыку и общайся с коллегами. Создай свой профиль — это займёт минуту.</p>
+    <button class="btn-primary" id="btnGoRegister">📝 РЕГИСТРАЦИЯ</button>
+    <button class="btn-secondary" id="btnGoLogin" style="display:none;">🔑 Уже есть профиль? Войти</button>
   </div>
 </div>
 
-<!-- ОБЫЧНОЕ МЕНЮ НАСТРОЕК ВО ВРЕМЯ ИГРЫ -->
+<!-- ============ ЭКРАН 2: РЕГИСТРАЦИЯ / РЕДАКТИРОВАНИЕ ПРОФИЛЯ ============ -->
+<div class="screen" id="scrForm">
+  <div class="screen-inner">
+    <button class="back-btn" id="btnFormBack">← Назад</button>
+    <h2 class="screen-title" id="formTitle">Регистрация</h2>
+
+    <div class="sec-title">1. Ник</div>
+    <input type="text" id="fNick" class="inp" maxlength="20" placeholder="Например: Лев Прайдов" autocomplete="off">
+
+    <div class="sec-title">2. Отдел</div>
+    <select id="fDept" class="inp"></select>
+
+    <div class="sec-title">3. Аватар</div>
+    <div class="avatar-creator">
+      <div class="avatar-big-preview" id="fAvatarPreview">🦁</div>
+      <div class="animal-grid" id="fAnimalGrid"></div>
+      <div class="color-row" id="fColorRow"></div>
+    </div>
+
+    <div class="sec-title" id="fPassTitle">4. Пароль</div>
+    <input type="password" id="fPass" class="inp" placeholder="Пароль (минимум 4 символа)" autocomplete="new-password">
+    <input type="password" id="fPass2" class="inp" placeholder="Повтори пароль" autocomplete="new-password">
+
+    <div class="sec-title">5. Цветовая схема</div>
+    <div class="theme-grid" id="themeGrid"></div>
+
+    <div class="form-error" id="formError"></div>
+    <button class="btn-primary" id="btnFormSubmit">✅ СОЗДАТЬ ПРОФИЛЬ</button>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН 3: ВХОД ============ -->
+<div class="screen" id="scrLogin">
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrWelcome">← Назад</button>
+    <h2 class="screen-title">Вход</h2>
+    <div class="sec-title">Ник</div>
+    <input type="text" id="lNick" class="inp" maxlength="20" placeholder="Твой ник" autocomplete="username">
+    <div class="sec-title">Пароль</div>
+    <input type="password" id="lPass" class="inp" placeholder="Пароль" autocomplete="current-password">
+    <div class="form-error" id="loginError"></div>
+    <button class="btn-primary" id="btnLoginSubmit">🔑 ВОЙТИ</button>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН 4: ГЛАВНОЕ МЕНЮ ============ -->
+<div class="screen" id="scrMain">
+  <div class="screen-inner">
+    <div class="profile-card">
+      <div class="avatar-big" id="mainAvatar">🦁</div>
+      <div class="pc-info">
+        <div class="pc-name" id="mainName">Игрок</div>
+        <div class="pc-dept" id="mainDept"></div>
+        <div class="pc-best" id="mainBest"></div>
+      </div>
+      <button class="pc-edit" id="btnEditProfile" title="Редактировать профиль">✏️</button>
+    </div>
+
+    <div class="menu-list">
+      <button class="menu-item" data-go="scrMusic">
+        <span class="mi-ico">🎵</span>
+        <span class="mi-txt"><b>Музыка</b><i>12 треков и звуковые эффекты</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrGames">
+        <span class="mi-ico">🎮</span>
+        <span class="mi-txt"><b>Игры</b><i>PRIDE Tetris и другие</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrLeaders">
+        <span class="mi-ico">🏆</span>
+        <span class="mi-txt"><b>Таблица лидеров</b><i>Лучшие результаты</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrChat">
+        <span class="mi-ico">💬</span>
+        <span class="mi-txt"><b>Чат</b><i>Общение с коллегами</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item danger" id="btnLogout">
+        <span class="mi-ico">🚪</span>
+        <span class="mi-txt"><b>Выход</b><i>Выйти из профиля</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН 5: МУЗЫКА ============ -->
+<div class="screen" id="scrMusic">
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">🎵 Музыка</h2>
+
+    <div class="mini-player big-player">
+      <button class="mp-btn big" id="btnMusicPrev">⏮</button>
+      <button class="mp-btn big" id="btnMusicPlay">⏯</button>
+      <button class="mp-btn big" id="btnMusicNext">⏭</button>
+    </div>
+
+    <div class="music-box">
+      <div class="track-grid">
+        <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass</button>
+        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit</button>
+        <button class="track-btn" data-track="s3">🎹 3. Neon Arpeggio</button>
+        <button class="track-btn" data-track="s4">🎹 4. Deadline Overdrive</button>
+        <button class="track-btn" data-track="s5">🎹 5. Agency Synthwave</button>
+        <button class="track-btn" data-track="s6">🎹 6. Retro Matrix Boss</button>
+        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride MP3</button>
+        <button class="track-btn" data-track="m2">🎵 8. Neon Agency MP3</button>
+        <button class="track-btn" data-track="m3">🎵 9. Techno Rush MP3</button>
+        <button class="track-btn" data-track="m4">🎵 10. Digital Horizon</button>
+        <button class="track-btn" data-track="m5">🎵 11. Night Print Shop</button>
+        <button class="track-btn" data-track="m6">🎵 12. Mega Billboard</button>
+        <button class="track-btn" data-track="off" style="grid-column: span 2;">🔇 Выключить музыку</button>
+      </div>
+      <div class="sfx-row">
+        <span>🔊 Звуковые эффекты (SFX):</span>
+        <button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН 6: ИГРЫ ============ -->
+<div class="screen" id="scrGames">
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">🎮 Игры</h2>
+    <div id="gamesList"></div>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН 7: ТАБЛИЦА ЛИДЕРОВ ============ -->
+<div class="screen" id="scrLeaders">
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">🏆 Таблица лидеров</h2>
+    <div class="sec-title">🧱 PRIDE Tetris — лучший бюджет</div>
+    <div id="leaderList"></div>
+    <div class="note">Пока таблица считает результаты только тех, кто играл на этом устройстве. Чтобы коллеги видели общую таблицу, нужен общий сервер.</div>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН 8: ЧАТ ============ -->
+<div class="screen noscroll" id="scrChat">
+  <div class="chat-wrap">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">💬 Чат</h2>
+    <div class="note">Пока чат работает только на этом устройстве. Чтобы переписываться с коллегами, нужен общий сервер.</div>
+    <div class="chat-list" id="chatList"></div>
+    <div class="chat-form">
+      <input type="text" id="chatInput" class="inp" maxlength="300" placeholder="Напиши сообщение..." autocomplete="off">
+      <button class="chat-send" id="btnChatSend">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS ============ -->
+<div class="game-screen" id="gameScreen">
+  <div class="header">
+    <div class="brand-box">
+      <svg class="logo-svg" viewBox="0 0 64 64">
+        <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="#ff007a" stroke-width="4" fill="#120924"/>
+        <path d="M20,25 L32,14 L44,25 L39,44 L25,44 Z" stroke="#00f0ff" stroke-width="3" fill="none"/>
+        <circle cx="27" cy="28" r="2.5" fill="#fcee09"/>
+        <circle cx="37" cy="28" r="2.5" fill="#fcee09"/>
+        <path d="M27,36 L32,39 L37,36" stroke="#fff" stroke-width="2.5" fill="none"/>
+      </svg>
+      <div class="avatar-badge" id="headerAvatar">🦁</div>
+      <div>
+        <div class="brand-name" id="headerPlayerName">Игрок</div>
+        <div class="brand-sub">PRIDE // Game Portal</div>
+      </div>
+    </div>
+    <div class="header-btns">
+      <button class="btn-pause" id="btnPause">⏸ ПАУЗА</button>
+      <button class="btn-menu" id="btnMenu">МЕНЮ</button>
+    </div>
+  </div>
+
+  <div class="game-area">
+    <div class="board-wrap" id="boardWrap">
+      <canvas id="board" width="264" height="440"></canvas>
+      <div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
+      <div id="banner">WOW-ЭФФЕКТ!</div>
+    </div>
+
+    <div class="side">
+      <div class="box">
+        <div class="lbl">Бюджет</div>
+        <div class="val" id="scoreVal">0 ₽</div>
+      </div>
+      <div class="box">
+        <div class="lbl">Проекты</div>
+        <div class="val" id="linesVal" style="color:var(--a2);">0</div>
+      </div>
+      <div class="box">
+        <div class="lbl">Режим</div>
+        <div class="val" id="modeVal" style="font-size:10px; color:var(--a3);">ASAP (Med)</div>
+      </div>
+      <div class="box">
+        <div class="lbl">Сейчас:</div>
+        <div class="service-tag" id="serviceName">Т-фигура</div>
+      </div>
+      <div class="box">
+        <div class="lbl">След.:</div>
+        <canvas id="nextCanvas" width="68" height="48" style="display:block; margin:2px auto 0;"></canvas>
+      </div>
+
+      <div class="box">
+        <div class="lbl" id="sideTrackLbl">🎹 1. Cyber Bass</div>
+        <div class="mini-player">
+          <button class="mp-btn" id="btnPrevTrack" title="Предыдущий">⏮</button>
+          <button class="mp-btn" id="btnPlayPauseTrack" title="Пуск/Стоп">⏯</button>
+          <button class="mp-btn" id="btnNextTrack" title="Следующий">⏭</button>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="lbl">«Под ключ»</div>
+        <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
+        <button class="btn-ult" id="btnUlt">⚡ УЛЬТА</button>
+      </div>
+
+      <button class="btn-side-drop" id="btnDrop">🚀 СБРОС ВНИЗ</button>
+      <button class="btn-side-restart" id="btnRestart">🔄 ЗАНОВО</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="c-btn" id="btnLeft">◀</button>
+    <button class="c-btn" id="btnRot">↻</button>
+    <button class="c-btn" id="btnDown">▼</button>
+    <button class="c-btn" id="btnRight">▶</button>
+  </div>
+</div>
+
+<!-- МЕНЮ ВНУТРИ ИГРЫ -->
 <div class="modal" id="menuModal">
   <div class="modal-box">
-    <h3>🦁 МЕНЮ // PRIDE PORTAL</h3>
+    <h3>🦁 МЕНЮ ИГРЫ</h3>
 
-    <div class="sec-title">1. Difficulty Mode (Speed):</div>
+    <div class="sec-title">1. Сложность (скорость):</div>
     <div class="mode-list">
       <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
         <b>Redline</b> <span>Easy Mode</span>
@@ -166,33 +283,7 @@
       </button>
     </div>
 
-    <div class="sec-title">2. Профиль и Аватар:</div>
-    <div class="avatar-creator">
-      <input type="text" id="menuNameInput" class="name-input" placeholder="Введи своё имя..." value="Лев Прайдов" maxlength="20">
-      <div class="avatar-big-preview" id="menuAvatarPreview">🦁</div>
-      <div class="animal-grid" id="animalGrid">
-        <button class="animal-opt selected" data-animal="🦁">🦁</button>
-        <button class="animal-opt" data-animal="🐯">🐯</button>
-        <button class="animal-opt" data-animal="🐺">🐺</button>
-        <button class="animal-opt" data-animal="🦊">🦊</button>
-        <button class="animal-opt" data-animal="🐻">🐻</button>
-        <button class="animal-opt" data-animal="🐼">🐼</button>
-        <button class="animal-opt" data-animal="🦅">🦅</button>
-        <button class="animal-opt" data-animal="🦈">🦈</button>
-        <button class="animal-opt" data-animal="🐲">🐲</button>
-        <button class="animal-opt" data-animal="🦍">🦍</button>
-      </div>
-      <div class="color-row" id="colorRow">
-        <div class="color-dot" style="background:#ff007a;" data-color="#ff007a"></div>
-        <div class="color-dot" style="background:#00f0ff;" data-color="#00f0ff"></div>
-        <div class="color-dot" style="background:#00ff9d;" data-color="#00ff9d"></div>
-        <div class="color-dot" style="background:#fcee09;" data-color="#fcee09"></div>
-        <div class="color-dot" style="background:#b829ff;" data-color="#b829ff"></div>
-        <div class="color-dot" style="background:#ff8800;" data-color="#ff8800"></div>
-      </div>
-    </div>
-
-    <div class="sec-title">3. Плейлист (12 Треков) и Звуки:</div>
+    <div class="sec-title">2. Музыка и звуки:</div>
     <div class="music-box">
       <div class="track-grid" id="menuTrackGrid">
         <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass</button>
@@ -211,21 +302,21 @@
       </div>
       <div class="sfx-row">
         <span>🔊 Звуковые эффекты (SFX):</span>
-        <button class="track-btn active" id="btnToggleSfx" style="padding:4px 12px;">ВКЛ</button>
+        <button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
       </div>
     </div>
 
-    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:#00f0ff; color:#000; font-size:13px;">ПРОДОЛЖИТЬ ИГРУ</button>
+    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px;">ПРОДОЛЖИТЬ ИГРУ</button>
+    <button class="btn-secondary" id="btnToMain" style="margin-top:8px;">🏠 В ГЛАВНОЕ МЕНЮ</button>
   </div>
 </div>
 
 <audio id="bgAudio" loop preload="none"></audio>
 
-<!-- ПОДКЛЮЧАЕМ МОДУЛИ ПОРТАЛА И ИГРЫ ПО ПОРЯДКУ -->
-<script src="./src/core/audio-player.js?v=7"></script>
-<script src="./src/core/portal-hub.js?v=7"></script>
-<script src="./src/games/pride-tetris/config.js?v=7"></script>
-<script src="./src/games/pride-tetris/engine-3d.js?v=7"></script>
-<script src="./src/games/pride-tetris/tetris-game.js?v=7"></script>
+<script src="./src/core/audio-player.js?v=8"></script>
+<script src="./src/core/portal-hub.js?v=8"></script>
+<script src="./src/games/pride-tetris/config.js?v=8"></script>
+<script src="./src/games/pride-tetris/engine-3d.js?v=8"></script>
+<script src="./src/games/pride-tetris/tetris-game.js?v=8"></script>
 </body>
 </html>
