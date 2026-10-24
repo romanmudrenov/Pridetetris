@@ -180,7 +180,6 @@ canvas#board {
   box-shadow: 0 0 20px rgba(252, 238, 9, 0.5);
 }
 
-/* Максимально узкая боковая панель справа */
 .side {
   display: flex;
   flex-direction: column;
@@ -225,7 +224,6 @@ canvas#board {
   text-overflow: ellipsis;
 }
 
-/* Кнопки управления плеером в узкой рамке */
 .mini-player {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -278,7 +276,6 @@ canvas#board {
   box-shadow: 0 0 10px #fcee09;
 }
 
-/* Кнопка сброса и рестарта на боковой панели */
 .btn-side-drop {
   width: 100%;
   padding: 8px 2px;
@@ -307,7 +304,6 @@ canvas#board {
   cursor: pointer;
 }
 
-/* Компактные кнопки управления в самом низу */
 .controls {
   width: 100%;
   max-width: 480px;
@@ -334,7 +330,6 @@ canvas#board {
   border-color: #fff;
 }
 
-/* МОДАЛЬНЫЕ ОКНА (ПРИВЕТСТВИЕ И МЕНЮ) */
 .modal {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -363,7 +358,6 @@ canvas#board {
   box-shadow: 0 0 35px rgba(255, 0, 122, 0.35);
 }
 .welcome-badge {
-  display: inline-block;
   background: #2b1238;
   border: 1px solid #ff007a;
   color: #fcee09;
