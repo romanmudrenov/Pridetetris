@@ -500,4 +500,39 @@
     else if (e.key === 'p' || e.key === 'P') togglePause();
   });
 
-  // ---------- Подключение к порталу ----
+  // ---------- Подключение к порталу ----------
+  Hub.registerGame('tetris', {
+    onOpen: function() {
+      inGame = true;
+      if (over) {
+        startGame(false);
+      } else {
+        paused = false;
+        setPauseButton(false);
+        document.getElementById('banner').style.display = 'none';
+        scheduleTick();
+        notify("🦁 В ИГРЕ: " + Hub.getPlayerName() + "!");
+      }
+      engine3D.triggerSpeedSparksExplosion();
+      draw();
+    },
+    onClose: function() {
+      submitCurrent(false);
+      inGame = false;
+      paused = true;
+      if (timer) clearTimeout(timer);
+      setPauseButton(true);
+      var bgAudio = document.getElementById('bgAudio');
+      if (bgAudio && Audio.isMp3Track(Audio.getCurrentTrack())) {
+        bgAudio.play().catch(function() {});
+      }
+    },
+    onReset: function() {
+      inGame = false;
+      if (timer) clearTimeout(timer);
+      startGame(true);
+    }
+  });
+
+  startGame(true);
+})();
