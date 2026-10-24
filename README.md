@@ -1,2 +1,0 @@
-# Pridetetris
-Pride Portal
