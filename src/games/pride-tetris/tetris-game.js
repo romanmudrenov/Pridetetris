@@ -200,18 +200,20 @@
   var shockwaves = [];
 
   // Размер поля подгоняется под экран: максимум по ширине и высоте
-  function layoutBoard() {
+function layoutBoard() {
+    var vw = document.documentElement.clientWidth || window.innerWidth;
+    var vh = window.innerHeight;
     var area = document.getElementById('gameArea');
-    var side = document.getElementById('sidePanel');
-    var top = area.getBoundingClientRect().top + (window.pageYOffset || 0);
-    var availW = area.clientWidth - side.offsetWidth - 6;
-    var availH = window.innerHeight - top - 50;
-    var cell = Math.floor(Math.min((availW - 6) / COLS, (availH - 6) / ROWS));
-    if (cell < 8) cell = 8;
+    var top = area.getBoundingClientRect().top;
+    if (top < 0) top = 0;
+    var availW = Math.min(vw, 480) - 78 - 6 - 8 - 6;
+    var availH = vh - top - 20;
+    var cell = Math.floor(Math.min(availW / COLS, availH / ROWS));
+    if (!(cell >= 8)) cell = 8;
+    if (cell > 40) cell = 40;
     boardWrap.style.width = (cell * COLS + 6) + 'px';
     boardWrap.style.height = (cell * ROWS + 6) + 'px';
   }
-
   function relayout() {
     layoutBoard();
     if (fitCamera) fitCamera();
