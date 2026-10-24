@@ -22,13 +22,15 @@
   var nextP = null;
   var over = false;
   var paused = true;
+  var inGame = false;
   var timer = null;
 
   var currentModeName = "ASAP (Medium)";
   var baseDelay = 480;
   var speedBoostLevel = 0;
 
-  Audio.setPauseChecker(function() { return paused || over; });
+  // Музыка не глушится, пока игрок в меню портала; в игре на паузе — глушится
+  Audio.setPauseChecker(function() { return inGame && (paused || over); });
 
   function makeGrid() {
     grid = [];
@@ -62,6 +64,15 @@
     b.innerText = msg;
     b.style.display = 'block';
     setTimeout(function() { b.style.display = 'none'; }, 1400);
+  }
+
+  function submitCurrent(announce) {
+    if (score <= 0) return;
+    var isRecord = Hub.submitScore('tetris', score);
+    if (isRecord && announce) {
+      var s = score;
+      setTimeout(function() { notify("🏆 НОВЫЙ РЕКОРД: " + s + " ₽"); }, 1500);
+    }
   }
 
   function hits(p, ox, oy, mat) {
@@ -196,6 +207,7 @@
 
     if (hits(cur, 0, 0)) {
       over = true;
+      submitCurrent(true);
       notify("ТЕНДЕР ОКОНЧЕН, " + Hub.getPlayerName() + "! БЮДЖЕТ: " + score + " ₽");
     }
     scheduleTick();
@@ -268,15 +280,21 @@
     }
   }
 
+  function setPauseButton(isPaused) {
+    var btnP = document.getElementById('btnPause');
+    if (!btnP) return;
+    btnP.innerText = isPaused ? "▶ ПУСК" : "⏸ ПАУЗА";
+    btnP.classList.toggle('paused', isPaused);
+  }
+
   function togglePause() {
     if (over) return;
     paused = !paused;
-    var btnP = document.getElementById('btnPause');
     var bgAudio = document.getElementById('bgAudio');
     if (paused) {
       if (timer) clearTimeout(timer);
       if (bgAudio && !bgAudio.paused) bgAudio.pause();
-      if (btnP) { btnP.innerText = "▶ ПУСК"; btnP.classList.add('paused'); }
+      setPauseButton(true);
       var b = document.getElementById('banner');
       b.innerText = "⏸ ПАУЗА";
       b.style.display = 'block';
@@ -284,7 +302,7 @@
       if (Audio.isMp3Track(Audio.getCurrentTrack()) && bgAudio) {
         bgAudio.play().catch(function() {});
       }
-      if (btnP) { btnP.innerText = "⏸ ПАУЗА"; btnP.classList.remove('paused'); }
+      setPauseButton(false);
       document.getElementById('banner').style.display = 'none';
       scheduleTick();
     }
@@ -327,11 +345,7 @@
     speedBoostLevel = 0;
     over = false;
     paused = !!keepPaused;
-    var btnP = document.getElementById('btnPause');
-    if (btnP) {
-      btnP.innerText = paused ? "▶ ПУСК" : "⏸ ПАУЗА";
-      btnP.classList.toggle('paused', paused);
-    }
+    setPauseButton(paused);
     setUlt(0);
     updateUI();
     nextP = randPiece();
@@ -363,7 +377,7 @@
   bindBtn('btnRot', function() { rotate(); });
   bindBtn('btnDrop', function() { dropFast(); });
   bindBtn('btnUlt', function() { useUlt(); });
-  bindBtn('btnRestart', function() { startGame(false); });
+  bindBtn('btnRestart', function() { submitCurrent(false); startGame(false); });
   bindBtn('btnPause', function() { togglePause(); });
 
   bindBtn('btnPrevTrack', function() { Audio.cycleTrack(-1); });
@@ -428,7 +442,9 @@
     if (!over && !paused) rotate();
   });
 
+  // ---------- Меню внутри игры ----------
   var menuModal = document.getElementById('menuModal');
+
   document.getElementById('btnMenu').onclick = function(e) {
     e.stopPropagation();
     Audio.ensureAudio();
@@ -440,12 +456,18 @@
   document.getElementById('btnCloseMenu').onclick = function(e) {
     e.stopPropagation();
     Audio.ensureAudio();
-    Hub.setPlayerName(document.getElementById('menuNameInput').value);
     menuModal.style.display = 'none';
     paused = false;
-    var btnP = document.getElementById('btnPause');
-    if (btnP) { btnP.innerText = "⏸ ПАУЗА"; btnP.classList.remove('paused'); }
+    setPauseButton(false);
+    document.getElementById('banner').style.display = 'none';
     scheduleTick();
+  };
+
+  document.getElementById('btnToMain').onclick = function(e) {
+    e.stopPropagation();
+    Audio.ensureAudio();
+    menuModal.style.display = 'none';
+    Hub.exitToMenu();
   };
 
   var modeBtns = document.querySelectorAll('.mode-btn');
@@ -460,6 +482,7 @@
       updateUI();
       menuModal.style.display = 'none';
       paused = false;
+      setPauseButton(false);
       engine3D.triggerSpeedSparksExplosion();
       notify("💥 SPEED MODE: " + currentModeName);
       scheduleTick();
@@ -467,6 +490,7 @@
   }
 
   document.addEventListener('keydown', function(e) {
+    if (!inGame) return;
     if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (e.key === 'ArrowLeft') moveX(-1);
     else if (e.key === 'ArrowRight') moveX(1);
@@ -476,18 +500,37 @@
     else if (e.key === 'p' || e.key === 'P') togglePause();
   });
 
-  // Инициализация общего профиля и окна приветствия
-  Hub.initPortalUI({
-    onWelcomeComplete: function(pName) {
-      paused = false;
-      var btnP = document.getElementById('btnPause');
-      if (btnP) { btnP.innerText = "⏸ ПАУЗА"; btnP.classList.remove('paused'); }
-      if (Audio.getCurrentTrack() !== 'off') {
-        Audio.startMusic(Audio.getCurrentTrack());
+  // ---------- Подключение к порталу ----------
+  Hub.registerGame('tetris', {
+    onOpen: function() {
+      inGame = true;
+      if (over) {
+        startGame(false);
+      } else {
+        paused = false;
+        setPauseButton(false);
+        document.getElementById('banner').style.display = 'none';
+        scheduleTick();
+        notify("🦁 В ИГРЕ: " + Hub.getPlayerName() + "!");
       }
       engine3D.triggerSpeedSparksExplosion();
-      notify("🦁 В ИГРЕ: " + pName + "!");
-      scheduleTick();
+      draw();
+    },
+    onClose: function() {
+      submitCurrent(false);
+      inGame = false;
+      paused = true;
+      if (timer) clearTimeout(timer);
+      setPauseButton(true);
+      var bgAudio = document.getElementById('bgAudio');
+      if (bgAudio && Audio.isMp3Track(Audio.getCurrentTrack())) {
+        bgAudio.play().catch(function() {});
+      }
+    },
+    onReset: function() {
+      inGame = false;
+      if (timer) clearTimeout(timer);
+      startGame(true);
     }
   });
 
