@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PridetetrisADV 3D — Рекламный Тетрис PRIDE</title>
+<title>PridetetrisADV 3D — Корпоративный Игровой Портал PRIDE</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <link rel="stylesheet" href="./css/main.css">
 </head>
@@ -20,8 +20,8 @@
     </svg>
     <div class="avatar-badge" id="headerAvatar">🦁</div>
     <div>
-      <div class="brand-name" id="headerPlayerName">PridetetrisADV</div>
-      <div class="brand-sub">PRIDE // 3D Agency</div>
+      <div class="brand-name" id="headerPlayerName">Лев Прайдов</div>
+      <div class="brand-sub">PRIDE // Game Portal</div>
     </div>
   </div>
   <div class="header-btns">
@@ -90,9 +90,9 @@
 <!-- ПАНЕЛЬ ПРИВЕТСТВИЯ ПРИ ОТКРЫТИИ ИГРЫ -->
 <div class="modal" id="welcomeModal" style="display: flex;">
   <div class="modal-box welcome-box">
-    <div class="welcome-badge">PRIDE // 3D AGENCY</div>
-    <h3>👋 ДОБРО ПОЖАЛОВАТЬ В PRIDETETRIS 3D!</h3>
-    <p class="welcome-sub">Создай свой профиль, выбери саундтрек и закрывай рекламные проекты с максимальным бюджетом!</p>
+    <div class="welcome-badge">PRIDE // GAME PORTAL</div>
+    <h3>👋 ДОБРО ПОЖАЛОВАТЬ В PRIDE!</h3>
+    <p class="welcome-sub">Создай единый профиль игрока, выбери саундтрек и ставь рекорды в играх компании!</p>
 
     <div class="sec-title">1. Создать аватар и имя пользователя:</div>
     <div class="avatar-creator">
@@ -126,9 +126,8 @@
       <button class="music-toggle-btn" id="btnWelcomeMusicOff">🔇 БЕЗ МУЗЫКИ</button>
     </div>
 
-    <!-- Блок выбора из 12 треков (показывается, если выбрано "Включить музыку") -->
     <div class="music-box" id="welcomeTrackPanel">
-      <div class="lbl" style="margin-bottom:6px; color:#00f0ff;">Выбери трек (прослушивание сразу):</div>
+      <div class="lbl" style="margin-bottom:6px; color:#00f0ff;">Выбери трек (12 треков удвоенной длины):</div>
       <div class="track-grid welcome-tracks" id="welcomeTrackGrid">
         <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass (Synth x2)</button>
         <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit (Synth x2)</button>
@@ -152,7 +151,7 @@
 <!-- ОБЫЧНОЕ МЕНЮ НАСТРОЕК ВО ВРЕМЯ ИГРЫ -->
 <div class="modal" id="menuModal">
   <div class="modal-box">
-    <h3>🦁 МЕНЮ // PRIDE ADV 3D</h3>
+    <h3>🦁 МЕНЮ // PRIDE PORTAL</h3>
 
     <div class="sec-title">1. Difficulty Mode (Speed):</div>
     <div class="mode-list">
@@ -222,6 +221,11 @@
 
 <audio id="bgAudio" loop preload="none"></audio>
 
+<!-- ПОДКЛЮЧАЕМ МОДУЛИ ПОРТАЛА И ИГРЫ ПО ПОРЯДКУ -->
+<script src="./src/core/audio-player.js"></script>
+<script src="./src/core/portal-hub.js"></script>
+<script src="./src/games/pride-tetris/config.js"></script>
+<script src="./src/games/pride-tetris/engine-3d.js"></script>
 <script src="./src/games/pride-tetris/tetris-game.js"></script>
 </body>
 </html>
