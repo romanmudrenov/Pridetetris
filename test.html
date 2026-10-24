@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Диагностика PRIDE</title>
+<style>
+  body { background:#0b0714; color:#fff; font-family:Arial,sans-serif; font-size:13px; padding:10px; }
+  h2 { color:#00f0ff; font-size:16px; }
+  .file { border:1px solid #352a59; border-radius:8px; padding:8px; margin:8px 0; background:#141024; word-break:break-all; }
+  .ok { color:#00ff9d; font-weight:bold; }
+  .bad { color:#ff4466; font-weight:bold; }
+  code { color:#fcee09; }
+</style>
+</head>
+<body>
+<h2>Диагностика файлов PRIDE</h2>
+<div id="out">Проверяю…</div>
+
+<script>
+var FILES = [
+  "./css/main.css",
+  "./src/core/audio-player.js",
+  "./src/core/portal-hub.js",
+  "./src/games/pride-tetris/config.js",
+  "./src/games/pride-tetris/engine-3d.js",
+  "./src/games/pride-tetris/tetris-game.js"
+];
+
+var out = document.getElementById('out');
+out.innerHTML = "";
+
+function addBlock(html) {
+  var d = document.createElement('div');
+  d.className = 'file';
+  d.innerHTML = html;
+  out.appendChild(d);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function checkFile(url) {
+  var bust = url + "?t=" + Date.now();
+  return fetch(bust, { cache: "no-store" }).then(function(resp) {
+    if (!resp.ok) {
+      addBlock("<b>" + url + "</b><br><span class='bad'>НЕ НАЙДЕН, код " + resp.status + "</span>");
+      return;
+    }
+    return resp.text().then(function(text) {
+      var html = "<b>" + url + "</b><br>Размер: " + text.length + " симв.<br>";
+      html += "Начало: <code>" + esc(text.substring(0, 45).replace(/\s+/g, " ")) + "</code><br>";
+      html += "Конец: <code>" + esc(text.slice(-30).replace(/\s+/g, " ")) + "</code><br>";
+
+      if (url.slice(-3) === ".js") {
+        try {
+          new Function(text);
+          html += "<span class='ok'>Синтаксис: ОК</span>";
+        } catch (e) {
+          html += "<span class='bad'>ОШИБКА СИНТАКСИСА: " + esc(e.message) + "</span>";
+        }
+        if (text.indexOf("export ") !== -1 || text.indexOf("import ") === 0) {
+          html += "<br><span class='bad'>Внутри есть import/export (старый код?)</span>";
+        }
+        if (text.indexOf("```") !== -1) {
+          html += "<br><span class='bad'>Внутри лишние обратные кавычки ```</span>";
+        }
+      }
+      addBlock(html);
+    });
+  }).catch(function(err) {
+    addBlock("<b>" + url + "</b><br><span class='bad'>Ошибка загрузки: " + esc(err.message) + "</span>");
+  });
+}
+
+var chain = Promise.resolve();
+FILES.forEach(function(f) {
+  chain = chain.then(function() { return checkFile(f); });
+});
+chain.then(function() {
+  var t = document.createElement('div');
+  t.className = 'file';
+  t.innerHTML = "THREE.js: " + (window.THREE ? "<span class='ok'>загружен</span>" : "<span class='bad'>НЕ загружен</span>")
+    + "<br>localStorage: " + (function() {
+      try { localStorage.setItem('t', '1'); return "<span class='ok'>работает</span>"; }
+      catch (e) { return "<span class='bad'>заблокирован</span>"; }
+    })();
+  out.appendChild(t);
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</body>
+</html>
