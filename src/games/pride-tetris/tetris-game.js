@@ -37,6 +37,7 @@
   var currentTrack = "synth";
   var synthInterval = null;
   var synthStep = 0;
+  var musicStarted = false;
   var bgAudio = document.getElementById('bgAudio');
 
   var FREE_TRACKS = {
@@ -52,6 +53,9 @@
     }
     if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
+    }
+    if (!musicStarted && currentTrack === 'synth') {
+      startMusic('synth');
     }
   }
 
@@ -120,6 +124,7 @@
   }
 
   function startMusic(trackKey) {
+    musicStarted = true;
     currentTrack = trackKey;
     if (synthInterval) {
       clearInterval(synthInterval);
@@ -173,7 +178,8 @@
 
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(40, 220 / 440, 0.1, 100);
-      camera.position.set(0, -0.6, 26.2);
+      // ИСПРАВЛЕНО: камера дальше, чтобы поле целиком помещалось в рамку
+      camera.position.set(0, -0.2, 33);
       camera.lookAt(0, -0.2, 0);
 
       scene.add(new THREE.AmbientLight(0xffffff, 0.55));
@@ -877,6 +883,10 @@
     else if (e.key === 'ArrowUp') rotate();
     else if (e.key === ' ') { e.preventDefault(); dropFast(); }
   });
+
+  // ИСПРАВЛЕНО: первое касание в любом месте экрана включает звук и музыку
+  document.addEventListener('touchend', ensureAudio, {passive: true});
+  document.addEventListener('click', ensureAudio);
 
   startGame();
 })();
