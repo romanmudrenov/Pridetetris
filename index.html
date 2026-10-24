@@ -27,50 +27,49 @@
   <button class="btn-menu" id="btnMenu">МЕНЮ</button>
 </div>
 
-<div class="game-area" id="gameArea">
+<div class="game-area">
   <div class="board-wrap" id="boardWrap">
     <canvas id="board" width="264" height="440"></canvas>
+    <div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
     <div id="banner">WOW-ЭФФЕКТ!</div>
-    <div id="pauseOverlay">
-      <div class="p-title">⏸ ПАУЗА</div>
-      <div class="p-sub">тапни по полю, чтобы продолжить</div>
-    </div>
   </div>
 
-  <div class="side" id="sidePanel">
+  <div class="side">
     <div class="box">
-      <div class="lbl">Бюджет</div>
+      <div class="lbl">Бюджет (Очки)</div>
       <div class="val" id="scoreVal">0 ₽</div>
     </div>
     <div class="box">
-      <div class="lbl">Проектов</div>
+      <div class="lbl">Сдано проектов</div>
       <div class="val" id="linesVal" style="color:#00f0ff;">0</div>
     </div>
     <div class="box">
-      <div class="lbl">Режим</div>
-      <div class="val" id="modeVal" style="font-size:10px; color:#fcee09;">ASAP (Medium)</div>
+      <div class="lbl">Difficulty Mode</div>
+      <div class="val" id="modeVal" style="font-size:12px; color:#fcee09;">ASAP (Medium)</div>
     </div>
     <div class="box">
-      <div class="lbl">Сейчас</div>
+      <div class="lbl">Фигура сейчас:</div>
       <div class="service-tag" id="serviceName">Т-фигура</div>
     </div>
     <div class="box">
-      <div class="lbl">Дальше</div>
-      <canvas id="nextCanvas" width="64" height="50" style="display:block; margin:3px auto 0;"></canvas>
+      <div class="lbl">Следующий заказ:</div>
+      <canvas id="nextCanvas" width="88" height="66" style="display:block; margin:4px auto 0;"></canvas>
     </div>
     <div class="box">
-      <div class="lbl">Под ключ</div>
+      <div class="lbl">Заказ «Под ключ»</div>
       <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
-      <button class="btn-ult" id="btnUlt">⚡ 100%</button>
+      <button class="btn-ult" id="btnUlt">⚡ ПОД КЛЮЧ (100%)</button>
     </div>
-    <button class="btn-menu btn-restart" id="btnRestart">🔄 ЗАНОВО</button>
+    <button class="btn-menu" id="btnRestart" style="background:#251d3d; border:1px solid #00f0ff; width:100%;">🔄 ЗАНОВО</button>
   </div>
 </div>
 
-<div class="float-bar">
-  <button class="fb" id="btnPrevTrack">⏮</button>
-  <button class="fb" id="btnPause">⏸</button>
-  <button class="fb" id="btnNextTrack">⏭</button>
+<div class="controls">
+  <button class="c-btn" id="btnLeft">◀</button>
+  <button class="c-btn" id="btnRot">↻</button>
+  <button class="c-btn" id="btnDown">▼</button>
+  <button class="c-btn" id="btnRight">▶</button>
+  <button class="c-btn wide" id="btnDrop">🚀 СДАТЬ МАКЕТ В ПЕЧАТЬ (СБРОС)</button>
 </div>
 
 <div class="modal" id="menuModal">
