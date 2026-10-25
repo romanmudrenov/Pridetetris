@@ -1,4 +1,3 @@
-html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,8 +5,8 @@ html
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>PRIDE — Корпоративный Игровой Портал</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="./css/main.css?v=18">
-<link rel="stylesheet" href="./css/music.css?v=18">
+<link rel="stylesheet" href="./css/main.css?v=11">
+<link rel="stylesheet" href="./css/music.css?v=11">
 </head>
 <body>
 
@@ -90,7 +89,7 @@ html
     <div class="menu-list">
       <button class="menu-item" data-go="scrMusic">
         <span class="mi-ico">🎵</span>
-        <span class="mi-txt"><b>Музыка и Радио</b><i>Плеер, интернет-радио и настройка звука</i></span>
+        <span class="mi-txt"><b>Музыка</b><i>Плеер, радио, громкость</i></span>
         <span class="mi-arr">›</span>
       </button>
       <button class="menu-item" data-go="scrGames">
@@ -117,158 +116,128 @@ html
   </div>
 </div>
 
-<!-- ============ ЭКРАН 5: МУЗЫКА ============ -->
+<!-- ============ МУЗЫКА: ГЛАВНАЯ СТРАНИЦА РАЗДЕЛА ============ -->
 <div class="screen" id="scrMusic">
   <div class="screen-inner">
     <button class="back-btn" data-go="scrMain">← В меню</button>
-    <h2 class="screen-title">🎵 Аудиоцентр PRIDE</h2>
+    <h2 class="screen-title">🎵 Музыка</h2>
 
     <div class="now-strip" id="nowStrip" style="display:none;">
-      <span id="nowText">Сейчас играет</span>
+      <span id="nowText"></span>
       <button id="btnNowStop" title="Остановить">⏹</button>
     </div>
 
-    <button class="btn-primary" id="miPlayer" style="margin-bottom:14px;">🎧 ОТКРЫТЬ ПОЛНОЭКРАННЫЙ ПЛЕЕР</button>
+    <div class="menu-list">
+      <button class="menu-item" id="miPlayer">
+        <span class="mi-ico">🎧</span>
+        <span class="mi-txt"><b>Плеер</b><i>Твои треки из папки music на весь экран</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrRadio">
+        <span class="mi-ico">📻</span>
+        <span class="mi-txt"><b>Интернет-радио</b><i>Бесплатные станции онлайн</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrMusicGame">
+        <span class="mi-ico">🎮</span>
+        <span class="mi-txt"><b>Игровая музыка</b><i>12 саундтреков для игры</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrVolume">
+        <span class="mi-ico">🔊</span>
+        <span class="mi-txt"><b>Громкость</b><i>Музыка и звуковые эффекты</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-    <div class="vol-card">
-      <div class="vol-head">
-        <span>Громкость музыки / радио</span>
-        <span class="vol-val" id="volMusicVal">70%</span>
-      </div>
-      <input type="range" class="rng" id="volMusic" min="0" max="100" value="70">
-      <div class="vol-hint">Регулирует громкость плеера, радио и музыки в игре</div>
+<!-- ============ МУЗЫКА: ИГРОВАЯ МУЗЫКА ============ -->
+<div class="screen" id="scrMusicGame">
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMusic">← Музыка</button>
+    <h2 class="screen-title">🎮 Игровая музыка</h2>
+
+    <div class="mini-player big-player">
+      <button class="mp-btn big" id="btnMusicPrev">⏮</button>
+      <button class="mp-btn big" id="btnMusicPlay">⏯</button>
+      <button class="mp-btn big" id="btnMusicNext">⏭</button>
     </div>
 
-    <div class="vol-card">
-      <div class="vol-head">
-        <span>Громкость эффектов (SFX)</span>
-        <span class="vol-val" id="volSfxVal">80%</span>
-      </div>
-      <input type="range" class="rng" id="volSfx" min="0" max="100" value="80">
-      <button class="btn-secondary" id="btnVolTest" style="margin-top:8px; padding:6px;">🔊 Проверить звук</button>
-    </div>
-
-    <div class="sec-title">🎹 Музыка в игре (PRIDE Tetris)</div>
-    <div class="music-box" style="margin-bottom:14px;">
-      <div class="mini-player big-player">
-        <button class="mp-btn big" id="btnMusicPrev" title="Предыдущий">⏮</button>
-        <button class="mp-btn big" id="btnMusicPlay" title="Пуск/Стоп">⏯</button>
-        <button class="mp-btn big" id="btnMusicNext" title="Следующий">⏭</button>
-      </div>
+    <div class="music-box">
       <div class="track-grid">
-        <button class="track-btn active" data-track="s1">🎹 1. Cyber Bass</button>
-        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki</button>
-        <button class="track-btn" data-track="s3">🎹 3. Neon Arp</button>
-        <button class="track-btn" data-track="s4">🎹 4. Overdrive</button>
-        <button class="track-btn" data-track="s5">🎹 5. Synthwave</button>
-        <button class="track-btn" data-track="s6">🎹 6. Matrix Boss</button>
-        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride</button>
-        <button class="track-btn" data-track="m2">🎵 8. Neon Agency</button>
-        <button class="track-btn" data-track="m3">🎵 9. Techno Rush</button>
-        <button class="track-btn" data-track="m4">🎵 10. Horizon</button>
-        <button class="track-btn" data-track="m5">🎵 11. Print Shop</button>
-        <button class="track-btn" data-track="m6">🎵 12. Billboard</button>
-        <button class="track-btn" data-track="off" style="grid-column: span 2;">🔇 Выключить игровую музыку</button>
-      </div>
-      <div class="sfx-row">
-        <span>🔊 Звуковые эффекты (SFX):</span>
-        <button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
+        <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass</button>
+        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit</button>
+        <button class="track-btn" data-track="s3">🎹 3. Neon Arpeggio</button>
+        <button class="track-btn" data-track="s4">🎹 4. Deadline Overdrive</button>
+        <button class="track-btn" data-track="s5">🎹 5. Agency Synthwave</button>
+        <button class="track-btn" data-track="s6">🎹 6. Retro Matrix Boss</button>
+        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride MP3</button>
+        <button class="track-btn" data-track="m2">🎵 8. Neon Agency MP3</button>
+        <button class="track-btn" data-track="m3">🎵 9. Techno Rush MP3</button>
+        <button class="track-btn" data-track="m4">🎵 10. Digital Horizon</button>
+        <button class="track-btn" data-track="m5">🎵 11. Night Print Shop</button>
+        <button class="track-btn" data-track="m6">🎵 12. Mega Billboard</button>
+        <button class="track-btn" data-track="off" style="grid-column: span 2;">🔇 Выключить музыку</button>
       </div>
     </div>
+  </div>
+</div>
 
-    <div class="sec-title">📻 Интернет-радио 24/7</div>
+<!-- ============ МУЗЫКА: ИНТЕРНЕТ-РАДИО ============ -->
+<div class="screen" id="scrRadio">
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMusic">← Музыка</button>
+    <h2 class="screen-title">📻 Интернет-радио</h2>
+
     <div class="radio-now" id="radioNow">
       <div class="rn-info">
-        <div class="rn-name" id="rnName">Станция</div>
-        <div class="rn-status" id="rnStatus">Подключение…</div>
+        <div class="rn-name" id="rnName">—</div>
+        <div class="rn-status" id="rnStatus"></div>
       </div>
-      <button class="rn-stop" id="btnRnStop" title="Остановить радио">⏹</button>
+      <button class="rn-stop" id="btnRnStop" title="Остановить">⏹</button>
     </div>
+
     <div id="radioList"></div>
 
     <div class="radio-add">
-      <div class="sec-title" style="margin-top:0;">Добавить свою радиостанцию</div>
-      <input type="text" id="rName" class="inp" placeholder="Название (например, Relax FM)" maxlength="30">
-      <input type="text" id="rUrl" class="inp" placeholder="Ссылка (https://...) stream URL">
+      <div class="sec-title" style="margin-top:0;">➕ Добавить свою станцию</div>
+      <input type="text" id="rName" class="inp" maxlength="30" placeholder="Название станции">
+      <input type="text" id="rUrl" class="inp" placeholder="Ссылка на поток (https://...)" autocapitalize="none" autocorrect="off">
       <div class="form-error" id="rAddErr"></div>
-      <button class="btn-secondary" id="btnAddStation">➕ Добавить в список</button>
+      <button class="btn-secondary" id="btnAddStation">Добавить</button>
+      <div class="note" style="margin-bottom:0;">Работают только ссылки, которые начинаются с https://. Некоторые станции могут быть недоступны в твоём регионе.</div>
     </div>
   </div>
 </div>
 
-<!-- ============ ПОЛНОЭКРАННЫЙ ПЛЕЕР ===================== -->
-<div class="player-full" id="playerFull">
-  <div class="pf-base"></div>
-  <div class="pf-bg" id="pfBgA"></div>
-  <div class="pf-bg" id="pfBgB"></div>
-  <div class="pf-shade"></div>
+<!-- ============ МУЗЫКА: ГРОМКОСТЬ ============ -->
+<div class="screen" id="scrVolume">
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMusic">← Музыка</button>
+    <h2 class="screen-title">🔊 Громкость</h2>
 
-  <div class="pf-ui">
-    <div class="pf-top">
-      <div class="pf-top-title">PRIDE AUDIO CENTER</div>
-      <div class="pf-top-right">
-        <button class="pf-icon" id="pfBgBtn" title="Сменить фон">🖼</button>
-        <button class="pf-icon" id="pfListBtn" title="Список треков">☰</button>
-        <button class="pf-icon" id="pfClose" title="Свернуть">✕</button>
+    <div class="vol-card">
+      <div class="vol-head"><span>🎵 Музыка</span><span class="vol-val" id="volMusicVal">70%</span></div>
+      <input type="range" class="rng" id="volMusic" min="0" max="100" value="70">
+      <div class="vol-hint">Плеер, радио и игровая музыка</div>
+    </div>
+
+    <div class="vol-card">
+      <div class="vol-head"><span>💥 Звуковые эффекты</span><span class="vol-val" id="volSfxVal">80%</span></div>
+      <input type="range" class="rng" id="volSfx" min="0" max="100" value="80">
+      <div class="vol-hint">Звуки в играх и в меню</div>
+      <div class="sfx-row" style="margin-top:10px;">
+        <span>Эффекты включены:</span>
+        <button class="track-btn active sfx-toggle" style="padding:6px 14px;">ВКЛ</button>
       </div>
     </div>
 
-    <div class="pf-center">
-      <div class="pf-disc" id="pfDisc">
-        <div class="pf-disc-label" id="pfDiscLabel">🎧</div>
-      </div>
-
-      <div class="pf-title-row">
-        <div class="pf-title" id="pfTitle">Загрузка…</div>
-      </div>
-      <div class="pf-sub" id="pfSub">Подключаемся к GitHub /music/</div>
-
-      <div class="eq paused" id="pfEq">
-        <span></span><span></span><span></span><span></span>
-      </div>
-
-      <div class="pf-empty" id="pfEmpty" style="display:none;">
-        <div id="pfEmptyText">В папке music пока нет треков.</div>
-        <button class="pf-empty-btn" id="btnPfRefresh">🔄 Обновить список</button>
-      </div>
-    </div>
-
-    <div class="pf-bottom">
-      <div class="pf-time-row">
-        <span id="pfCur">0:00</span>
-        <span id="pfDur">0:00</span>
-      </div>
-      <input type="range" class="rng" id="pfSeek" min="0" max="1000" value="0">
-
-      <div class="pf-controls">
-        <button class="pf-btn" id="pfShuffle" title="Случайный порядок">🔀</button>
-        <button class="pf-btn" id="pfPrev" title="Предыдущий">⏮</button>
-        <button class="pf-btn pf-play" id="pfPlay" title="Пуск / Пауза">▶</button>
-        <button class="pf-btn" id="pfNext" title="Следующий">⏭</button>
-        <button class="pf-btn" id="pfRepeat" title="Повтор">🔁</button>
-      </div>
-
-      <div class="pf-vol-row">
-        <span>🔈</span>
-        <input type="range" class="rng" id="pfVol" min="0" max="100" value="70">
-        <span>🔊</span>
-      </div>
-    </div>
-
-    <div class="pf-list" id="pfList">
-      <div class="pf-list-head">
-        <div>Плейлист треков <small id="pfListInfo"></small></div>
-        <div>
-          <button class="pf-icon" id="pfListRefresh" title="Обновить">🔄</button>
-          <button class="pf-icon" id="pfListClose" title="Закрыть">✕</button>
-        </div>
-      </div>
-      <div class="pf-list-items" id="pfListItems"></div>
-    </div>
+    <button class="btn-secondary" id="btnVolTest">🔔 Проверить звук</button>
   </div>
 </div>
 
-<!-- ============ ЭКРАН 6: ИГРЫ ============ -->
+<!-- ============ ИГРЫ ============ -->
 <div class="screen" id="scrGames">
   <div class="screen-inner">
     <button class="back-btn" data-go="scrMain">← В меню</button>
@@ -277,23 +246,23 @@ html
   </div>
 </div>
 
-<!-- ============ ЭКРАН 7: ТАБЛИЦА ЛИДЕРОВ ============ -->
+<!-- ============ ТАБЛИЦА ЛИДЕРОВ ============ -->
 <div class="screen" id="scrLeaders">
   <div class="screen-inner">
     <button class="back-btn" data-go="scrMain">← В меню</button>
     <h2 class="screen-title">🏆 Таблица лидеров</h2>
     <div class="sec-title">🧱 PRIDE Tetris — лучший бюджет</div>
     <div id="leaderList"></div>
-    <div class="note">Пока таблица считает результаты только тех, кто играл на этом устройстве.</div>
+    <div class="note">Пока таблица считает результаты только тех, кто играл на этом устройстве. Чтобы коллеги видели общую таблицу, нужен общий сервер.</div>
   </div>
 </div>
 
-<!-- ============ ЭКРАН 8: ЧАТ ============ -->
+<!-- ============ ЧАТ ============ -->
 <div class="screen noscroll" id="scrChat">
   <div class="chat-wrap">
     <button class="back-btn" data-go="scrMain">← В меню</button>
     <h2 class="screen-title">💬 Чат</h2>
-    <div class="note">Общение с коллегами на этом устройстве.</div>
+    <div class="note">Пока чат работает только на этом устройстве. Чтобы переписываться с коллегами, нужен общий сервер.</div>
     <div class="chat-list" id="chatList"></div>
     <div class="chat-form">
       <input type="text" id="chatInput" class="inp" maxlength="300" placeholder="Напиши сообщение..." autocomplete="off">
@@ -389,26 +358,32 @@ html
 
     <div class="sec-title">1. Сложность (скорость):</div>
     <div class="mode-list">
-      <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780"><b>Redline</b> <span>Easy Mode</span></button>
-      <button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480"><b>ASAP</b> <span>Medium Mode</span></button>
-      <button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240"><b>Deadline</b> <span>Hard Mode</span></button>
+      <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
+        <b>Redline</b> <span>Easy Mode</span>
+      </button>
+      <button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480">
+        <b>ASAP</b> <span>Medium Mode</span>
+      </button>
+      <button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240">
+        <b>Deadline</b> <span>Hard Mode</span>
+      </button>
     </div>
 
     <div class="sec-title">2. Музыка и звуки:</div>
     <div class="music-box">
       <div class="track-grid" id="menuTrackGrid">
-        <button class="track-btn active" data-track="s1">🎹 1. Cyber Bass</button>
-        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki</button>
-        <button class="track-btn" data-track="s3">🎹 3. Neon Arp</button>
-        <button class="track-btn" data-track="s4">🎹 4. Overdrive</button>
-        <button class="track-btn" data-track="s5">🎹 5. Synthwave</button>
-        <button class="track-btn" data-track="s6">🎹 6. Matrix Boss</button>
-        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride</button>
-        <button class="track-btn" data-track="m2">🎵 8. Neon Agency</button>
-        <button class="track-btn" data-track="m3">🎵 9. Techno Rush</button>
-        <button class="track-btn" data-track="m4">🎵 10. Horizon</button>
-        <button class="track-btn" data-track="m5">🎵 11. Print Shop</button>
-        <button class="track-btn" data-track="m6">🎵 12. Billboard</button>
+        <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass</button>
+        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit</button>
+        <button class="track-btn" data-track="s3">🎹 3. Neon Arpeggio</button>
+        <button class="track-btn" data-track="s4">🎹 4. Deadline Overdrive</button>
+        <button class="track-btn" data-track="s5">🎹 5. Agency Synthwave</button>
+        <button class="track-btn" data-track="s6">🎹 6. Retro Matrix Boss</button>
+        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride MP3</button>
+        <button class="track-btn" data-track="m2">🎵 8. Neon Agency MP3</button>
+        <button class="track-btn" data-track="m3">🎵 9. Techno Rush MP3</button>
+        <button class="track-btn" data-track="m4">🎵 10. Digital Horizon</button>
+        <button class="track-btn" data-track="m5">🎵 11. Night Print Shop</button>
+        <button class="track-btn" data-track="m6">🎵 12. Mega Billboard</button>
         <button class="track-btn" data-track="off" style="grid-column: span 2;">🔇 Выключить музыку</button>
       </div>
       <div class="sfx-row">
@@ -422,13 +397,73 @@ html
   </div>
 </div>
 
+<!-- ============ ПОЛНОЭКРАННЫЙ ПЛЕЕР ============ -->
+<div class="player-full" id="playerFull">
+  <div class="pf-base"></div>
+  <div class="pf-bg" id="pfBgA"></div>
+  <div class="pf-bg" id="pfBgB"></div>
+  <div class="pf-shade"></div>
+
+  <div class="pf-ui">
+    <div class="pf-top">
+      <button class="pf-icon" id="pfClose" title="Свернуть">⌄</button>
+      <div class="pf-top-title">PRIDE PLAYER</div>
+      <div class="pf-top-right">
+        <button class="pf-icon" id="pfBgBtn" title="Сменить фон">🖼</button>
+        <button class="pf-icon" id="pfListBtn" title="Список треков">☰</button>
+      </div>
+    </div>
+
+    <div class="pf-center">
+      <div class="pf-disc" id="pfDisc"><div class="pf-disc-label">🎵</div></div>
+      <div class="pf-title-row">
+        <div class="eq paused" id="pfEq"><span></span><span></span><span></span><span></span></div>
+        <div class="pf-title" id="pfTitle">Загрузка…</div>
+      </div>
+      <div class="pf-sub" id="pfSub"></div>
+      <div class="pf-empty" id="pfEmpty" style="display:none;">
+        <div id="pfEmptyText">В папке music на GitHub пока нет треков.</div>
+        <button class="pf-empty-btn" id="btnPfRefresh">🔄 Обновить список</button>
+      </div>
+    </div>
+
+    <div class="pf-bottom">
+      <div class="pf-time-row"><span id="pfCur">0:00</span><span id="pfDur">0:00</span></div>
+      <input type="range" class="rng" id="pfSeek" min="0" max="1000" value="0">
+      <div class="pf-controls">
+        <button class="pf-btn" id="pfShuffle" title="Перемешать">🔀</button>
+        <button class="pf-btn" id="pfPrev" title="Назад">⏮</button>
+        <button class="pf-btn pf-play" id="pfPlay" title="Пуск/Пауза">▶</button>
+        <button class="pf-btn" id="pfNext" title="Вперёд">⏭</button>
+        <button class="pf-btn" id="pfRepeat" title="Повтор">🔁</button>
+      </div>
+      <div class="pf-vol-row">
+        <span>🔈</span>
+        <input type="range" class="rng" id="pfVol" min="0" max="100" value="70">
+        <span>🔊</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pf-list" id="pfList">
+    <div class="pf-list-head">
+      <span>Треки <small id="pfListInfo"></small></span>
+      <span>
+        <button class="pf-icon" id="pfListRefresh" title="Обновить список">🔄</button>
+        <button class="pf-icon" id="pfListClose" title="Закрыть">✕</button>
+      </span>
+    </div>
+    <div class="pf-list-items" id="pfListItems"></div>
+  </div>
+</div>
+
 <audio id="bgAudio" loop preload="none"></audio>
 
-<script src="./src/core/audio-player.js?v=18"></script>
-<script src="./src/core/portal-hub.js?v=18"></script>
-<script src="./src/core/music-hub.js?v=18"></script>
-<script src="./src/games/pride-tetris/config.js?v=18"></script>
-<script src="./src/games/pride-tetris/engine-3d.js?v=18"></script>
-<script src="./src/games/pride-tetris/tetris-game.js?v=18"></script>
+<script src="./src/core/audio-player.js?v=11"></script>
+<script src="./src/core/portal-hub.js?v=11"></script>
+<script src="./src/core/music-hub.js?v=11"></script>
+<script src="./src/games/pride-tetris/config.js?v=11"></script>
+<script src="./src/games/pride-tetris/engine-3d.js?v=11"></script>
+<script src="./src/games/pride-tetris/tetris-game.js?v=11"></script>
 </body>
 </html>
