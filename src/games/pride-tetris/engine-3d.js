@@ -112,7 +112,7 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
   }
 
   function animate3D() {
-    if (useThree && boardWrap.offsetParent !== null) {
+    if (useThree) {
       currentRotY += (targetRotY - currentRotY) * 0.15;
       targetRotY *= 0.9;
       boardGroup.rotation.y = currentRotY;
