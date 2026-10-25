@@ -7,6 +7,7 @@ window.PrideCore = window.PrideCore || {};
     stopAll: function() {}
   };
 
+  // =============== НАСТРОЙКИ (можно менять) ===============
   var DEPARTMENTS = [
     "Креатив / Дизайн", "Производство", "Монтаж и логистика", "Менеджеры проектов",
     "Продажи", "Закупки", "Бухгалтерия и финансы", "IT", "HR", "Руководство", "Другое"
@@ -27,6 +28,7 @@ window.PrideCore = window.PrideCore || {};
     { id: "soon2",  icon: "🧩", title: "Новая игра", desc: "Скоро в портале", soon: true }
   ];
 
+  // =============== ХРАНИЛИЩЕ ===============
   var KEY_USERS = 'pride_users_v1';
   var KEY_SESSION = 'pride_session_v1';
   var KEY_THEME = 'pride_theme_v1';
@@ -53,6 +55,7 @@ window.PrideCore = window.PrideCore || {};
     return e;
   }
 
+  // =============== ПАРОЛИ ===============
   function simpleHash(s) {
     var h = 5381;
     for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
@@ -75,6 +78,7 @@ window.PrideCore = window.PrideCore || {};
     return Math.random().toString(36).slice(2) + Date.now().toString(36);
   }
 
+  // =============== СОСТОЯНИЕ ===============
   var games = {};
   var currentGame = null;
   var currentScreen = 'scrWelcome';
@@ -87,6 +91,7 @@ window.PrideCore = window.PrideCore || {};
     return users[key] || null;
   }
 
+  // =============== ТЕМЫ ===============
   function markThemeCards(id) {
     var cards = document.querySelectorAll('.theme-card');
     for (var i = 0; i < cards.length; i++) {
@@ -102,11 +107,11 @@ window.PrideCore = window.PrideCore || {};
     markThemeCards(id);
   }
 
+  // =============== ЭКРАНЫ ===============
   function showScreen(id) {
     var scr = document.querySelectorAll('.screen');
     for (var i = 0; i < scr.length; i++) scr[i].classList.toggle('active', scr[i].id === id);
-    var gs = $('gameScreen');
-    if (gs) gs.classList.remove('active');
+    $('gameScreen').classList.remove('active');
     var s = $(id);
     if (s) s.scrollTop = 0;
     currentScreen = id;
@@ -119,31 +124,31 @@ window.PrideCore = window.PrideCore || {};
     var users = load(KEY_USERS, {});
     var has = false;
     for (var k in users) { has = true; break; }
-    var btn = $('btnGoLogin');
-    if (btn) btn.style.display = has ? 'block' : 'none';
+    $('btnGoLogin').style.display = has ? 'block' : 'none';
   }
 
+  // =============== ПРОФИЛЬ ===============
   function refreshProfileUI() {
     var u = currentUser();
     if (!u) return;
     var best = (u.best && u.best.tetris) || 0;
     var ma = $('mainAvatar');
-    if (ma) { ma.textContent = u.avatar; ma.style.background = u.color; }
-    var mn = $('mainName');
-    if (mn) mn.textContent = u.nick;
-    var md = $('mainDept');
-    if (md) md.textContent = u.dept;
-    var mb = $('mainBest');
-    if (mb) mb.textContent = best > 0 ? ('🏆 Рекорд в Tetris: ' + best + ' ₽') : 'Рекордов пока нет — сыграй в Tetris!';
+    ma.textContent = u.avatar;
+    ma.style.background = u.color;
+    $('mainName').textContent = u.nick;
+    $('mainDept').textContent = u.dept;
+    $('mainBest').textContent = best > 0 ? ('🏆 Рекорд в Tetris: ' + best + ' ₽') : 'Рекордов пока нет — сыграй в Tetris!';
     var ha = $('headerAvatar');
     if (ha) { ha.textContent = u.avatar; ha.style.background = u.color; }
     var hn = $('headerPlayerName');
     if (hn) hn.textContent = u.nick;
   }
 
+  // =============== ФОРМА РЕГИСТРАЦИИ / РЕДАКТИРОВАНИЯ ===============
   function paintFormAvatar() {
     var p = $('fAvatarPreview');
-    if (p) { p.textContent = form.avatar; p.style.background = form.color; }
+    p.textContent = form.avatar;
+    p.style.background = form.color;
     var an = document.querySelectorAll('#fAnimalGrid .animal-opt');
     for (var i = 0; i < an.length; i++) an[i].classList.toggle('selected', an[i].getAttribute('data-animal') === form.avatar);
     var dots = document.querySelectorAll('#fColorRow .color-dot');
@@ -152,82 +157,73 @@ window.PrideCore = window.PrideCore || {};
 
   function buildForm() {
     var g = $('fAnimalGrid');
-    if (g) {
-      g.innerHTML = '';
-      ANIMALS.forEach(function(a) {
-        var b = el('button', 'animal-opt', a);
-        b.type = 'button';
-        b.setAttribute('data-animal', a);
-        b.onclick = function() {
-          Audio.ensureAudio();
-          form.avatar = a;
-          paintFormAvatar();
-          Audio.playSfx('rotate');
-        };
-        g.appendChild(b);
-      });
-    }
+    g.innerHTML = '';
+    ANIMALS.forEach(function(a) {
+      var b = el('button', 'animal-opt', a);
+      b.type = 'button';
+      b.setAttribute('data-animal', a);
+      b.onclick = function() {
+        Audio.ensureAudio();
+        form.avatar = a;
+        paintFormAvatar();
+        Audio.playSfx('rotate');
+      };
+      g.appendChild(b);
+    });
 
     var cr = $('fColorRow');
-    if (cr) {
-      cr.innerHTML = '';
-      AVATAR_COLORS.forEach(function(c) {
-        var d = el('div', 'color-dot');
-        d.style.background = c;
-        d.setAttribute('data-color', c);
-        d.onclick = function() {
-          Audio.ensureAudio();
-          form.color = c;
-          paintFormAvatar();
-          Audio.playSfx('move');
-        };
-        cr.appendChild(d);
-      });
-    }
+    cr.innerHTML = '';
+    AVATAR_COLORS.forEach(function(c) {
+      var d = el('div', 'color-dot');
+      d.style.background = c;
+      d.setAttribute('data-color', c);
+      d.onclick = function() {
+        Audio.ensureAudio();
+        form.color = c;
+        paintFormAvatar();
+        Audio.playSfx('move');
+      };
+      cr.appendChild(d);
+    });
 
     var sel = $('fDept');
-    if (sel) {
-      sel.innerHTML = '';
-      var ph = el('option', null, '— выбери отдел —');
-      ph.value = '';
-      sel.appendChild(ph);
-      DEPARTMENTS.forEach(function(d) {
-        var o = el('option', null, d);
-        o.value = d;
-        sel.appendChild(o);
-      });
-    }
+    sel.innerHTML = '';
+    var ph = el('option', null, '— выбери отдел —');
+    ph.value = '';
+    sel.appendChild(ph);
+    DEPARTMENTS.forEach(function(d) {
+      var o = el('option', null, d);
+      o.value = d;
+      sel.appendChild(o);
+    });
 
     var tg = $('themeGrid');
-    if (tg) {
-      tg.innerHTML = '';
-      THEMES.forEach(function(t) {
-        var b = el('button', 'theme-card');
-        b.type = 'button';
-        b.setAttribute('data-theme-id', t.id);
-        var sw = el('div', 'theme-sw');
-        sw.style.background = t.bg;
-        [t.c1, t.c2, t.c3].forEach(function(c) {
-          var s = el('span');
-          s.style.background = c;
-          sw.appendChild(s);
-        });
-        b.appendChild(sw);
-        b.appendChild(el('div', 'theme-name', t.name));
-        b.onclick = function() {
-          Audio.ensureAudio();
-          form.theme = t.id;
-          applyTheme(t.id);
-          Audio.playSfx('rotate');
-        };
-        tg.appendChild(b);
+    tg.innerHTML = '';
+    THEMES.forEach(function(t) {
+      var b = el('button', 'theme-card');
+      b.type = 'button';
+      b.setAttribute('data-theme-id', t.id);
+      var sw = el('div', 'theme-sw');
+      sw.style.background = t.bg;
+      [t.c1, t.c2, t.c3].forEach(function(c) {
+        var s = el('span');
+        s.style.background = c;
+        sw.appendChild(s);
       });
-    }
+      b.appendChild(sw);
+      b.appendChild(el('div', 'theme-name', t.name));
+      b.onclick = function() {
+        Audio.ensureAudio();
+        form.theme = t.id;
+        applyTheme(t.id);
+        Audio.playSfx('rotate');
+      };
+      tg.appendChild(b);
+    });
   }
 
   function setDept(value) {
     var sel = $('fDept');
-    if (!sel) return;
     var found = false;
     for (var i = 0; i < sel.options.length; i++) if (sel.options[i].value === value) found = true;
     if (!found && value) {
@@ -241,32 +237,33 @@ window.PrideCore = window.PrideCore || {};
   function openForm(mode) {
     var u = currentUser();
     form.mode = mode;
-    var err = $('formError');
-    if (err) err.textContent = '';
-    var fp1 = $('fPass'); if (fp1) fp1.value = '';
-    var fp2 = $('fPass2'); if (fp2) fp2.value = '';
+    $('formError').textContent = '';
+    $('fPass').value = '';
+    $('fPass2').value = '';
 
     if (mode === 'edit' && u) {
-      var ft = $('formTitle'); if (ft) ft.textContent = 'Мой профиль';
-      var fn = $('fNick'); if (fn) { fn.value = u.nick; fn.disabled = true; }
+      $('formTitle').textContent = 'Мой профиль';
+      $('fNick').value = u.nick;
+      $('fNick').disabled = true;
       setDept(u.dept);
       form.avatar = u.avatar;
       form.color = u.color;
       form.theme = u.theme || 'neon';
-      var fpt = $('fPassTitle'); if (fpt) fpt.textContent = '4. Новый пароль (необязательно)';
-      if (fp1) fp1.placeholder = 'Оставь пустым, чтобы не менять';
-      var fbs = $('btnFormSubmit'); if (fbs) fbs.textContent = '💾 СОХРАНИТЬ';
+      $('fPassTitle').textContent = '4. Новый пароль (необязательно)';
+      $('fPass').placeholder = 'Оставь пустым, чтобы не менять';
+      $('btnFormSubmit').textContent = '💾 СОХРАНИТЬ';
     } else {
       form.mode = 'register';
-      var ft = $('formTitle'); if (ft) ft.textContent = 'Регистрация';
-      var fn = $('fNick'); if (fn) { fn.value = ''; fn.disabled = false; }
+      $('formTitle').textContent = 'Регистрация';
+      $('fNick').value = '';
+      $('fNick').disabled = false;
       setDept('');
       form.avatar = ANIMALS[0];
       form.color = AVATAR_COLORS[0];
       form.theme = load(KEY_THEME, 'neon');
-      var fpt = $('fPassTitle'); if (fpt) fpt.textContent = '4. Пароль';
-      if (fp1) fp1.placeholder = 'Пароль (минимум 4 символа)';
-      var fbs = $('btnFormSubmit'); if (fbs) fbs.textContent = '✅ СОЗДАТЬ ПРОФИЛЬ';
+      $('fPassTitle').textContent = '4. Пароль';
+      $('fPass').placeholder = 'Пароль (минимум 4 символа)';
+      $('btnFormSubmit').textContent = '✅ СОЗДАТЬ ПРОФИЛЬ';
     }
     applyTheme(form.theme);
     paintFormAvatar();
@@ -275,21 +272,20 @@ window.PrideCore = window.PrideCore || {};
 
   function submitForm() {
     var err = $('formError');
-    if (err) err.textContent = '';
-    var deptEl = $('fDept');
-    var dept = deptEl ? deptEl.value : '';
-    var p1 = $('fPass') ? $('fPass').value : '';
-    var p2 = $('fPass2') ? $('fPass2').value : '';
+    err.textContent = '';
+    var dept = $('fDept').value;
+    var p1 = $('fPass').value;
+    var p2 = $('fPass2').value;
 
     if (form.mode === 'register') {
-      var nick = $('fNick') ? $('fNick').value.replace(/\s+/g, ' ').trim() : '';
-      if (nick.length < 2) { if (err) err.textContent = 'Ник — минимум 2 символа'; return; }
+      var nick = $('fNick').value.replace(/\s+/g, ' ').trim();
+      if (nick.length < 2) { err.textContent = 'Ник — минимум 2 символа'; return; }
       var key = nick.toLowerCase();
       var existing = load(KEY_USERS, {});
-      if (existing[key]) { if (err) err.textContent = 'Такой ник уже занят, выбери другой'; return; }
-      if (!dept) { if (err) err.textContent = 'Выбери свой отдел'; return; }
-      if (p1.length < 4) { if (err) err.textContent = 'Пароль — минимум 4 символа'; return; }
-      if (p1 !== p2) { if (err) err.textContent = 'Пароли не совпадают'; return; }
+      if (existing[key]) { err.textContent = 'Такой ник уже занят, выбери другой'; return; }
+      if (!dept) { err.textContent = 'Выбери свой отдел'; return; }
+      if (p1.length < 4) { err.textContent = 'Пароль — минимум 4 символа'; return; }
+      if (p1 !== p2) { err.textContent = 'Пароли не совпадают'; return; }
 
       var salt = randSalt();
       hashPass(salt, p1).then(function(h) {
@@ -300,7 +296,7 @@ window.PrideCore = window.PrideCore || {};
           salt: salt, hash: h, best: {}, created: Date.now()
         };
         if (!save(KEY_USERS, users)) {
-          if (err) err.textContent = 'Не удалось сохранить: память браузера недоступна';
+          err.textContent = 'Не удалось сохранить: память браузера недоступна';
           return;
         }
         save(KEY_SESSION, key);
@@ -312,11 +308,11 @@ window.PrideCore = window.PrideCore || {};
     } else {
       var me = currentUser();
       if (!me) { showScreen('scrWelcome'); return; }
-      if (!dept) { if (err) err.textContent = 'Выбери свой отдел'; return; }
+      if (!dept) { err.textContent = 'Выбери свой отдел'; return; }
       var changePass = (p1.length > 0 || p2.length > 0);
       if (changePass) {
-        if (p1.length < 4) { if (err) err.textContent = 'Новый пароль — минимум 4 символа'; return; }
-        if (p1 !== p2) { if (err) err.textContent = 'Пароли не совпадают'; return; }
+        if (p1.length < 4) { err.textContent = 'Новый пароль — минимум 4 символа'; return; }
+        if (p1 !== p2) { err.textContent = 'Пароли не совпадают'; return; }
       }
       var finish = function(extra) {
         var users = load(KEY_USERS, {});
@@ -341,23 +337,24 @@ window.PrideCore = window.PrideCore || {};
     }
   }
 
+  // =============== ВХОД / ВЫХОД ===============
   function openLogin() {
-    var le = $('loginError'); if (le) le.textContent = '';
-    var ln = $('lNick'); if (ln) ln.value = load(KEY_LAST, '') || '';
-    var lp = $('lPass'); if (lp) lp.value = '';
+    $('loginError').textContent = '';
+    $('lNick').value = load(KEY_LAST, '') || '';
+    $('lPass').value = '';
     showScreen('scrLogin');
   }
 
   function doLogin() {
     var err = $('loginError');
-    if (err) err.textContent = '';
-    var nick = $('lNick') ? $('lNick').value.replace(/\s+/g, ' ').trim() : '';
-    var pass = $('lPass') ? $('lPass').value : '';
+    err.textContent = '';
+    var nick = $('lNick').value.replace(/\s+/g, ' ').trim();
+    var pass = $('lPass').value;
     var users = load(KEY_USERS, {});
     var u = users[nick.toLowerCase()];
-    if (!u) { if (err) err.textContent = 'Неверный ник или пароль'; return; }
+    if (!u) { err.textContent = 'Неверный ник или пароль'; return; }
     hashPass(u.salt, pass).then(function(h) {
-      if (h !== u.hash) { if (err) err.textContent = 'Неверный ник или пароль'; return; }
+      if (h !== u.hash) { err.textContent = 'Неверный ник или пароль'; return; }
       save(KEY_SESSION, u.key);
       save(KEY_LAST, u.nick);
       applyTheme(u.theme || 'neon');
@@ -379,9 +376,9 @@ window.PrideCore = window.PrideCore || {};
     showScreen('scrWelcome');
   }
 
+  // =============== ИГРЫ ===============
   function renderGames() {
     var box = $('gamesList');
-    if (!box) return;
     box.innerHTML = '';
     GAMES.forEach(function(g) {
       var card = el('div', 'game-card' + (g.soon ? ' soon' : ''));
@@ -410,8 +407,7 @@ window.PrideCore = window.PrideCore || {};
     if (!g) { alert('Игра ещё не загрузилась. Обнови страницу.'); return; }
     var scr = document.querySelectorAll('.screen');
     for (var i = 0; i < scr.length; i++) scr[i].classList.remove('active');
-    var gs = $('gameScreen');
-    if (gs) gs.classList.add('active');
+    $('gameScreen').classList.add('active');
     currentGame = id;
     currentScreen = 'game';
     refreshProfileUI();
@@ -443,9 +439,9 @@ window.PrideCore = window.PrideCore || {};
     return false;
   }
 
+  // =============== ТАБЛИЦА ЛИДЕРОВ ===============
   function renderLeaders() {
     var box = $('leaderList');
-    if (!box) return;
     box.innerHTML = '';
     var users = load(KEY_USERS, {});
     var me = currentUser();
@@ -476,6 +472,7 @@ window.PrideCore = window.PrideCore || {};
     });
   }
 
+  // =============== ЧАТ ===============
   function fmtTime(t) {
     var d = new Date(t);
     return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
@@ -483,7 +480,6 @@ window.PrideCore = window.PrideCore || {};
 
   function renderChat(scrollDown) {
     var list = $('chatList');
-    if (!list) return;
     list.innerHTML = '';
     var msgs = load(KEY_CHAT, []);
     var me = currentUser();
@@ -510,7 +506,6 @@ window.PrideCore = window.PrideCore || {};
 
   function sendChat() {
     var inp = $('chatInput');
-    if (!inp) return;
     var text = inp.value.trim();
     var me = currentUser();
     if (!text || !me) return;
@@ -524,6 +519,7 @@ window.PrideCore = window.PrideCore || {};
     Audio.playSfx('move');
   }
 
+  // =============== МУЗЫКА (игровые треки и эффекты) ===============
   function bindMusic() {
     var tb = document.querySelectorAll('.track-btn[data-track]');
     for (var i = 0; i < tb.length; i++) {
@@ -546,16 +542,17 @@ window.PrideCore = window.PrideCore || {};
         }
       };
     }
-    var bmp = $('btnMusicPrev'); if (bmp) bmp.onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(-1); };
-    var bml = $('btnMusicPlay'); if (bml) bml.onclick = function() { Audio.ensureAudio(); Audio.togglePlayPauseMusic(); };
-    var bmn = $('btnMusicNext'); if (bmn) bmn.onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(1); };
+    $('btnMusicPrev').onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(-1); };
+    $('btnMusicPlay').onclick = function() { Audio.ensureAudio(); Audio.togglePlayPauseMusic(); };
+    $('btnMusicNext').onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(1); };
   }
 
+  // =============== ЗАПУСК ===============
   function bindEvents() {
-    var bgReg = $('btnGoRegister'); if (bgReg) bgReg.onclick = function() { Audio.ensureAudio(); openForm('register'); };
-    var bgLog = $('btnGoLogin'); if (bgLog) bgLog.onclick = function() { Audio.ensureAudio(); openLogin(); };
-    var bfs = $('btnFormSubmit'); if (bfs) bfs.onclick = function() { Audio.ensureAudio(); submitForm(); };
-    var bfb = $('btnFormBack'); if (bfb) bfb.onclick = function() {
+    $('btnGoRegister').onclick = function() { Audio.ensureAudio(); openForm('register'); };
+    $('btnGoLogin').onclick = function() { Audio.ensureAudio(); openLogin(); };
+    $('btnFormSubmit').onclick = function() { Audio.ensureAudio(); submitForm(); };
+    $('btnFormBack').onclick = function() {
       if (form.mode === 'edit') {
         var u = currentUser();
         if (u) applyTheme(u.theme || 'neon');
@@ -564,12 +561,12 @@ window.PrideCore = window.PrideCore || {};
         showScreen('scrWelcome');
       }
     };
-    var bls = $('btnLoginSubmit'); if (bls) bls.onclick = function() { Audio.ensureAudio(); doLogin(); };
-    var lp = $('lPass'); if (lp) lp.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-    var bep = $('btnEditProfile'); if (bep) bep.onclick = function() { openForm('edit'); };
-    var bo = $('btnLogout'); if (bo) bo.onclick = logout;
-    var bcs = $('btnChatSend'); if (bcs) bcs.onclick = sendChat;
-    var ci = $('chatInput'); if (ci) ci.addEventListener('keydown', function(e) { if (e.key === 'Enter') sendChat(); });
+    $('btnLoginSubmit').onclick = function() { Audio.ensureAudio(); doLogin(); };
+    $('lPass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+    $('btnEditProfile').onclick = function() { openForm('edit'); };
+    $('btnLogout').onclick = logout;
+    $('btnChatSend').onclick = sendChat;
+    $('chatInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') sendChat(); });
 
     var goBtns = document.querySelectorAll('[data-go]');
     for (var i = 0; i < goBtns.length; i++) {
