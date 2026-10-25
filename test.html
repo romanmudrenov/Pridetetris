@@ -1,10 +1,9 @@
-html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Диагностика PRIDE v10</title>
+<title>Диагностика PRIDE</title>
 <style>
   body { background:#0b0714; color:#fff; font-family:Arial,sans-serif; font-size:13px; padding:10px; }
   h2 { color:#00f0ff; font-size:16px; }
@@ -12,28 +11,35 @@ html
   .ok { color:#00ff9d; font-weight:bold; }
   .bad { color:#ff4466; font-weight:bold; }
   code { color:#fcee09; }
+  .sum { border:2px solid #00f0ff; border-radius:10px; padding:10px; margin:10px 0; font-weight:bold; }
 </style>
 </head>
 <body>
-<h2>Диагностика файлов PRIDE (v10)</h2>
-<div id="out">Проверяю структуру и новые модули…</div>
+<h2>Диагностика файлов PRIDE</h2>
+<div id="sum" class="sum">Проверяю…</div>
+<div id="out"></div>
 
 <script>
+// Для каждого файла: какие фрагменты обязаны в нём быть (признак новой версии)
 var FILES = [
-  "./index.html",
-  "./css/main.css",
-  "./css/music.css",
-  "./src/core/audio-player.js",
-  "./src/core/portal-hub.js",
-  "./src/core/music-hub.js",
-  "./src/games/pride-tetris/config.js",
-  "./src/games/pride-tetris/engine-3d.js",
-  "./src/games/pride-tetris/tetris-game.js"
+  { url: "./index.html", marks: ['id="scrWelcome"', 'music-hub.js', 'id="playerFull"', 'id="gameScreen"'] },
+  { url: "./css/main.css", marks: ['[data-theme="royal"]', '.game-screen', '.screen.active'] },
+  { url: "./css/music.css", marks: ['.player-full', '.rng'] },
+  { url: "./src/core/audio-player.js", marks: ['setExternalStopper', 'getMusicVolume', 'stopAll'] },
+  { url: "./src/core/portal-hub.js", marks: ['registerGame', 'stopAll', 'showScreen'] },
+  { url: "./src/core/music-hub.js", marks: ['loadLibrary', 'playStation', 'STATIONS'] },
+  { url: "./src/games/pride-tetris/config.js", marks: ['TetrisConfig'] },
+  { url: "./src/games/pride-tetris/engine-3d.js", marks: ['createEngine3D'] },
+  { url: "./src/games/pride-tetris/tetris-game.js", marks: ['registerGame', 'btnToMain', 'submitScore'] }
 ];
 
+var sum = document.getElementById('sum');
 var out = document.getElementById('out');
-out.innerHTML = "";
+var problems = 0;
 
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 function addBlock(html) {
   var d = document.createElement('div');
   d.className = 'file';
@@ -41,34 +47,47 @@ function addBlock(html) {
   out.appendChild(d);
 }
 
-function esc(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function checkFile(url) {
-  var bust = url + "?t=" + Date.now();
-  return fetch(bust, { cache: "no-store" }).then(function(resp) {
+function checkFile(f) {
+  var url = f.url;
+  return fetch(url + "?t=" + Date.now(), { cache: "no-store" }).then(function(resp) {
     if (!resp.ok) {
-      addBlock("<b>" + url + "</b><br><span class='bad'>НЕ НАЙДЕН, код " + resp.status + "</span>");
+      problems++;
+      addBlock("<b>" + url + "</b><br><span class='bad'>НЕ НАЙДЕН (код " + resp.status + "). Файл лежит не там или назван иначе</span>");
       return;
     }
     return resp.text().then(function(text) {
       var html = "<b>" + url + "</b><br>Размер: " + text.length + " симв.<br>";
-      html += "Начало: <code>" + esc(text.substring(0, 45).replace(/\s+/g, " ")) + "</code><br>";
+      html += "Начало: <code>" + esc(text.substring(0, 40).replace(/\s+/g, " ")) + "</code><br>";
+      html += "Конец: <code>" + esc(text.slice(-30).replace(/\s+/g, " ")) + "</code><br>";
 
       if (url.slice(-3) === ".js") {
         try {
           new Function(text);
-          html += "<span class='ok'>Синтаксис: ОК</span>";
+          html += "<span class='ok'>Синтаксис: ОК</span><br>";
         } catch (e) {
-          html += "<span class='bad'>ОШИБКА СИНТАКСИСА: " + esc(e.message) + "</span>";
+          problems++;
+          html += "<span class='bad'>ОШИБКА СИНТАКСИСА: " + esc(e.message) + "</span><br>";
         }
+        if (text.indexOf("```") !== -1) {
+          problems++;
+          html += "<span class='bad'>Внутри лишние обратные кавычки ```</span><br>";
+        }
+      }
+
+      var missing = [];
+      f.marks.forEach(function(m) {
+        if (text.indexOf(m) === -1) missing.push(m);
+      });
+      if (missing.length) {
+        problems++;
+        html += "<span class='bad'>СТАРАЯ ВЕРСИЯ: нет фрагментов: " + esc(missing.join(" | ")) + "</span>";
       } else {
-        html += "<span class='ok'>Файл загружен</span>";
+        html += "<span class='ok'>Версия: новая</span>";
       }
       addBlock(html);
     });
   }).catch(function(err) {
+    problems++;
     addBlock("<b>" + url + "</b><br><span class='bad'>Ошибка загрузки: " + esc(err.message) + "</span>");
   });
 }
@@ -78,14 +97,21 @@ FILES.forEach(function(f) {
   chain = chain.then(function() { return checkFile(f); });
 });
 chain.then(function() {
-  var t = document.createElement('div');
-  t.className = 'file';
-  t.innerHTML = "THREE.js: " + (window.THREE ? "<span class='ok'>загружен</span>" : "<span class='bad'>НЕ загружен</span>")
+  var extra = "THREE.js: " + (window.THREE ? "<span class='ok'>загружен</span>" : "<span class='bad'>НЕ загружен</span>")
     + "<br>localStorage: " + (function() {
       try { localStorage.setItem('t', '1'); return "<span class='ok'>работает</span>"; }
       catch (e) { return "<span class='bad'>заблокирован</span>"; }
     })();
-  out.appendChild(t);
+  var d = document.createElement('div');
+  d.className = 'file';
+  d.innerHTML = extra;
+  out.appendChild(d);
+
+  if (problems === 0) {
+    sum.innerHTML = "<span class='ok'>✅ Все 9 файлов на месте и новой версии. Открой сайт с новым ?v= в адресе.</span>";
+  } else {
+    sum.innerHTML = "<span class='bad'>❌ Проблем: " + problems + ". Красные блоки ниже показывают, какие файлы заменить.</span>";
+  }
 });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
