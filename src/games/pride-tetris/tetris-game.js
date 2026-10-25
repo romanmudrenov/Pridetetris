@@ -534,6 +534,3 @@
       startGame(true);
     }
   });
-
-  startGame(true);
-});
