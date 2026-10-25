@@ -1,4 +1,3 @@
-javascript
 (function() {
   var Config = window.PrideCore.TetrisConfig;
   var Audio = window.PrideCore.Audio;
@@ -397,6 +396,9 @@ javascript
   bindBtn('btnUlt', function() { useUlt(); });
   bindBtn('btnRestart', function() { submitCurrent(false); startGame(false); });
   bindBtn('btnPause', function() { togglePause(); });
+  bindBtn('btnPrevTrack', function() { if (Audio && Audio.cycleTrack) Audio.cycleTrack(-1); });
+  bindBtn('btnPlayPauseTrack', function() { if (Audio && Audio.togglePlayPauseMusic) Audio.togglePlayPauseMusic(); });
+  bindBtn('btnNextTrack', function() { if (Audio && Audio.cycleTrack) Audio.cycleTrack(1); });
 
   var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
   var lastDragX = 0, lastDragY = 0, wasDragged = false;
@@ -524,10 +526,12 @@ javascript
     else if (e.key === 'p' || e.key === 'P') togglePause();
   });
 
+  startGame(true);
+
   Hub.registerGame('tetris', {
     onOpen: function() {
       inGame = true;
-      if (over) {
+      if (over || !cur) {
         startGame(false);
       } else {
         paused = false;
@@ -557,5 +561,3 @@ javascript
     }
   });
 })();
-
- 
