@@ -1,469 +1,549 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>PRIDE — Корпоративный Игровой Портал</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="./css/main.css?v=11">
-<link rel="stylesheet" href="./css/music.css?v=11">
-</head>
-<body>
+javascript
+(function() {
+  var Config = window.PrideCore.TetrisConfig;
+  var Audio = window.PrideCore.Audio;
+  var Hub = window.PrideCore.Hub;
 
-<!-- ============ ЭКРАН 1: ПРИВЕТСТВИЕ ============ -->
-<div class="screen active" id="scrWelcome">
-  <div class="screen-inner center-inner">
-    <svg class="big-logo" viewBox="0 0 64 64">
-      <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="#ff007a" stroke-width="4" fill="#120924"/>
-      <path d="M20,25 L32,14 L44,25 L39,44 L25,44 Z" stroke="#00f0ff" stroke-width="3" fill="none"/>
-      <circle cx="27" cy="28" r="2.5" fill="#fcee09"/>
-      <circle cx="37" cy="28" r="2.5" fill="#fcee09"/>
-      <path d="M27,36 L32,39 L37,36" stroke="#fff" stroke-width="2.5" fill="none"/>
-    </svg>
-    <div class="welcome-badge">PRIDE // GAME PORTAL</div>
-    <h1 class="hero-title">Добро пожаловать на портал PRIDE</h1>
-    <p class="hero-sub">Играй, ставь рекорды, слушай музыку и общайся с коллегами. Создай свой профиль — это займёт минуту.</p>
-    <button class="btn-primary" id="btnGoRegister">📝 РЕГИСТРАЦИЯ</button>
-    <button class="btn-secondary" id="btnGoLogin" style="display:none;">🔑 Уже есть профиль? Войти</button>
-  </div>
-</div>
+  var canvas = document.getElementById('board');
+  var boardWrap = document.getElementById('boardWrap');
+  var nextCan = document.getElementById('nextCanvas');
+  var nextCtx = nextCan ? nextCan.getContext('2d') : null;
 
-<!-- ============ ЭКРАН 2: РЕГИСТРАЦИЯ / РЕДАКТИРОВАНИЕ ПРОФИЛЯ ============ -->
-<div class="screen" id="scrForm">
-  <div class="screen-inner">
-    <button class="back-btn" id="btnFormBack">← Назад</button>
-    <h2 class="screen-title" id="formTitle">Регистрация</h2>
+  if (!Config || !canvas || !boardWrap) return;
 
-    <div class="sec-title">1. Ник</div>
-    <input type="text" id="fNick" class="inp" maxlength="20" placeholder="Например: Лев Прайдов" autocomplete="off">
+  var COLS = Config.COLS;
+  var ROWS = Config.ROWS;
+  var SERVICES = Config.SERVICES;
 
-    <div class="sec-title">2. Отдел</div>
-    <select id="fDept" class="inp"></select>
+  var engine3D = window.PrideCore.createEngine3D(canvas, boardWrap, COLS, ROWS);
 
-    <div class="sec-title">3. Аватар</div>
-    <div class="avatar-creator">
-      <div class="avatar-big-preview" id="fAvatarPreview">🦁</div>
-      <div class="animal-grid" id="fAnimalGrid"></div>
-      <div class="color-row" id="fColorRow"></div>
-    </div>
+  var grid = [];
+  var score = 0;
+  var lines = 0;
+  var ult = 0;
+  var cur = null;
+  var nextP = null;
+  var over = false;
+  var paused = true;
+  var inGame = false;
+  var timer = null;
 
-    <div class="sec-title" id="fPassTitle">4. Пароль</div>
-    <input type="password" id="fPass" class="inp" placeholder="Пароль (минимум 4 символа)" autocomplete="new-password">
-    <input type="password" id="fPass2" class="inp" placeholder="Повтори пароль" autocomplete="new-password">
+  var currentModeName = "ASAP (Medium)";
+  var baseDelay = 480;
+  var speedBoostLevel = 0;
 
-    <div class="sec-title">5. Цветовая схема</div>
-    <div class="theme-grid" id="themeGrid"></div>
+  Audio.setPauseChecker(function() { return inGame && (paused || over); });
 
-    <div class="form-error" id="formError"></div>
-    <button class="btn-primary" id="btnFormSubmit">✅ СОЗДАТЬ ПРОФИЛЬ</button>
-  </div>
-</div>
+  function makeGrid() {
+    grid = [];
+    for (var r = 0; r < ROWS; r++) {
+      var row = [];
+      for (var c = 0; c < COLS; c++) row.push(null);
+      grid.push(row);
+    }
+  }
 
-<!-- ============ ЭКРАН 3: ВХОД ============ -->
-<div class="screen" id="scrLogin">
-  <div class="screen-inner">
-    <button class="back-btn" data-go="scrWelcome">← Назад</button>
-    <h2 class="screen-title">Вход</h2>
-    <div class="sec-title">Ник</div>
-    <input type="text" id="lNick" class="inp" maxlength="20" placeholder="Твой ник" autocomplete="username">
-    <div class="sec-title">Пароль</div>
-    <input type="password" id="lPass" class="inp" placeholder="Пароль" autocomplete="current-password">
-    <div class="form-error" id="loginError"></div>
-    <button class="btn-primary" id="btnLoginSubmit">🔑 ВОЙТИ</button>
-  </div>
-</div>
+  function cloneMatrix(m) {
+    var out = [];
+    for (var i = 0; i < m.length; i++) out.push(m[i].slice());
+    return out;
+  }
 
-<!-- ============ ЭКРАН 4: ГЛАВНОЕ МЕНЮ ============ -->
-<div class="screen" id="scrMain">
-  <div class="screen-inner">
-    <div class="profile-card">
-      <div class="avatar-big" id="mainAvatar">🦁</div>
-      <div class="pc-info">
-        <div class="pc-name" id="mainName">Игрок</div>
-        <div class="pc-dept" id="mainDept"></div>
-        <div class="pc-best" id="mainBest"></div>
-      </div>
-      <button class="pc-edit" id="btnEditProfile" title="Редактировать профиль">✏️</button>
-    </div>
+  function randPiece() {
+    var s = SERVICES[Math.floor(Math.random() * SERVICES.length)];
+    return {
+      name: s.name,
+      color: s.color,
+      type: s.type,
+      shape: cloneMatrix(s.shape),
+      x: Math.floor(COLS / 2) - Math.ceil(s.shape[0].length / 2),
+      y: 0
+    };
+  }
 
-    <div class="menu-list">
-      <button class="menu-item" data-go="scrMusic">
-        <span class="mi-ico">🎵</span>
-        <span class="mi-txt"><b>Музыка</b><i>Плеер, радио, громкость</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-      <button class="menu-item" data-go="scrGames">
-        <span class="mi-ico">🎮</span>
-        <span class="mi-txt"><b>Игры</b><i>PRIDE Tetris и другие</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-      <button class="menu-item" data-go="scrLeaders">
-        <span class="mi-ico">🏆</span>
-        <span class="mi-txt"><b>Таблица лидеров</b><i>Лучшие результаты</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-      <button class="menu-item" data-go="scrChat">
-        <span class="mi-ico">💬</span>
-        <span class="mi-txt"><b>Чат</b><i>Общение с коллегами</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-      <button class="menu-item danger" id="btnLogout">
-        <span class="mi-ico">🚪</span>
-        <span class="mi-txt"><b>Выход</b><i>Выйти из профиля</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-    </div>
-  </div>
-</div>
+  function notify(msg) {
+    var b = document.getElementById('banner');
+    if (!b) return;
+    b.innerText = msg;
+    b.style.display = 'block';
+    setTimeout(function() { b.style.display = 'none'; }, 1400);
+  }
 
-<!-- ============ МУЗЫКА: ГЛАВНАЯ СТРАНИЦА РАЗДЕЛА ============ -->
-<div class="screen" id="scrMusic">
-  <div class="screen-inner">
-    <button class="back-btn" data-go="scrMain">← В меню</button>
-    <h2 class="screen-title">🎵 Музыка</h2>
+  function submitCurrent(announce) {
+    if (score <= 0) return;
+    var isRecord = Hub.submitScore('tetris', score);
+    if (isRecord && announce) {
+      var s = score;
+      setTimeout(function() { notify("🏆 НОВЫЙ РЕКОРД: " + s + " ₽"); }, 1500);
+    }
+  }
 
-    <div class="now-strip" id="nowStrip" style="display:none;">
-      <span id="nowText"></span>
-      <button id="btnNowStop" title="Остановить">⏹</button>
-    </div>
+  function hits(p, ox, oy, mat) {
+    var m = mat || p.shape;
+    for (var r = 0; r < m.length; r++) {
+      for (var c = 0; c < m[r].length; c++) {
+        if (!m[r][c]) continue;
+        var nx = p.x + c + ox;
+        var ny = p.y + r + oy;
+        if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+        if (ny >= 0 && grid[ny][nx]) return true;
+      }
+    }
+    return false;
+  }
 
-    <div class="menu-list">
-      <button class="menu-item" id="miPlayer">
-        <span class="mi-ico">🎧</span>
-        <span class="mi-txt"><b>Плеер</b><i>Твои треки из папки music на весь экран</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-      <button class="menu-item" data-go="scrRadio">
-        <span class="mi-ico">📻</span>
-        <span class="mi-txt"><b>Интернет-радио</b><i>Бесплатные станции онлайн</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-      <button class="menu-item" data-go="scrMusicGame">
-        <span class="mi-ico">🎮</span>
-        <span class="mi-txt"><b>Игровая музыка</b><i>12 саундтреков для игры</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-      <button class="menu-item" data-go="scrVolume">
-        <span class="mi-ico">🔊</span>
-        <span class="mi-txt"><b>Громкость</b><i>Музыка и звуковые эффекты</i></span>
-        <span class="mi-arr">›</span>
-      </button>
-    </div>
-  </div>
-</div>
+  function getGhostY() {
+    if (!cur) return 0;
+    var gy = cur.y;
+    while (!hits(cur, 0, gy - cur.y + 1)) gy++;
+    return gy;
+  }
 
-<!-- ============ МУЗЫКА: ИГРОВАЯ МУЗЫКА ============ -->
-<div class="screen" id="scrMusicGame">
-  <div class="screen-inner">
-    <button class="back-btn" data-go="scrMusic">← Музыка</button>
-    <h2 class="screen-title">🎮 Игровая музыка</h2>
+  function draw() {
+    engine3D.draw(grid, cur, getGhostY());
+  }
 
-    <div class="mini-player big-player">
-      <button class="mp-btn big" id="btnMusicPrev">⏮</button>
-      <button class="mp-btn big" id="btnMusicPlay">⏯</button>
-      <button class="mp-btn big" id="btnMusicNext">⏭</button>
-    </div>
+  function drawNext() {
+    if (!nextCtx) return;
+    nextCtx.clearRect(0, 0, nextCan.width, nextCan.height);
+    if (!nextP) return;
+    var s = 14;
+    var d = Math.max(2, Math.floor(s * 0.2));
+    for (var dy = 0; dy < nextP.shape.length; dy++) {
+      for (var dx = 0; dx < nextP.shape[dy].length; dx++) {
+        if (nextP.shape[dy][dx]) {
+          var px = (dx + 0.3) * s;
+          var py = (dy + 0.3) * s;
+          nextCtx.fillStyle = nextP.color;
+          nextCtx.fillRect(px + 1, py + d, s - d - 1, s - d - 1);
+          nextCtx.strokeStyle = "rgba(255,255,255,0.45)";
+          nextCtx.strokeRect(px + 1, py + d, s - d - 1, s - d - 1);
+        }
+      }
+    }
+  }
 
-    <div class="music-box">
-      <div class="track-grid">
-        <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass</button>
-        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit</button>
-        <button class="track-btn" data-track="s3">🎹 3. Neon Arpeggio</button>
-        <button class="track-btn" data-track="s4">🎹 4. Deadline Overdrive</button>
-        <button class="track-btn" data-track="s5">🎹 5. Agency Synthwave</button>
-        <button class="track-btn" data-track="s6">🎹 6. Retro Matrix Boss</button>
-        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride MP3</button>
-        <button class="track-btn" data-track="m2">🎵 8. Neon Agency MP3</button>
-        <button class="track-btn" data-track="m3">🎵 9. Techno Rush MP3</button>
-        <button class="track-btn" data-track="m4">🎵 10. Digital Horizon</button>
-        <button class="track-btn" data-track="m5">🎵 11. Night Print Shop</button>
-        <button class="track-btn" data-track="m6">🎵 12. Mega Billboard</button>
-        <button class="track-btn" data-track="off" style="grid-column: span 2;">🔇 Выключить музыку</button>
-      </div>
-    </div>
-  </div>
-</div>
+  function setUlt(val) {
+    ult = Math.min(100, Math.max(0, val));
+    var bar = document.getElementById('ultBar');
+    if (bar) bar.style.width = ult + "%";
+    var btn = document.getElementById('btnUlt');
+    if (btn) btn.className = ult >= 100 ? "btn-ult active" : "btn-ult";
+  }
 
-<!-- ============ МУЗЫКА: ИНТЕРНЕТ-РАДИО ============ -->
-<div class="screen" id="scrRadio">
-  <div class="screen-inner">
-    <button class="back-btn" data-go="scrMusic">← Музыка</button>
-    <h2 class="screen-title">📻 Интернет-радио</h2>
+  function updateUI() {
+    var sVal = document.getElementById('scoreVal');
+    var lVal = document.getElementById('linesVal');
+    var mVal = document.getElementById('modeVal');
+    if (sVal) sVal.innerText = score + " ₽";
+    if (lVal) lVal.innerText = lines;
+    if (mVal) mVal.innerText = currentModeName;
+  }
 
-    <div class="radio-now" id="radioNow">
-      <div class="rn-info">
-        <div class="rn-name" id="rnName">—</div>
-        <div class="rn-status" id="rnStatus"></div>
-      </div>
-      <button class="rn-stop" id="btnRnStop" title="Остановить">⏹</button>
-    </div>
+  function checkLines() {
+    var count = 0;
+    var designBonus = false;
 
-    <div id="radioList"></div>
+    for (var r = ROWS - 1; r >= 0; r--) {
+      var full = true;
+      for (var c = 0; c < COLS; c++) {
+        if (!grid[r][c]) { full = false; break; }
+      }
+      if (full) {
+        engine3D.triggerLaserRowExplosion(r);
+        for (var k = 0; k < COLS; k++) {
+          if (grid[r][k].type === "design") designBonus = true;
+        }
+        grid.splice(r, 1);
+        var empty = [];
+        for (var e = 0; e < COLS; e++) empty.push(null);
+        grid.unshift(empty);
+        count++;
+        r++;
+      }
+    }
 
-    <div class="radio-add">
-      <div class="sec-title" style="margin-top:0;">➕ Добавить свою станцию</div>
-      <input type="text" id="rName" class="inp" maxlength="30" placeholder="Название станции">
-      <input type="text" id="rUrl" class="inp" placeholder="Ссылка на поток (https://...)" autocapitalize="none" autocorrect="off">
-      <div class="form-error" id="rAddErr"></div>
-      <button class="btn-secondary" id="btnAddStation">Добавить</button>
-      <div class="note" style="margin-bottom:0;">Работают только ссылки, которые начинаются с https://. Некоторые станции могут быть недоступны в твоём регионе.</div>
-    </div>
-  </div>
-</div>
+    if (count > 0) {
+      var reward = count * 300 * count;
+      if (designBonus) {
+        reward *= 2;
+        notify("🎨 ДИЗАЙН PRIDE УДВОИЛ ЧЕК! +" + reward + " ₽");
+      }
+      if (count >= 3) {
+        reward += 1500;
+        notify("🪧 МЕГА-ВЫВЕСКА! +" + reward + " ₽");
+      }
+      score += reward;
+      lines += count;
+      setUlt(ult + count * 20);
 
-<!-- ============ МУЗЫКА: ГРОМКОСТЬ ============ -->
-<div class="screen" id="scrVolume">
-  <div class="screen-inner">
-    <button class="back-btn" data-go="scrMusic">← Музыка</button>
-    <h2 class="screen-title">🔊 Громкость</h2>
+      var newBoost = Math.floor(lines / 5);
+      if (newBoost > speedBoostLevel) {
+        speedBoostLevel = newBoost;
+        engine3D.triggerSpeedSparksExplosion();
+        notify("⚡ НОВАЯ СКОРОСТЬ! УРОВЕНЬ " + (speedBoostLevel + 1));
+      }
+    }
+    updateUI();
+  }
 
-    <div class="vol-card">
-      <div class="vol-head"><span>🎵 Музыка</span><span class="vol-val" id="volMusicVal">70%</span></div>
-      <input type="range" class="rng" id="volMusic" min="0" max="100" value="70">
-      <div class="vol-hint">Плеер, радио и игровая музыка</div>
-    </div>
+  function lockPiece() {
+    Audio.playSfx('drop');
+    for (var dy = 0; dy < cur.shape.length; dy++) {
+      for (var dx = 0; dx < cur.shape[dy].length; dx++) {
+        if (cur.shape[dy][dx] && cur.y + dy >= 0) {
+          grid[cur.y + dy][cur.x + dx] = { color: cur.color, type: cur.type };
+        }
+      }
+    }
+    if (cur.type === "deadline") {
+      score += 500;
+      notify("🔥 ДЕДЛАЙН СДАН! +500 ₽");
+    }
+    setUlt(ult + (cur.type === "merch" ? 25 : 10));
+    checkLines();
+    spawn();
+  }
 
-    <div class="vol-card">
-      <div class="vol-head"><span>💥 Звуковые эффекты</span><span class="vol-val" id="volSfxVal">80%</span></div>
-      <input type="range" class="rng" id="volSfx" min="0" max="100" value="80">
-      <div class="vol-hint">Звуки в играх и в меню</div>
-      <div class="sfx-row" style="margin-top:10px;">
-        <span>Эффекты включены:</span>
-        <button class="track-btn active sfx-toggle" style="padding:6px 14px;">ВКЛ</button>
-      </div>
-    </div>
+  function spawn() {
+    cur = nextP || randPiece();
+    nextP = randPiece();
+    var tag = document.getElementById('serviceName');
+    if (tag) {
+      tag.innerText = cur.name;
+      tag.style.borderColor = cur.color;
+    }
+    drawNext();
 
-    <button class="btn-secondary" id="btnVolTest">🔔 Проверить звук</button>
-  </div>
-</div>
+    if (hits(cur, 0, 0)) {
+      over = true;
+      submitCurrent(true);
+      notify("ТЕНДЕР ОКОНЧЕН, " + Hub.getPlayerName() + "! БЮДЖЕТ: " + score + " ₽");
+    }
+    scheduleTick();
+  }
 
-<!-- ============ ИГРЫ ============ -->
-<div class="screen" id="scrGames">
-  <div class="screen-inner">
-    <button class="back-btn" data-go="scrMain">← В меню</button>
-    <h2 class="screen-title">🎮 Игры</h2>
-    <div id="gamesList"></div>
-  </div>
-</div>
+  function moveX(dir) {
+    if (over || paused || !cur) return;
+    if (!hits(cur, dir, 0)) {
+      cur.x += dir;
+      engine3D.tilt(dir * 0.12);
+      Audio.playSfx('move');
+      engine3D.spawnFallingTrail(cur, paused, over);
+      draw();
+    }
+  }
 
-<!-- ============ ТАБЛИЦА ЛИДЕРОВ ============ -->
-<div class="screen" id="scrLeaders">
-  <div class="screen-inner">
-    <button class="back-btn" data-go="scrMain">← В меню</button>
-    <h2 class="screen-title">🏆 Таблица лидеров</h2>
-    <div class="sec-title">🧱 PRIDE Tetris — лучший бюджет</div>
-    <div id="leaderList"></div>
-    <div class="note">Пока таблица считает результаты только тех, кто играл на этом устройстве. Чтобы коллеги видели общую таблицу, нужен общий сервер.</div>
-  </div>
-</div>
+  function stepDown() {
+    if (over || paused || !cur) return;
+    if (!hits(cur, 0, 1)) {
+      cur.y++;
+      engine3D.spawnFallingTrail(cur, paused, over);
+    } else {
+      lockPiece();
+    }
+    draw();
+  }
 
-<!-- ============ ЧАТ ============ -->
-<div class="screen noscroll" id="scrChat">
-  <div class="chat-wrap">
-    <button class="back-btn" data-go="scrMain">← В меню</button>
-    <h2 class="screen-title">💬 Чат</h2>
-    <div class="note">Пока чат работает только на этом устройстве. Чтобы переписываться с коллегами, нужен общий сервер.</div>
-    <div class="chat-list" id="chatList"></div>
-    <div class="chat-form">
-      <input type="text" id="chatInput" class="inp" maxlength="300" placeholder="Напиши сообщение..." autocomplete="off">
-      <button class="chat-send" id="btnChatSend">➤</button>
-    </div>
-  </div>
-</div>
+  function dropFast() {
+    if (over || paused || !cur) return;
+    while (!hits(cur, 0, 1)) {
+      cur.y++;
+      score += 5;
+      engine3D.spawnFallingTrail(cur, paused, over);
+    }
+    lockPiece();
+    updateUI();
+    draw();
+  }
 
-<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS ============ -->
-<div class="game-screen" id="gameScreen">
-  <div class="header">
-    <div class="brand-box">
-      <svg class="logo-svg" viewBox="0 0 64 64">
-        <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="#ff007a" stroke-width="4" fill="#120924"/>
-        <path d="M20,25 L32,14 L44,25 L39,44 L25,44 Z" stroke="#00f0ff" stroke-width="3" fill="none"/>
-        <circle cx="27" cy="28" r="2.5" fill="#fcee09"/>
-        <circle cx="37" cy="28" r="2.5" fill="#fcee09"/>
-        <path d="M27,36 L32,39 L37,36" stroke="#fff" stroke-width="2.5" fill="none"/>
-      </svg>
-      <div class="avatar-badge" id="headerAvatar">🦁</div>
-      <div>
-        <div class="brand-name" id="headerPlayerName">Игрок</div>
-        <div class="brand-sub">PRIDE // Game Portal</div>
-      </div>
-    </div>
-    <div class="header-btns">
-      <button class="btn-pause" id="btnPause">⏸ ПАУЗА</button>
-      <button class="btn-menu" id="btnMenu">МЕНЮ</button>
-    </div>
-  </div>
+  function rotate() {
+    if (over || paused || !cur) return;
+    var s = cur.shape;
+    var rot = [];
+    for (var c = 0; c < s[0].length; c++) {
+      var newRow = [];
+      for (var r = s.length - 1; r >= 0; r--) {
+        newRow.push(s[r][c]);
+      }
+      rot.push(newRow);
+    }
 
-  <div class="game-area">
-    <div class="board-wrap" id="boardWrap">
-      <canvas id="board" width="264" height="440"></canvas>
-      <div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
-      <div id="banner">WOW-ЭФФЕКТ!</div>
-    </div>
+    var kicks = [[0,0], [-1,0], [1,0], [-2,0], [2,0], [0,-1], [0,1], [-1,-1], [1,-1]];
+    var rotated = false;
+    for (var i = 0; i < kicks.length; i++) {
+      var ox = kicks[i][0], oy = kicks[i][1];
+      if (!hits(cur, ox, oy, rot)) {
+        cur.x += ox;
+        cur.y += oy;
+        cur.shape = rot;
+        rotated = true;
+        break;
+      }
+    }
 
-    <div class="side">
-      <div class="box">
-        <div class="lbl">Бюджет</div>
-        <div class="val" id="scoreVal">0 ₽</div>
-      </div>
-      <div class="box">
-        <div class="lbl">Проекты</div>
-        <div class="val" id="linesVal" style="color:var(--a2);">0</div>
-      </div>
-      <div class="box">
-        <div class="lbl">Режим</div>
-        <div class="val" id="modeVal" style="font-size:10px; color:var(--a3);">ASAP (Med)</div>
-      </div>
-      <div class="box">
-        <div class="lbl">Сейчас:</div>
-        <div class="service-tag" id="serviceName">Т-фигура</div>
-      </div>
-      <div class="box">
-        <div class="lbl">След.:</div>
-        <canvas id="nextCanvas" width="68" height="48" style="display:block; margin:2px auto 0;"></canvas>
-      </div>
+    if (rotated) {
+      engine3D.tilt(0.16);
+      Audio.playSfx('rotate');
+      engine3D.spawnFallingTrail(cur, paused, over);
+      draw();
+    }
+  }
 
-      <div class="box">
-        <div class="lbl" id="sideTrackLbl">🎹 1. Cyber Bass</div>
-        <div class="mini-player">
-          <button class="mp-btn" id="btnPrevTrack" title="Предыдущий">⏮</button>
-          <button class="mp-btn" id="btnPlayPauseTrack" title="Пуск/Стоп">⏯</button>
-          <button class="mp-btn" id="btnNextTrack" title="Следующий">⏭</button>
-        </div>
-      </div>
+  function setPauseButton(isPaused) {
+    var btnP = document.getElementById('btnPause');
+    if (!btnP) return;
+    btnP.innerText = isPaused ? "▶ ПУСК" : "⏸ ПАУЗА";
+    btnP.classList.toggle('paused', isPaused);
+  }
 
-      <div class="box">
-        <div class="lbl">«Под ключ»</div>
-        <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
-        <button class="btn-ult" id="btnUlt">⚡ УЛЬТА</button>
-      </div>
+  function togglePause() {
+    if (over) return;
+    paused = !paused;
+    var bgAudio = document.getElementById('bgAudio');
+    if (paused) {
+      if (timer) clearTimeout(timer);
+      if (bgAudio && !bgAudio.paused) bgAudio.pause();
+      setPauseButton(true);
+      notify("⏸ ПАУЗА");
+    } else {
+      if (Audio.isMp3Track(Audio.getCurrentTrack()) && bgAudio) {
+        bgAudio.play().catch(function() {});
+      }
+      setPauseButton(false);
+      var b = document.getElementById('banner');
+      if (b) b.style.display = 'none';
+      scheduleTick();
+    }
+  }
 
-      <button class="btn-side-drop" id="btnDrop">🚀 СБРОС ВНИЗ</button>
-      <button class="btn-side-restart" id="btnRestart">🔄 ЗАНОВО</button>
-    </div>
-  </div>
+  function useUlt() {
+    if (ult < 100 || over || paused) return;
+    engine3D.triggerLaserRowExplosion(ROWS - 1);
+    engine3D.triggerLaserRowExplosion(ROWS - 2);
+    engine3D.triggerLaserRowExplosion(ROWS - 3);
+    grid.splice(ROWS - 3, 3);
+    for (var i = 0; i < 3; i++) {
+      var empty = [];
+      for (var c = 0; c < COLS; c++) empty.push(null);
+      grid.unshift(empty);
+    }
+    setUlt(0);
+    score += 1200;
+    lines += 3;
+    updateUI();
+    notify("🦁 СДАНО ПОД КЛЮЧ! -3 РЯДА & +1200 ₽");
+    draw();
+  }
 
-  <div class="controls">
-    <button class="c-btn" id="btnLeft">◀</button>
-    <button class="c-btn" id="btnRot">↻</button>
-    <button class="c-btn" id="btnDown">▼</button>
-    <button class="c-btn" id="btnRight">▶</button>
-  </div>
-</div>
+  function scheduleTick() {
+    if (timer) clearTimeout(timer);
+    if (over || paused) return;
+    var speedFactor = Math.max(140, baseDelay - speedBoostLevel * 30);
+    var delay = (cur && cur.type === "deadline") ? Math.max(120, Math.floor(speedFactor * 0.55)) : speedFactor;
+    timer = setTimeout(function() {
+      stepDown();
+      scheduleTick();
+    }, delay);
+  }
 
-<!-- МЕНЮ ВНУТРИ ИГРЫ -->
-<div class="modal" id="menuModal">
-  <div class="modal-box">
-    <h3>🦁 МЕНЮ ИГРЫ</h3>
+  function startGame(keepPaused) {
+    makeGrid();
+    score = 0;
+    lines = 0;
+    speedBoostLevel = 0;
+    over = false;
+    paused = !!keepPaused;
+    setPauseButton(paused);
+    setUlt(0);
+    updateUI();
+    nextP = randPiece();
+    spawn();
+    draw();
+  }
 
-    <div class="sec-title">1. Сложность (скорость):</div>
-    <div class="mode-list">
-      <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
-        <b>Redline</b> <span>Easy Mode</span>
-      </button>
-      <button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480">
-        <b>ASAP</b> <span>Medium Mode</span>
-      </button>
-      <button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240">
-        <b>Deadline</b> <span>Hard Mode</span>
-      </button>
-    </div>
+  function bindBtn(id, fn) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      Audio.ensureAudio();
+      fn();
+    }, {passive: false});
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      Audio.ensureAudio();
+      fn();
+    });
+  }
 
-    <div class="sec-title">2. Музыка и звуки:</div>
-    <div class="music-box">
-      <div class="track-grid" id="menuTrackGrid">
-        <button class="track-btn active" data-track="s1">🎹 1. Cyber Pride Bass</button>
-        <button class="track-btn" data-track="s2">🎹 2. Korobeiniki 8-Bit</button>
-        <button class="track-btn" data-track="s3">🎹 3. Neon Arpeggio</button>
-        <button class="track-btn" data-track="s4">🎹 4. Deadline Overdrive</button>
-        <button class="track-btn" data-track="s5">🎹 5. Agency Synthwave</button>
-        <button class="track-btn" data-track="s6">🎹 6. Retro Matrix Boss</button>
-        <button class="track-btn" data-track="m1">🎵 7. Cyber Pride MP3</button>
-        <button class="track-btn" data-track="m2">🎵 8. Neon Agency MP3</button>
-        <button class="track-btn" data-track="m3">🎵 9. Techno Rush MP3</button>
-        <button class="track-btn" data-track="m4">🎵 10. Digital Horizon</button>
-        <button class="track-btn" data-track="m5">🎵 11. Night Print Shop</button>
-        <button class="track-btn" data-track="m6">🎵 12. Mega Billboard</button>
-        <button class="track-btn" data-track="off" style="grid-column: span 2;">🔇 Выключить музыку</button>
-      </div>
-      <div class="sfx-row">
-        <span>🔊 Звуковые эффекты (SFX):</span>
-        <button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
-      </div>
-    </div>
+  bindBtn('btnLeft', function() { moveX(-1); });
+  bindBtn('btnRight', function() { moveX(1); });
+  bindBtn('btnDown', function() { stepDown(); });
+  bindBtn('btnRot', function() { rotate(); });
+  bindBtn('btnDrop', function() { dropFast(); });
+  bindBtn('btnUlt', function() { useUlt(); });
+  bindBtn('btnRestart', function() { submitCurrent(false); startGame(false); });
+  bindBtn('btnPause', function() { togglePause(); });
 
-    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px;">ПРОДОЛЖИТЬ ИГРУ</button>
-    <button class="btn-secondary" id="btnToMain" style="margin-top:8px;">🏠 В ГЛАВНОЕ МЕНЮ</button>
-  </div>
-</div>
+  var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+  var lastDragX = 0, lastDragY = 0, wasDragged = false;
+  var lastTouchEndTime = 0;
 
-<!-- ============ ПОЛНОЭКРАННЫЙ ПЛЕЕР ============ -->
-<div class="player-full" id="playerFull">
-  <div class="pf-base"></div>
-  <div class="pf-bg" id="pfBgA"></div>
-  <div class="pf-bg" id="pfBgB"></div>
-  <div class="pf-shade"></div>
+  if (boardWrap) {
+    boardWrap.addEventListener('touchstart', function(e) {
+      Audio.ensureAudio();
+      if (over || paused) return;
+      var t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      lastDragX = touchStartX;
+      lastDragY = touchStartY;
+      touchStartTime = Date.now();
+      wasDragged = false;
+    }, {passive: true});
 
-  <div class="pf-ui">
-    <div class="pf-top">
-      <button class="pf-icon" id="pfClose" title="Свернуть">⌄</button>
-      <div class="pf-top-title">PRIDE PLAYER</div>
-      <div class="pf-top-right">
-        <button class="pf-icon" id="pfBgBtn" title="Сменить фон">🖼</button>
-        <button class="pf-icon" id="pfListBtn" title="Список треков">☰</button>
-      </div>
-    </div>
+    boardWrap.addEventListener('touchmove', function(e) {
+      if (over || paused) return;
+      e.preventDefault();
+      var t = e.touches[0];
+      var dx = t.clientX - lastDragX;
+      var dy = t.clientY - lastDragY;
 
-    <div class="pf-center">
-      <div class="pf-disc" id="pfDisc"><div class="pf-disc-label">🎵</div></div>
-      <div class="pf-title-row">
-        <div class="eq paused" id="pfEq"><span></span><span></span><span></span><span></span></div>
-        <div class="pf-title" id="pfTitle">Загрузка…</div>
-      </div>
-      <div class="pf-sub" id="pfSub"></div>
-      <div class="pf-empty" id="pfEmpty" style="display:none;">
-        <div id="pfEmptyText">В папке music на GitHub пока нет треков.</div>
-        <button class="pf-empty-btn" id="btnPfRefresh">🔄 Обновить список</button>
-      </div>
-    </div>
+      if (Math.abs(dx) > 22) {
+        moveX(dx > 0 ? 1 : -1);
+        lastDragX = t.clientX;
+        wasDragged = true;
+      }
+      if (dy > 26) {
+        stepDown();
+        lastDragY = t.clientY;
+        wasDragged = true;
+      }
+    }, {passive: false});
 
-    <div class="pf-bottom">
-      <div class="pf-time-row"><span id="pfCur">0:00</span><span id="pfDur">0:00</span></div>
-      <input type="range" class="rng" id="pfSeek" min="0" max="1000" value="0">
-      <div class="pf-controls">
-        <button class="pf-btn" id="pfShuffle" title="Перемешать">🔀</button>
-        <button class="pf-btn" id="pfPrev" title="Назад">⏮</button>
-        <button class="pf-btn pf-play" id="pfPlay" title="Пуск/Пауза">▶</button>
-        <button class="pf-btn" id="pfNext" title="Вперёд">⏭</button>
-        <button class="pf-btn" id="pfRepeat" title="Повтор">🔁</button>
-      </div>
-      <div class="pf-vol-row">
-        <span>🔈</span>
-        <input type="range" class="rng" id="pfVol" min="0" max="100" value="70">
-        <span>🔊</span>
-      </div>
-    </div>
-  </div>
+    boardWrap.addEventListener('touchend', function(e) {
+      lastTouchEndTime = Date.now();
+      if (over || paused) return;
+      var dt = lastTouchEndTime - touchStartTime;
+      var ch = e.changedTouches[0];
+      var totalDx = Math.abs(ch.clientX - touchStartX);
+      var totalDy = ch.clientY - touchStartY;
 
-  <div class="pf-list" id="pfList">
-    <div class="pf-list-head">
-      <span>Треки <small id="pfListInfo"></small></span>
-      <span>
-        <button class="pf-icon" id="pfListRefresh" title="Обновить список">🔄</button>
-        <button class="pf-icon" id="pfListClose" title="Закрыть">✕</button>
-      </span>
-    </div>
-    <div class="pf-list-items" id="pfListItems"></div>
-  </div>
-</div>
+      if (totalDy > 90 && dt < 220) {
+        dropFast();
+        return;
+      }
+      if (!wasDragged && totalDx < 30 && Math.abs(totalDy) < 30) {
+        rotate();
+      }
+    }, {passive: true});
 
-<audio id="bgAudio" loop preload="none"></audio>
+    boardWrap.addEventListener('click', function() {
+      if (Date.now() - lastTouchEndTime < 450) return;
+      Audio.ensureAudio();
+      if (!over && !paused) rotate();
+    });
+  }
 
-<script src="./src/core/audio-player.js?v=11"></script>
-<script src="./src/core/portal-hub.js?v=11"></script>
-<script src="./src/core/music-hub.js?v=11"></script>
-<script src="./src/games/pride-tetris/config.js?v=11"></script>
-<script src="./src/games/pride-tetris/engine-3d.js?v=11"></script>
-<script src="./src/games/pride-tetris/tetris-game.js?v=11"></script>
-</body>
-</html>
+  var menuModal = document.getElementById('menuModal');
+  var btnMenu = document.getElementById('btnMenu');
+  if (btnMenu && menuModal) {
+    btnMenu.onclick = function(e) {
+      e.stopPropagation();
+      Audio.ensureAudio();
+      paused = true;
+      if (timer) clearTimeout(timer);
+      menuModal.style.display = 'flex';
+    };
+  }
+
+  var btnCloseMenu = document.getElementById('btnCloseMenu');
+  if (btnCloseMenu && menuModal) {
+    btnCloseMenu.onclick = function(e) {
+      e.stopPropagation();
+      Audio.ensureAudio();
+      menuModal.style.display = 'none';
+      paused = false;
+      setPauseButton(false);
+      var b = document.getElementById('banner');
+      if (b) b.style.display = 'none';
+      scheduleTick();
+    };
+  }
+
+  var btnToMain = document.getElementById('btnToMain');
+  if (btnToMain && menuModal) {
+    btnToMain.onclick = function(e) {
+      e.stopPropagation();
+      Audio.ensureAudio();
+      menuModal.style.display = 'none';
+      Hub.exitToMenu();
+    };
+  }
+
+  var modeBtns = document.querySelectorAll('.mode-btn');
+  for (var i = 0; i < modeBtns.length; i++) {
+    modeBtns[i].onclick = function(e) {
+      e.stopPropagation();
+      Audio.ensureAudio();
+      for (var j = 0; j < modeBtns.length; j++) modeBtns[j].classList.remove('selected');
+      this.classList.add('selected');
+      currentModeName = this.getAttribute('data-mode');
+      baseDelay = parseInt(this.getAttribute('data-speed'), 10);
+      updateUI();
+      if (menuModal) menuModal.style.display = 'none';
+      paused = false;
+      setPauseButton(false);
+      engine3D.triggerSpeedSparksExplosion();
+      notify("💥 SPEED MODE: " + currentModeName);
+      scheduleTick();
+    };
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (!inGame) return;
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+    if (e.key === 'ArrowLeft') moveX(-1);
+    else if (e.key === 'ArrowRight') moveX(1);
+    else if (e.key === 'ArrowDown') stepDown();
+    else if (e.key === 'ArrowUp') rotate();
+    else if (e.key === ' ') { e.preventDefault(); dropFast(); }
+    else if (e.key === 'p' || e.key === 'P') togglePause();
+  });
+
+  Hub.registerGame('tetris', {
+    onOpen: function() {
+      inGame = true;
+      if (over) {
+        startGame(false);
+      } else {
+        paused = false;
+        setPauseButton(false);
+        var b = document.getElementById('banner');
+        if (b) b.style.display = 'none';
+        scheduleTick();
+      }
+      engine3D.triggerSpeedSparksExplosion();
+      draw();
+    },
+    onClose: function() {
+      submitCurrent(false);
+      inGame = false;
+      paused = true;
+      if (timer) clearTimeout(timer);
+      setPauseButton(true);
+      var bgAudio = document.getElementById('bgAudio');
+      if (bgAudio && Audio.isMp3Track(Audio.getCurrentTrack())) {
+        bgAudio.play().catch(function() {});
+      }
+    },
+    onReset: function() {
+      inGame = false;
+      if (timer) clearTimeout(timer);
+      startGame(true);
+    }
+  });
+})();
