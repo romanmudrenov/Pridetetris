@@ -1,4 +1,3 @@
-```javascript
 (function() {
   var Config = window.PrideCore.TetrisConfig;
   var Audio = window.PrideCore.Audio;
@@ -538,4 +537,3 @@
 
   startGame(true);
 })();
-```
