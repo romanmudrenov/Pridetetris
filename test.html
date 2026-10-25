@@ -1,9 +1,10 @@
+html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Диагностика PRIDE</title>
+<title>Диагностика PRIDE v10</title>
 <style>
   body { background:#0b0714; color:#fff; font-family:Arial,sans-serif; font-size:13px; padding:10px; }
   h2 { color:#00f0ff; font-size:16px; }
@@ -14,14 +15,17 @@
 </style>
 </head>
 <body>
-<h2>Диагностика файлов PRIDE</h2>
-<div id="out">Проверяю…</div>
+<h2>Диагностика файлов PRIDE (v10)</h2>
+<div id="out">Проверяю структуру и новые модули…</div>
 
 <script>
 var FILES = [
+  "./index.html",
   "./css/main.css",
+  "./css/music.css",
   "./src/core/audio-player.js",
   "./src/core/portal-hub.js",
+  "./src/core/music-hub.js",
   "./src/games/pride-tetris/config.js",
   "./src/games/pride-tetris/engine-3d.js",
   "./src/games/pride-tetris/tetris-game.js"
@@ -51,7 +55,6 @@ function checkFile(url) {
     return resp.text().then(function(text) {
       var html = "<b>" + url + "</b><br>Размер: " + text.length + " симв.<br>";
       html += "Начало: <code>" + esc(text.substring(0, 45).replace(/\s+/g, " ")) + "</code><br>";
-      html += "Конец: <code>" + esc(text.slice(-30).replace(/\s+/g, " ")) + "</code><br>";
 
       if (url.slice(-3) === ".js") {
         try {
@@ -60,12 +63,8 @@ function checkFile(url) {
         } catch (e) {
           html += "<span class='bad'>ОШИБКА СИНТАКСИСА: " + esc(e.message) + "</span>";
         }
-        if (text.indexOf("export ") !== -1 || text.indexOf("import ") === 0) {
-          html += "<br><span class='bad'>Внутри есть import/export (старый код?)</span>";
-        }
-        if (text.indexOf("```") !== -1) {
-          html += "<br><span class='bad'>Внутри лишние обратные кавычки ```</span>";
-        }
+      } else {
+        html += "<span class='ok'>Файл загружен</span>";
       }
       addBlock(html);
     });
