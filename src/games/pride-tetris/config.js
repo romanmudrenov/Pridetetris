@@ -1,3 +1,4 @@
+```javascript
 window.PrideCore = window.PrideCore || {};
 
 window.PrideCore.TetrisConfig = {
@@ -13,3 +14,4 @@ window.PrideCore.TetrisConfig = {
     { name: "Обратная Г (J)", color: "#ff2a2a", type: "deadline",  shape: [[0,0,1],[1,1,1]] }
   ]
 };
+```
