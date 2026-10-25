@@ -1,3 +1,4 @@
+```javascript
 window.PrideCore = window.PrideCore || {};
 
 window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
@@ -112,7 +113,7 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
   }
 
   function animate3D() {
-    if (useThree) {
+    if (useThree && boardWrap.offsetParent !== null) {
       currentRotY += (targetRotY - currentRotY) * 0.15;
       targetRotY *= 0.9;
       boardGroup.rotation.y = currentRotY;
@@ -284,3 +285,4 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
     }
   };
 };
+```
