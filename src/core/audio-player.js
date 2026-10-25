@@ -1,195 +1,64 @@
+window.onerror = function(m, s, l) {
+  alert("ОШИБКА: " + m + "\n" + String(s || "").split("/").pop() + " строка " + l);
+};
+
 window.PrideCore = window.PrideCore || {};
 
 (function() {
   var audioCtx = null;
   var sfxEnabled = true;
-  var musicVolume = 0.70;
-  var sfxVolume = 0.80;
-
   var currentTrack = "s1";
   var lastActiveTrack = "s1";
   var synthInterval = null;
   var synthStep = 0;
-  var loopMp3 = true;
   var isGamePausedOrOver = function() { return false; };
 
-  // Загрузка сохранённой громкости из памяти браузера
-  try {
-    var savedMVol = localStorage.getItem('pride_music_vol_v1');
-    if (savedMVol !== null) musicVolume = Math.max(0, Math.min(1, parseFloat(savedMVol)));
-    var savedSVol = localStorage.getItem('pride_sfx_vol_v1');
-    if (savedSVol !== null) sfxVolume = Math.max(0, Math.min(1, parseFloat(savedSVol)));
-  } catch (e) {}
+  var KEY_MV = 'pride_vol_music_v1';
+  var KEY_SV = 'pride_vol_sfx_v1';
+  var volListeners = [];
+  var externalStopper = null;
 
-  // Папки на GitHub, куда ты загрузишь свои MP3 и картинки обложек
-  var GITHUB_MUSIC_DIR = "./music/";
-  var GITHUB_COVERS_DIR = "./music/covers/";
+  function clamp01(v) {
+    v = parseFloat(v);
+    if (isNaN(v)) return 0;
+    return Math.max(0, Math.min(1, v));
+  }
+  function loadVol(key, def) {
+    try {
+      var v = parseFloat(localStorage.getItem(key));
+      if (isNaN(v) || v < 0 || v > 1) return def;
+      return v;
+    } catch (e) { return def; }
+  }
+  function saveVol(key, v) {
+    try { localStorage.setItem(key, String(v)); } catch (e) {}
+  }
+  var musicVol = loadVol(KEY_MV, 0.7);
+  var sfxVol = loadVol(KEY_SV, 0.8);
 
-  // Встроенные неоновые SVG-фоны (работают, пока свои картинки ещё не загружены в /music/covers/)
-  function makeSvgCover(c1, c2, c3, label) {
-    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">'
-      + '<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">'
-      + '<stop offset="0%" stop-color="' + c1 + '"/><stop offset="50%" stop-color="' + c2 + '"/><stop offset="100%" stop-color="' + c3 + '"/>'
-      + '</linearGradient></defs>'
-      + '<rect width="600" height="600" fill="url(#g)"/>'
-      + '<circle cx="300" cy="300" r="210" stroke="rgba(255,255,255,0.18)" stroke-width="4" fill="none"/>'
-      + '<polygon points="300,70 500,190 500,410 300,530 100,410 100,190" stroke="rgba(0,240,255,0.45)" stroke-width="6" fill="rgba(10,6,22,0.45)"/>'
-      + '<text x="300" y="565" text-anchor="middle" fill="#ffffff" font-family="Arial" font-weight="900" font-size="24" opacity="0.65">' + label + '</text>'
-      + '</svg>';
-    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  function fireVol() {
+    for (var i = 0; i < volListeners.length; i++) {
+      try { volListeners[i](); } catch (e) {}
+    }
   }
 
-  // Полный каталог: MP3 из папки GitHub, 8-Bit Synth и Интернет-радио
-  var CATALOG = {
-    "m1": {
-      id: "m1", kind: "mp3", emoji: "🎵",
-      shortName: "🎵 1. Cyber Pride",
-      title: "Cyber Pride Anthem", artist: "PRIDE Studio • Папка /music/",
-      src: GITHUB_MUSIC_DIR + "track1.mp3",
-      fallbackSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-      cover: GITHUB_COVERS_DIR + "cover1.jpg",
-      fallbackCover: makeSvgCover("#ff007a", "#180b30", "#00f0ff", "PRIDE TRACK 01")
-    },
-    "m2": {
-      id: "m2", kind: "mp3", emoji: "🌆",
-      shortName: "🎵 2. Neon Agency",
-      title: "Neon Agency Vibes", artist: "PRIDE Studio • Папка /music/",
-      src: GITHUB_MUSIC_DIR + "track2.mp3",
-      fallbackSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
-      cover: GITHUB_COVERS_DIR + "cover2.jpg",
-      fallbackCover: makeSvgCover("#00f0ff", "#091d36", "#b829ff", "PRIDE TRACK 02")
-    },
-    "m3": {
-      id: "m3", kind: "mp3", emoji: "⚡",
-      shortName: "🎵 3. Techno Rush",
-      title: "Techno Rush Deadline", artist: "PRIDE Studio • Папка /music/",
-      src: GITHUB_MUSIC_DIR + "track3.mp3",
-      fallbackSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-      cover: GITHUB_COVERS_DIR + "cover3.jpg",
-      fallbackCover: makeSvgCover("#fcee09", "#3b0d2c", "#ff007a", "PRIDE TRACK 03")
-    },
-    "m4": {
-      id: "m4", kind: "mp3", emoji: "🌌",
-      shortName: "🎵 4. Horizon",
-      title: "Digital Horizon", artist: "PRIDE Studio • Папка /music/",
-      src: GITHUB_MUSIC_DIR + "track4.mp3",
-      fallbackSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-      cover: GITHUB_COVERS_DIR + "cover4.jpg",
-      fallbackCover: makeSvgCover("#00ff9d", "#071f24", "#2563eb", "PRIDE TRACK 04")
-    },
-    "m5": {
-      id: "m5", kind: "mp3", emoji: "🖨️",
-      shortName: "🎵 5. Print Shop",
-      title: "Night Print Shop", artist: "PRIDE Studio • Папка /music/",
-      src: GITHUB_MUSIC_DIR + "track5.mp3",
-      fallbackSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-      cover: GITHUB_COVERS_DIR + "cover5.jpg",
-      fallbackCover: makeSvgCover("#b829ff", "#1a0933", "#ff5e3a", "PRIDE TRACK 05")
-    },
-    "m6": {
-      id: "m6", kind: "mp3", emoji: "🪧",
-      shortName: "🎵 6. Billboard",
-      title: "Mega Billboard Dreams", artist: "PRIDE Studio • Папка /music/",
-      src: GITHUB_MUSIC_DIR + "track6.mp3",
-      fallbackSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
-      cover: GITHUB_COVERS_DIR + "cover6.jpg",
-      fallbackCover: makeSvgCover("#ff8800", "#240b1c", "#00f0ff", "PRIDE TRACK 06")
-    },
+  var TRACK_ORDER = ["s1", "s2", "s3", "s4", "s5", "s6", "m1", "m2", "m3", "m4", "m5", "m6"];
 
-    "s1": {
-      id: "s1", kind: "synth", emoji: "🎹",
-      shortName: "🎹 1. Cyber Bass",
-      title: "Cyber Pride Bass (8-Bit)", artist: "PRIDE Chiptune Generator",
-      fallbackCover: makeSvgCover("#120924", "#ff007a", "#00f0ff", "8-BIT SYNTH 01")
-    },
-    "s2": {
-      id: "s2", kind: "synth", emoji: "🕹️",
-      shortName: "🎹 2. Korobeiniki",
-      title: "Korobeiniki Classic 8-Bit", artist: "PRIDE Chiptune Generator",
-      fallbackCover: makeSvgCover("#0b2418", "#00ff9d", "#00f0ff", "8-BIT SYNTH 02")
-    },
-    "s3": {
-      id: "s3", kind: "synth", emoji: "✨",
-      shortName: "🎹 3. Neon Arp",
-      title: "Neon Arpeggio Pulse", artist: "PRIDE Chiptune Generator",
-      fallbackCover: makeSvgCover("#1f1038", "#b829ff", "#fcee09", "8-BIT SYNTH 03")
-    },
-    "s4": {
-      id: "s4", kind: "synth", emoji: "🔥",
-      shortName: "🎹 4. Overdrive",
-      title: "Deadline Overdrive", artist: "PRIDE Chiptune Generator",
-      fallbackCover: makeSvgCover("#330a0a", "#ff2a2a", "#fcee09", "8-BIT SYNTH 04")
-    },
-    "s5": {
-      id: "s5", kind: "synth", emoji: "🕶️",
-      shortName: "🎹 5. Synthwave",
-      title: "Agency Synthwave", artist: "PRIDE Chiptune Generator",
-      fallbackCover: makeSvgCover("#29092b", "#ff007a", "#ff8800", "8-BIT SYNTH 05")
-    },
-    "s6": {
-      id: "s6", kind: "synth", emoji: "👾",
-      shortName: "🎹 6. Matrix Boss",
-      title: "Retro Matrix Boss", artist: "PRIDE Chiptune Generator",
-      fallbackCover: makeSvgCover("#041c0c", "#2bff88", "#e5ff3a", "8-BIT SYNTH 06")
-    },
-
-    "r1": {
-      id: "r1", kind: "radio", emoji: "🌆",
-      shortName: "📻 Synthwave FM",
-      title: "Nightride FM • Synthwave",
-      artist: "Интернет-радио • Retrowave / Cyber",
-      src: "https://stream.nightride.fm/nightride.m4a",
-      fallbackSrc: "https://ice1.somafm.com/spacestation-128-mp3",
-      fallbackCover: makeSvgCover("#ff007a", "#1c0836", "#00f0ff", "SYNTHWAVE RADIO")
-    },
-    "r2": {
-      id: "r2", kind: "radio", emoji: "🍸",
-      shortName: "📻 Groove Salad",
-      title: "SomaFM • Groove Salad",
-      artist: "Интернет-радио • Chillout / Lounge",
-      src: "https://ice1.somafm.com/groovesalad-128-mp3",
-      fallbackCover: makeSvgCover("#00ff9d", "#072621", "#22d3ee", "CHILLOUT RADIO")
-    },
-    "r3": {
-      id: "r3", kind: "radio", emoji: "🚀",
-      shortName: "📻 Space Station",
-      title: "SomaFM • Space Station",
-      artist: "Интернет-радио • Ambient / Space",
-      src: "https://ice1.somafm.com/spacestation-128-mp3",
-      fallbackCover: makeSvgCover("#2563eb", "#060e24", "#b829ff", "SPACE RADIO")
-    },
-    "r4": {
-      id: "r4", kind: "radio", emoji: "☕",
-      shortName: "📻 Lo-Fi Work Beats",
-      title: "Laut.fm • Lo-Fi Chillhop",
-      artist: "Интернет-радио • Для фокуса и работы",
-      src: "https://stream.laut.fm/lofi",
-      fallbackSrc: "https://ice1.somafm.com/BeatBlender-128-mp3",
-      fallbackCover: makeSvgCover("#ff8800", "#261507", "#ffd166", "LO-FI RADIO")
-    },
-    "r5": {
-      id: "r5", kind: "radio", emoji: "🕵️",
-      shortName: "📻 Secret Agent",
-      title: "SomaFM • Secret Agent",
-      artist: "Интернет-радио • Spy Jazz / Lounge",
-      src: "https://ice1.somafm.com/secretagent-128-mp3",
-      fallbackCover: makeSvgCover("#b3123c", "#1a060b", "#e6b84a", "SECRET AGENT FM")
-    },
-    "r6": {
-      id: "r6", kind: "radio", emoji: "💻",
-      shortName: "📻 DEF CON Radio",
-      title: "SomaFM • DEF CON Hacker",
-      artist: "Интернет-радио • Electronic / Techno",
-      src: "https://ice1.somafm.com/defcon-128-mp3",
-      fallbackCover: makeSvgCover("#00f0ff", "#04161c", "#00ff9d", "DEF CON RADIO")
-    }
+  var TRACK_NAMES = {
+    "s1": "🎹 1. Cyber Bass",
+    "s2": "🎹 2. Korobeiniki",
+    "s3": "🎹 3. Neon Arp",
+    "s4": "🎹 4. Overdrive",
+    "s5": "🎹 5. Synthwave",
+    "s6": "🎹 6. Matrix Boss",
+    "m1": "🎵 7. Cyber Pride",
+    "m2": "🎵 8. Neon Agency",
+    "m3": "🎵 9. Techno Rush",
+    "m4": "🎵 10. Horizon",
+    "m5": "🎵 11. Print Shop",
+    "m6": "🎵 12. Billboard",
+    "off": "🔇 Выкл"
   };
-
-  var TRACK_ORDER = [
-    "m1", "m2", "m3", "m4", "m5", "m6",
-    "s1", "s2", "s3", "s4", "s5", "s6",
-    "r1", "r2", "r3", "r4", "r5", "r6"
-  ];
 
   var SYNTH_PATTERNS = {
     "s1": {
@@ -249,6 +118,15 @@ window.PrideCore = window.PrideCore || {};
     }
   };
 
+  var FREE_TRACKS = {
+    "m1": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    "m2": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
+    "m3": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    "m4": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    "m5": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+    "m6": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
+  };
+
   function getBgAudio() {
     return document.getElementById('bgAudio');
   }
@@ -264,12 +142,12 @@ window.PrideCore = window.PrideCore || {};
   }
 
   function playSfx(type) {
-    if (!sfxEnabled || sfxVolume <= 0.01) return;
+    if (!sfxEnabled || sfxVol < 0.02) return;
     ensureAudio();
     if (!audioCtx) return;
 
     var now = audioCtx.currentTime;
-    var v = sfxVolume;
+    var k = sfxVol / 0.8;
 
     if (type === 'move') {
       var osc = audioCtx.createOscillator();
@@ -277,7 +155,7 @@ window.PrideCore = window.PrideCore || {};
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(220, now);
       osc.frequency.exponentialRampToValueAtTime(340, now + 0.04);
-      g.gain.setValueAtTime(Math.max(0.002, 0.12 * v), now);
+      g.gain.setValueAtTime(0.08 * k, now);
       g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
       osc.connect(g); g.connect(audioCtx.destination);
       osc.start(now); osc.stop(now + 0.04);
@@ -287,7 +165,7 @@ window.PrideCore = window.PrideCore || {};
       osc2.type = 'sine';
       osc2.frequency.setValueAtTime(380, now);
       osc2.frequency.exponentialRampToValueAtTime(680, now + 0.08);
-      g2.gain.setValueAtTime(Math.max(0.002, 0.18 * v), now);
+      g2.gain.setValueAtTime(0.12 * k, now);
       g2.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
       osc2.connect(g2); g2.connect(audioCtx.destination);
       osc2.start(now); osc2.stop(now + 0.08);
@@ -297,7 +175,7 @@ window.PrideCore = window.PrideCore || {};
       osc3.type = 'sawtooth';
       osc3.frequency.setValueAtTime(160, now);
       osc3.frequency.exponentialRampToValueAtTime(45, now + 0.14);
-      g3.gain.setValueAtTime(Math.max(0.002, 0.25 * v), now);
+      g3.gain.setValueAtTime(0.18 * k, now);
       g3.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
       osc3.connect(g3); g3.connect(audioCtx.destination);
       osc3.start(now); osc3.stop(now + 0.14);
@@ -307,7 +185,7 @@ window.PrideCore = window.PrideCore || {};
       oscL.type = 'sawtooth';
       oscL.frequency.setValueAtTime(980, now);
       oscL.frequency.exponentialRampToValueAtTime(90, now + 0.38);
-      gL.gain.setValueAtTime(Math.max(0.002, 0.32 * v), now);
+      gL.gain.setValueAtTime(0.25 * k, now);
       gL.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
       oscL.connect(gL); gL.connect(audioCtx.destination);
       oscL.start(now); oscL.stop(now + 0.38);
@@ -319,7 +197,7 @@ window.PrideCore = window.PrideCore || {};
         o.type = 'square';
         o.frequency.setValueAtTime(notes[i], now + i * 0.045);
         o.frequency.exponentialRampToValueAtTime(notes[i] * 1.5, now + i * 0.045 + 0.12);
-        gn.gain.setValueAtTime(Math.max(0.002, 0.16 * v), now + i * 0.045);
+        gn.gain.setValueAtTime(0.12 * k, now + i * 0.045);
         gn.gain.exponentialRampToValueAtTime(0.001, now + i * 0.045 + 0.12);
         o.connect(gn); gn.connect(audioCtx.destination);
         o.start(now + i * 0.045);
@@ -328,91 +206,14 @@ window.PrideCore = window.PrideCore || {};
     }
   }
 
-  function applyCoverWithFallback(item) {
-    var fpBg = document.getElementById('fpBg');
-    var fpArtImg = document.getElementById('fpArtImg');
-    var npThumb = document.getElementById('npThumb');
-    if (!item) return;
-
-    var setUrl = function(url) {
-      if (fpBg) fpBg.style.backgroundImage = 'url("' + url + '")';
-      if (fpArtImg) fpArtImg.style.backgroundImage = 'url("' + url + '")';
-      if (npThumb) npThumb.style.backgroundImage = 'url("' + url + '")';
-    };
-
-    if (item.cover) {
-      var img = new Image();
-      img.onload = function() { setUrl(item.cover); };
-      img.onerror = function() { setUrl(item.fallbackCover); };
-      img.src = item.cover;
-    } else if (item.fallbackCover) {
-      setUrl(item.fallbackCover);
-    }
-  }
-
-  function fmtSec(sec) {
-    if (!sec || !isFinite(sec) || sec < 0) return "00:00";
-    var m = Math.floor(sec / 60);
-    var s = Math.floor(sec % 60);
-    return ('0' + m).slice(-2) + ':' + ('0' + s).slice(-2);
-  }
-
   function updateTrackUI() {
-    var activeKey = currentTrack === 'off' ? lastActiveTrack : currentTrack;
-    var item = CATALOG[activeKey] || CATALOG["s1"];
-    var isPlaying = currentTrack !== 'off';
-
     var lbl = document.getElementById('sideTrackLbl');
-    if (lbl) lbl.innerText = isPlaying ? item.shortName : "🔇 Выкл";
-
+    if (lbl) lbl.innerText = TRACK_NAMES[currentTrack] || "🎵 Музыка";
     var allTrackBtns = document.querySelectorAll('.track-btn[data-track]');
     for (var k = 0; k < allTrackBtns.length; k++) {
       var tk = allTrackBtns[k].getAttribute('data-track');
       allTrackBtns[k].classList.toggle('active', tk === currentTrack);
     }
-
-    var radioCards = document.querySelectorAll('.radio-card[data-track]');
-    for (var r = 0; r < radioCards.length; r++) {
-      var rk = radioCards[r].getAttribute('data-track');
-      var activeRadio = (rk === currentTrack);
-      radioCards[r].classList.toggle('active', activeRadio);
-      var badge = radioCards[r].querySelector('.rc-live');
-      if (badge) badge.textContent = activeRadio ? '🔊 В ЭФИРЕ' : '▶ LIVE';
-    }
-
-    var drawerItems = document.querySelectorAll('.fp-drawer-item[data-track]');
-    for (var d = 0; d < drawerItems.length; d++) {
-      drawerItems[d].classList.toggle('active', drawerItems[d].getAttribute('data-track') === currentTrack);
-    }
-
-    var npTitle = document.getElementById('npTitle');
-    var npSub = document.getElementById('npSub');
-    var npThumb = document.getElementById('npThumb');
-    if (npTitle) npTitle.textContent = isPlaying ? item.title : "Музыка на паузе";
-    if (npSub) npSub.textContent = isPlaying ? (item.artist + " • Открыть плеер ⛶") : "Нажми ⏯ для запуска или открой плеер ⛶";
-    if (npThumb) npThumb.textContent = item.emoji || "🎵";
-
-    var fpTitle = document.getElementById('fpTitle');
-    var fpArtist = document.getElementById('fpArtist');
-    var fpArtEmoji = document.getElementById('fpArtEmoji');
-    var fpBadge = document.getElementById('fpBadge');
-    var fpBtnPlay = document.getElementById('fpBtnPlay');
-    var fpEq = document.getElementById('fpEq');
-    var fpDurTime = document.getElementById('fpDurTime');
-
-    if (fpTitle) fpTitle.textContent = item.title;
-    if (fpArtist) fpArtist.textContent = item.artist;
-    if (fpArtEmoji) fpArtEmoji.textContent = item.emoji || "🎧";
-    if (fpBadge) {
-      fpBadge.textContent = item.kind === 'radio' ? '📻 LIVE RADIO' : (item.kind === 'mp3' ? '🎧 MP3 PLAYER' : '🎹 8-BIT SYNTH');
-    }
-    if (fpBtnPlay) fpBtnPlay.textContent = isPlaying ? "⏸" : "▶";
-    if (fpEq) fpEq.classList.toggle('paused', !isPlaying);
-    if (fpDurTime && item.kind !== 'mp3') {
-      fpDurTime.textContent = item.kind === 'radio' ? "🔴 ПРЯМОЙ ЭФИР" : "🎹 SYNTH LOOP";
-    }
-
-    applyCoverWithFallback(item);
   }
 
   function startMusic(trackKey) {
@@ -424,67 +225,44 @@ window.PrideCore = window.PrideCore || {};
       synthInterval = null;
     }
     var bgAudio = getBgAudio();
-    if (bgAudio) {
-      bgAudio.onended = null;
-      bgAudio.onerror = null;
-      bgAudio.pause();
-    }
+    if (bgAudio) bgAudio.pause();
     updateTrackUI();
 
     if (trackKey === 'off') return;
 
-    var item = CATALOG[trackKey];
-    if (!item) return;
+    // Игровая музыка включается — плеер и радио замолкают
+    if (externalStopper) {
+      try { externalStopper(); } catch (e) {}
+    }
 
-    if (item.kind === 'synth' && SYNTH_PATTERNS[trackKey]) {
+    if (SYNTH_PATTERNS[trackKey]) {
       ensureAudio();
       var pat = SYNTH_PATTERNS[trackKey];
       synthStep = 0;
       synthInterval = setInterval(function() {
-        var menuModal = document.getElementById('menuModal');
-        var menuOpen = menuModal && menuModal.style.display === 'flex';
-        if ((isGamePausedOrOver() && !menuOpen) || !audioCtx || audioCtx.state !== 'running' || musicVolume <= 0.01) return;
-        var now = audioCtx.currentTime;
+        var welcomeModal = document.getElementById('welcomeModal');
+        var welcomeOpen = welcomeModal && welcomeModal.style.display !== 'none';
+        if ((isGamePausedOrOver() && !welcomeOpen) || !audioCtx || audioCtx.state !== 'running') return;
+        var peak = 0.06 * musicVol;
         var freq = pat.notes[synthStep % pat.notes.length];
         synthStep++;
+        if (peak < 0.002) return;
+        var now = audioCtx.currentTime;
         var osc = audioCtx.createOscillator();
         var gain = audioCtx.createGain();
         osc.type = pat.wave;
         osc.frequency.setValueAtTime(freq, now);
-        gain.gain.setValueAtTime(Math.max(0.002, 0.08 * musicVolume), now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + (pat.tempo / 1000) * 0.9);
+        gain.gain.setValueAtTime(peak, now);
+        gain.gain.exponentialRampToValueAtTime(0.0005, now + (pat.tempo / 1000) * 0.9);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start(now);
         osc.stop(now + (pat.tempo / 1000) * 0.9);
       }, pat.tempo);
-    } else if ((item.kind === 'mp3' || item.kind === 'radio') && bgAudio) {
-      bgAudio.loop = (item.kind === 'mp3') ? loopMp3 : false;
-      bgAudio.volume = musicVolume;
-      var triedFallback = false;
-
-      bgAudio.onerror = function() {
-        if (!triedFallback && item.fallbackSrc && bgAudio.src.indexOf(item.fallbackSrc) === -1) {
-          triedFallback = true;
-          bgAudio.src = item.fallbackSrc;
-          bgAudio.play().catch(function() {});
-        }
-      };
-
-      bgAudio.onended = function() {
-        if (item.kind === 'mp3' && !loopMp3) {
-          cycleTrack(1);
-        }
-      };
-
-      bgAudio.src = item.src;
-      bgAudio.play().catch(function() {
-        if (!triedFallback && item.fallbackSrc) {
-          triedFallback = true;
-          bgAudio.src = item.fallbackSrc;
-          bgAudio.play().catch(function() {});
-        }
-      });
+    } else if (FREE_TRACKS[trackKey] && bgAudio) {
+      bgAudio.src = FREE_TRACKS[trackKey];
+      bgAudio.volume = musicVol;
+      bgAudio.play().catch(function() {});
     }
   }
 
@@ -503,106 +281,19 @@ window.PrideCore = window.PrideCore || {};
     }
   }
 
-  function setMusicVolume(val01) {
-    musicVolume = Math.max(0, Math.min(1, val01));
-    try { localStorage.setItem('pride_music_vol_v1', String(musicVolume)); } catch (e) {}
-    var bgAudio = getBgAudio();
-    if (bgAudio) bgAudio.volume = musicVolume;
-    syncVolumeSlidersUI();
+  function setMusicVolume(v) {
+    musicVol = clamp01(v);
+    saveVol(KEY_MV, musicVol);
+    var bg = getBgAudio();
+    if (bg) bg.volume = musicVol;
+    fireVol();
   }
 
-  function setSfxVolume(val01) {
-    sfxVolume = Math.max(0, Math.min(1, val01));
-    try { localStorage.setItem('pride_sfx_vol_v1', String(sfxVolume)); } catch (e) {}
-    syncVolumeSlidersUI();
+  function setSfxVolume(v) {
+    sfxVol = clamp01(v);
+    saveVol(KEY_SV, sfxVol);
+    fireVol();
   }
-
-  function syncVolumeSlidersUI() {
-    var mPct = Math.round(musicVolume * 100);
-    var sPct = Math.round(sfxVolume * 100);
-
-    var mSliders = document.querySelectorAll('.music-vol-slider');
-    for (var i = 0; i < mSliders.length; i++) mSliders[i].value = mPct;
-
-    var sSliders = document.querySelectorAll('.sfx-vol-slider');
-    for (var j = 0; j < sSliders.length; j++) sSliders[j].value = sPct;
-
-    var mLbls = document.querySelectorAll('.vol-music-lbl');
-    for (var k = 0; k < mLbls.length; k++) mLbls[k].textContent = mPct + '%';
-
-    var sLbls = document.querySelectorAll('.vol-sfx-lbl');
-    for (var l = 0; l < sLbls.length; l++) sLbls[l].textContent = sPct + '%';
-
-    var muteBtn = document.getElementById('fpBtnMute');
-    if (muteBtn) muteBtn.textContent = musicVolume <= 0.01 ? '🔇' : '🔊';
-  }
-
-  function initAudioTimeline() {
-    var bgAudio = getBgAudio();
-    if (!bgAudio) return;
-
-    bgAudio.addEventListener('timeupdate', function() {
-      var item = CATALOG[currentTrack];
-      var seek = document.getElementById('fpSeek');
-      var curEl = document.getElementById('fpCurTime');
-      var durEl = document.getElementById('fpDurTime');
-      if (!item || item.kind !== 'mp3') {
-        if (curEl) curEl.textContent = item && item.kind === 'radio' ? "LIVE" : "00:00";
-        if (seek) seek.value = 100;
-        return;
-      }
-      if (curEl) curEl.textContent = fmtSec(bgAudio.currentTime);
-      if (bgAudio.duration && isFinite(bgAudio.duration)) {
-        if (durEl) durEl.textContent = fmtSec(bgAudio.duration);
-        if (seek) seek.value = Math.round((bgAudio.currentTime / bgAudio.duration) * 100);
-      }
-    });
-  }
-
-  function seekToPercent(pct) {
-    var bgAudio = getBgAudio();
-    var item = CATALOG[currentTrack];
-    if (!bgAudio || !item || item.kind !== 'mp3') return;
-    if (bgAudio.duration && isFinite(bgAudio.duration)) {
-      bgAudio.currentTime = (pct / 100) * bgAudio.duration;
-    }
-  }
-
-  function openFullPlayer() {
-    var fp = document.getElementById('fullPlayer');
-    if (fp) {
-      fp.classList.add('active');
-      updateTrackUI();
-    }
-  }
-
-  function closeFullPlayer() {
-    var fp = document.getElementById('fullPlayer');
-    if (fp) fp.classList.remove('active');
-  }
-
-  function getRadioStations() {
-    var out = [];
-    for (var i = 0; i < TRACK_ORDER.length; i++) {
-      var it = CATALOG[TRACK_ORDER[i]];
-      if (it && it.kind === 'radio') out.push(it);
-    }
-    return out;
-  }
-
-  function getAllCatalogItems() {
-    var out = [];
-    for (var i = 0; i < TRACK_ORDER.length; i++) {
-      if (CATALOG[TRACK_ORDER[i]]) out.push(CATALOG[TRACK_ORDER[i]]);
-    }
-    return out;
-  }
-
-  setTimeout(function() {
-    initAudioTimeline();
-    syncVolumeSlidersUI();
-    updateTrackUI();
-  }, 0);
 
   window.PrideCore.Audio = {
     ensureAudio: ensureAudio,
@@ -613,30 +304,32 @@ window.PrideCore = window.PrideCore || {};
     setPauseChecker: function(fn) { isGamePausedOrOver = fn; },
     getCurrentTrack: function() { return currentTrack; },
     getLastActiveTrack: function() { return lastActiveTrack; },
-    isMp3Track: function(tk) {
-      var it = CATALOG[tk];
-      return !!(it && (it.kind === 'mp3' || it.kind === 'radio'));
-    },
+    isMp3Track: function(tk) { return !!FREE_TRACKS[tk]; },
     toggleSfx: function() {
       sfxEnabled = !sfxEnabled;
       if (sfxEnabled) playSfx('rotate');
       return sfxEnabled;
     },
+    isSfxEnabled: function() { return sfxEnabled; },
+
+    // Громкость
+    getMusicVolume: function() { return musicVol; },
     setMusicVolume: setMusicVolume,
-    getMusicVolume: function() { return musicVolume; },
+    getSfxVolume: function() { return sfxVol; },
     setSfxVolume: setSfxVolume,
-    getSfxVolume: function() { return sfxVolume; },
-    syncVolumeSlidersUI: syncVolumeSlidersUI,
-    openFullPlayer: openFullPlayer,
-    closeFullPlayer: closeFullPlayer,
-    seekToPercent: seekToPercent,
-    toggleLoopMode: function() {
-      loopMp3 = !loopMp3;
-      var bgAudio = getBgAudio();
-      if (bgAudio) bgAudio.loop = loopMp3;
-      return loopMp3;
-    },
-    getRadioStations: getRadioStations,
-    getAllCatalogItems: getAllCatalogItems
+    onVolume: function(fn) { volListeners.push(fn); },
+
+    // Плеер и радио регистрируют сюда функцию, которая их останавливает
+    setExternalStopper: function(fn) { externalStopper = fn; },
+    stopAll: function() {
+      startMusic('off');
+      if (externalStopper) {
+        try { externalStopper(); } catch (e) {}
+      }
+    }
   };
+
+  // Применяем сохранённую громкость к основному аудио-элементу
+  var bgInit = getBgAudio();
+  if (bgInit) bgInit.volume = musicVol;
 })();
