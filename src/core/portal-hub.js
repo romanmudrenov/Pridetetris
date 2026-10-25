@@ -1,10 +1,10 @@
+```javascript
 window.PrideCore = window.PrideCore || {};
 
 (function() {
   var Audio = window.PrideCore.Audio || {
     ensureAudio: function() {}, playSfx: function() {}, startMusic: function() {},
-    cycleTrack: function() {}, togglePlayPauseMusic: function() {}, toggleSfx: function() { return true; },
-    playCustomRadio: function() {}, getCustomRadioUrl: function() { return ""; }
+    cycleTrack: function() {}, togglePlayPauseMusic: function() {}, toggleSfx: function() { return true; }
   };
 
   // =============== НАСТРОЙКИ (можно менять) ===============
@@ -118,6 +118,7 @@ window.PrideCore = window.PrideCore || {};
     if (id === 'scrMain') refreshProfileUI();
     if (id === 'scrLeaders') renderLeaders();
     if (id === 'scrChat') renderChat(true);
+    if (id === 'scrMusic' && Audio.syncVolumeSlidersUI) Audio.syncVolumeSlidersUI();
   }
 
   function updateWelcome() {
@@ -519,27 +520,60 @@ window.PrideCore = window.PrideCore || {};
     Audio.playSfx('move');
   }
 
-  // =============== МУЗЫКА И РАДИО (ПОДРАЗДЕЛЫ) ===============
-  function switchAudioTab(tabName) {
-    var tabs = document.querySelectorAll('.audio-tab-btn[data-audio-tab]');
-    for (var i = 0; i < tabs.length; i++) {
-      tabs[i].classList.toggle('active', tabs[i].getAttribute('data-audio-tab') === tabName);
-    }
-    var panes = document.querySelectorAll('.audio-pane[data-audio-pane]');
-    for (var j = 0; j < panes.length; j++) {
-      panes[j].classList.toggle('active', panes[j].getAttribute('data-audio-pane') === tabName);
-    }
-  }
-
+  // =============== МУЗЫКА, РАДИО И ПОЛНОЭКРАННЫЙ ПЛЕЕР ===============
   function bindMusic() {
-    var tabBtns = document.querySelectorAll('.audio-tab-btn[data-audio-tab]');
-    for (var t = 0; t < tabBtns.length; t++) {
-      tabBtns[t].onclick = function(e) {
-        e.stopPropagation();
+    var tabs = document.querySelectorAll('.m-tab[data-mtab]');
+    for (var t = 0; t < tabs.length; t++) {
+      tabs[t].onclick = function() {
         Audio.ensureAudio();
+        var targetId = this.getAttribute('data-mtab');
+        for (var k = 0; k < tabs.length; k++) {
+          tabs[k].classList.toggle('active', tabs[k] === this);
+        }
+        var panels = document.querySelectorAll('.m-panel');
+        for (var p = 0; p < panels.length; p++) {
+          panels[p].classList.toggle('active', panels[p].id === targetId);
+        }
         Audio.playSfx('move');
-        switchAudioTab(this.getAttribute('data-audio-tab'));
       };
+    }
+
+    var radioBox = $('radioList');
+    if (radioBox && Audio.getRadioStations) {
+      radioBox.innerHTML = '';
+      var stations = Audio.getRadioStations();
+      stations.forEach(function(st) {
+        var card = el('div', 'radio-card');
+        card.setAttribute('data-track', st.id);
+        card.appendChild(el('div', 'rc-ico', st.emoji || '📻'));
+        var info = el('div', 'rc-info');
+        info.appendChild(el('div', 'rc-name', st.title));
+        info.appendChild(el('div', 'rc-genre', st.artist));
+        card.appendChild(info);
+        card.appendChild(el('div', 'rc-live', '▶ LIVE'));
+        card.onclick = function() {
+          Audio.ensureAudio();
+          Audio.startMusic(st.id);
+        };
+        radioBox.appendChild(card);
+      });
+    }
+
+    var drawerList = $('fpDrawerList');
+    if (drawerList && Audio.getAllCatalogItems) {
+      drawerList.innerHTML = '';
+      Audio.getAllCatalogItems().forEach(function(item) {
+        var row = el('button', 'fp-drawer-item');
+        row.setAttribute('data-track', item.id);
+        row.appendChild(el('span', null, item.shortName + ' — ' + item.title));
+        row.appendChild(el('small', null, item.kind.toUpperCase()));
+        row.onclick = function() {
+          Audio.ensureAudio();
+          Audio.startMusic(item.id);
+          $('fpDrawer').classList.remove('open');
+        };
+        drawerList.appendChild(row);
+      });
     }
 
     var tb = document.querySelectorAll('.track-btn[data-track]');
@@ -551,17 +585,23 @@ window.PrideCore = window.PrideCore || {};
       };
     }
 
-    var customInp = $('customRadioInput');
-    var customBtn = $('btnCustomRadioPlay');
-    if (customInp && Audio.getCustomRadioUrl) {
-      customInp.value = Audio.getCustomRadioUrl();
-    }
-    if (customBtn && customInp) {
-      customBtn.onclick = function(e) {
-        e.stopPropagation();
+    var mSliders = document.querySelectorAll('.music-vol-slider');
+    for (var m = 0; m < mSliders.length; m++) {
+      mSliders[m].addEventListener('input', function() {
         Audio.ensureAudio();
-        Audio.playCustomRadio(customInp.value);
-      };
+        if (Audio.setMusicVolume) Audio.setMusicVolume(parseInt(this.value, 10) / 100);
+      });
+    }
+
+    var sSliders = document.querySelectorAll('.sfx-vol-slider');
+    for (var s = 0; s < sSliders.length; s++) {
+      sSliders[s].addEventListener('input', function() {
+        Audio.ensureAudio();
+        if (Audio.setSfxVolume) Audio.setSfxVolume(parseInt(this.value, 10) / 100);
+      });
+      sSliders[s].addEventListener('change', function() {
+        Audio.playSfx('rotate');
+      });
     }
 
     var sfx = document.querySelectorAll('.sfx-toggle');
@@ -577,9 +617,60 @@ window.PrideCore = window.PrideCore || {};
         }
       };
     }
-    $('btnMusicPrev').onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(-1); };
-    $('btnMusicPlay').onclick = function() { Audio.ensureAudio(); Audio.togglePlayPauseMusic(); };
-    $('btnMusicNext').onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(1); };
+
+    if ($('btnTestRotate')) $('btnTestRotate').onclick = function() { Audio.ensureAudio(); Audio.playSfx('rotate'); };
+    if ($('btnTestLaser'))  $('btnTestLaser').onclick  = function() { Audio.ensureAudio(); Audio.playSfx('laser'); };
+    if ($('btnTestSparks')) $('btnTestSparks').onclick = function() { Audio.ensureAudio(); Audio.playSfx('sparks'); };
+
+    $('btnMusicPrev').onclick = function(e) { e.stopPropagation(); Audio.ensureAudio(); Audio.cycleTrack(-1); };
+    $('btnMusicPlay').onclick = function(e) { e.stopPropagation(); Audio.ensureAudio(); Audio.togglePlayPauseMusic(); };
+    $('btnMusicNext').onclick = function(e) { e.stopPropagation(); Audio.ensureAudio(); Audio.cycleTrack(1); };
+
+    if ($('btnOpenFullPlayer'))   $('btnOpenFullPlayer').onclick   = function() { Audio.ensureAudio(); Audio.openFullPlayer(); };
+    if ($('btnLaunchFullPlayer')) $('btnLaunchFullPlayer').onclick = function() { Audio.ensureAudio(); Audio.openFullPlayer(); };
+    if ($('npThumb'))             $('npThumb').onclick             = function() { Audio.ensureAudio(); Audio.openFullPlayer(); };
+    if ($('btnCloseFullPlayer'))  $('btnCloseFullPlayer').onclick  = function() { Audio.closeFullPlayer(); };
+
+    if ($('fpBtnPrev')) $('fpBtnPrev').onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(-1); };
+    if ($('fpBtnPlay')) $('fpBtnPlay').onclick = function() { Audio.ensureAudio(); Audio.togglePlayPauseMusic(); };
+    if ($('fpBtnNext')) $('fpBtnNext').onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(1); };
+
+    if ($('fpBtnMode')) {
+      $('fpBtnMode').onclick = function() {
+        var loop = Audio.toggleLoopMode ? Audio.toggleLoopMode() : true;
+        this.textContent = loop ? '🔁' : '➡️';
+        Audio.playSfx('move');
+      };
+    }
+
+    if ($('fpBtnMute')) {
+      var prevVol = 0.7;
+      $('fpBtnMute').onclick = function() {
+        if (Audio.getMusicVolume() > 0.01) {
+          prevVol = Audio.getMusicVolume();
+          Audio.setMusicVolume(0);
+        } else {
+          Audio.setMusicVolume(prevVol || 0.7);
+        }
+      };
+    }
+
+    if ($('fpSeek')) {
+      $('fpSeek').addEventListener('input', function() {
+        if (Audio.seekToPercent) Audio.seekToPercent(parseFloat(this.value));
+      });
+    }
+
+    if ($('btnToggleFpDrawer')) {
+      $('btnToggleFpDrawer').onclick = function() {
+        $('fpDrawer').classList.toggle('open');
+      };
+    }
+    if ($('btnCloseFpDrawer')) {
+      $('btnCloseFpDrawer').onclick = function() {
+        $('fpDrawer').classList.remove('open');
+      };
+    }
   }
 
   // =============== ЗАПУСК ===============
@@ -645,3 +736,4 @@ window.PrideCore = window.PrideCore || {};
 
   boot();
 })();
+```
