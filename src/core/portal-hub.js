@@ -3,7 +3,8 @@ window.PrideCore = window.PrideCore || {};
 (function() {
   var Audio = window.PrideCore.Audio || {
     ensureAudio: function() {}, playSfx: function() {}, startMusic: function() {},
-    cycleTrack: function() {}, togglePlayPauseMusic: function() {}, toggleSfx: function() { return true; }
+    cycleTrack: function() {}, togglePlayPauseMusic: function() {}, toggleSfx: function() { return true; },
+    playCustomRadio: function() {}, getCustomRadioUrl: function() { return ""; }
   };
 
   // =============== НАСТРОЙКИ (можно менять) ===============
@@ -518,8 +519,29 @@ window.PrideCore = window.PrideCore || {};
     Audio.playSfx('move');
   }
 
-  // =============== МУЗЫКА ===============
+  // =============== МУЗЫКА И РАДИО (ПОДРАЗДЕЛЫ) ===============
+  function switchAudioTab(tabName) {
+    var tabs = document.querySelectorAll('.audio-tab-btn[data-audio-tab]');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('active', tabs[i].getAttribute('data-audio-tab') === tabName);
+    }
+    var panes = document.querySelectorAll('.audio-pane[data-audio-pane]');
+    for (var j = 0; j < panes.length; j++) {
+      panes[j].classList.toggle('active', panes[j].getAttribute('data-audio-pane') === tabName);
+    }
+  }
+
   function bindMusic() {
+    var tabBtns = document.querySelectorAll('.audio-tab-btn[data-audio-tab]');
+    for (var t = 0; t < tabBtns.length; t++) {
+      tabBtns[t].onclick = function(e) {
+        e.stopPropagation();
+        Audio.ensureAudio();
+        Audio.playSfx('move');
+        switchAudioTab(this.getAttribute('data-audio-tab'));
+      };
+    }
+
     var tb = document.querySelectorAll('.track-btn[data-track]');
     for (var i = 0; i < tb.length; i++) {
       tb[i].onclick = function(e) {
@@ -528,6 +550,20 @@ window.PrideCore = window.PrideCore || {};
         Audio.startMusic(this.getAttribute('data-track'));
       };
     }
+
+    var customInp = $('customRadioInput');
+    var customBtn = $('btnCustomRadioPlay');
+    if (customInp && Audio.getCustomRadioUrl) {
+      customInp.value = Audio.getCustomRadioUrl();
+    }
+    if (customBtn && customInp) {
+      customBtn.onclick = function(e) {
+        e.stopPropagation();
+        Audio.ensureAudio();
+        Audio.playCustomRadio(customInp.value);
+      };
+    }
+
     var sfx = document.querySelectorAll('.sfx-toggle');
     for (var j = 0; j < sfx.length; j++) {
       sfx[j].onclick = function(e) {
