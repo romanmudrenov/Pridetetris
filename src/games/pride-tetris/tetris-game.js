@@ -6,7 +6,9 @@
   var canvas = document.getElementById('board');
   var boardWrap = document.getElementById('boardWrap');
   var nextCan = document.getElementById('nextCanvas');
-  var nextCtx = nextCan.getContext('2d');
+  var nextCtx = nextCan ? nextCan.getContext('2d') : null;
+
+  if (!Config || !canvas || !boardWrap) return;
 
   var COLS = Config.COLS;
   var ROWS = Config.ROWS;
@@ -29,7 +31,6 @@
   var baseDelay = 480;
   var speedBoostLevel = 0;
 
-  // Музыка не глушится, пока игрок в меню портала; в игре на паузе — глушится
   Audio.setPauseChecker(function() { return inGame && (paused || over); });
 
   function makeGrid() {
@@ -61,6 +62,7 @@
 
   function notify(msg) {
     var b = document.getElementById('banner');
+    if (!b) return;
     b.innerText = msg;
     b.style.display = 'block';
     setTimeout(function() { b.style.display = 'none'; }, 1400);
@@ -101,6 +103,7 @@
   }
 
   function drawNext() {
+    if (!nextCtx) return;
     nextCtx.clearRect(0, 0, nextCan.width, nextCan.height);
     if (!nextP) return;
     var s = 14;
@@ -121,15 +124,19 @@
 
   function setUlt(val) {
     ult = Math.min(100, Math.max(0, val));
-    document.getElementById('ultBar').style.width = ult + "%";
+    var bar = document.getElementById('ultBar');
+    if (bar) bar.style.width = ult + "%";
     var btn = document.getElementById('btnUlt');
-    btn.className = ult >= 100 ? "btn-ult active" : "btn-ult";
+    if (btn) btn.className = ult >= 100 ? "btn-ult active" : "btn-ult";
   }
 
   function updateUI() {
-    document.getElementById('scoreVal').innerText = score + " ₽";
-    document.getElementById('linesVal').innerText = lines;
-    document.getElementById('modeVal').innerText = currentModeName;
+    var sVal = document.getElementById('scoreVal');
+    var lVal = document.getElementById('linesVal');
+    var mVal = document.getElementById('modeVal');
+    if (sVal) sVal.innerText = score + " ₽";
+    if (lVal) lVal.innerText = lines;
+    if (mVal) mVal.innerText = currentModeName;
   }
 
   function checkLines() {
@@ -201,8 +208,10 @@
     cur = nextP || randPiece();
     nextP = randPiece();
     var tag = document.getElementById('serviceName');
-    tag.innerText = cur.name;
-    tag.style.borderColor = cur.color;
+    if (tag) {
+      tag.innerText = cur.name;
+      tag.style.borderColor = cur.color;
+    }
     drawNext();
 
     if (hits(cur, 0, 0)) {
@@ -295,15 +304,14 @@
       if (timer) clearTimeout(timer);
       if (bgAudio && !bgAudio.paused) bgAudio.pause();
       setPauseButton(true);
-      var b = document.getElementById('banner');
-      b.innerText = "⏸ ПАУЗА";
-      b.style.display = 'block';
+      notify("⏸ ПАУЗА");
     } else {
       if (Audio.isMp3Track(Audio.getCurrentTrack()) && bgAudio) {
         bgAudio.play().catch(function() {});
       }
       setPauseButton(false);
-      document.getElementById('banner').style.display = 'none';
+      var b = document.getElementById('banner');
+      if (b) b.style.display = 'none';
       scheduleTick();
     }
   }
@@ -351,7 +359,6 @@
     nextP = randPiece();
     spawn();
     draw();
-    if (!paused) notify("🚀 ВПЕРЁД, " + Hub.getPlayerName() + "!");
   }
 
   function bindBtn(id, fn) {
@@ -380,96 +387,101 @@
   bindBtn('btnRestart', function() { submitCurrent(false); startGame(false); });
   bindBtn('btnPause', function() { togglePause(); });
 
-  bindBtn('btnPrevTrack', function() { Audio.cycleTrack(-1); });
-  bindBtn('btnPlayPauseTrack', function() { Audio.togglePlayPauseMusic(); });
-  bindBtn('btnNextTrack', function() { Audio.cycleTrack(1); });
-
   var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
   var lastDragX = 0, lastDragY = 0, wasDragged = false;
   var lastTouchEndTime = 0;
 
-  boardWrap.addEventListener('touchstart', function(e) {
-    Audio.ensureAudio();
-    if (over || paused) return;
-    var t = e.touches[0];
-    touchStartX = t.clientX;
-    touchStartY = t.clientY;
-    lastDragX = touchStartX;
-    lastDragY = touchStartY;
-    touchStartTime = Date.now();
-    wasDragged = false;
-  }, {passive: true});
+  if (boardWrap) {
+    boardWrap.addEventListener('touchstart', function(e) {
+      Audio.ensureAudio();
+      if (over || paused) return;
+      var t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      lastDragX = touchStartX;
+      lastDragY = touchStartY;
+      touchStartTime = Date.now();
+      wasDragged = false;
+    }, {passive: true});
 
-  boardWrap.addEventListener('touchmove', function(e) {
-    if (over || paused) return;
-    e.preventDefault();
-    var t = e.touches[0];
-    var dx = t.clientX - lastDragX;
-    var dy = t.clientY - lastDragY;
+    boardWrap.addEventListener('touchmove', function(e) {
+      if (over || paused) return;
+      e.preventDefault();
+      var t = e.touches[0];
+      var dx = t.clientX - lastDragX;
+      var dy = t.clientY - lastDragY;
 
-    if (Math.abs(dx) > 22) {
-      moveX(dx > 0 ? 1 : -1);
-      lastDragX = t.clientX;
-      wasDragged = true;
-    }
-    if (dy > 26) {
-      stepDown();
-      lastDragY = t.clientY;
-      wasDragged = true;
-    }
-  }, {passive: false});
+      if (Math.abs(dx) > 22) {
+        moveX(dx > 0 ? 1 : -1);
+        lastDragX = t.clientX;
+        wasDragged = true;
+      }
+      if (dy > 26) {
+        stepDown();
+        lastDragY = t.clientY;
+        wasDragged = true;
+      }
+    }, {passive: false});
 
-  boardWrap.addEventListener('touchend', function(e) {
-    lastTouchEndTime = Date.now();
-    if (over || paused) return;
-    var dt = lastTouchEndTime - touchStartTime;
-    var ch = e.changedTouches[0];
-    var totalDx = Math.abs(ch.clientX - touchStartX);
-    var totalDy = ch.clientY - touchStartY;
+    boardWrap.addEventListener('touchend', function(e) {
+      lastTouchEndTime = Date.now();
+      if (over || paused) return;
+      var dt = lastTouchEndTime - touchStartTime;
+      var ch = e.changedTouches[0];
+      var totalDx = Math.abs(ch.clientX - touchStartX);
+      var totalDy = ch.clientY - touchStartY;
 
-    if (totalDy > 90 && dt < 220) {
-      dropFast();
-      return;
-    }
-    if (!wasDragged && totalDx < 30 && Math.abs(totalDy) < 30) {
-      rotate();
-    }
-  }, {passive: true});
+      if (totalDy > 90 && dt < 220) {
+        dropFast();
+        return;
+      }
+      if (!wasDragged && totalDx < 30 && Math.abs(totalDy) < 30) {
+        rotate();
+      }
+    }, {passive: true});
 
-  boardWrap.addEventListener('click', function() {
-    if (Date.now() - lastTouchEndTime < 450) return;
-    Audio.ensureAudio();
-    if (!over && !paused) rotate();
-  });
+    boardWrap.addEventListener('click', function() {
+      if (Date.now() - lastTouchEndTime < 450) return;
+      Audio.ensureAudio();
+      if (!over && !paused) rotate();
+    });
+  }
 
-  // ---------- Меню внутри игры ----------
   var menuModal = document.getElementById('menuModal');
+  var btnMenu = document.getElementById('btnMenu');
+  if (btnMenu && menuModal) {
+    btnMenu.onclick = function(e) {
+      e.stopPropagation();
+      Audio.ensureAudio();
+      paused = true;
+      if (timer) clearTimeout(timer);
+      menuModal.style.display = 'flex';
+    };
+  }
 
-  document.getElementById('btnMenu').onclick = function(e) {
-    e.stopPropagation();
-    Audio.ensureAudio();
-    paused = true;
-    if (timer) clearTimeout(timer);
-    if (Audio.syncVolumeSlidersUI) Audio.syncVolumeSlidersUI();
-    menuModal.style.display = 'flex';
-  };
+  var btnCloseMenu = document.getElementById('btnCloseMenu');
+  if (btnCloseMenu && menuModal) {
+    btnCloseMenu.onclick = function(e) {
+      e.stopPropagation();
+      Audio.ensureAudio();
+      menuModal.style.display = 'none';
+      paused = false;
+      setPauseButton(false);
+      var b = document.getElementById('banner');
+      if (b) b.style.display = 'none';
+      scheduleTick();
+    };
+  }
 
-  document.getElementById('btnCloseMenu').onclick = function(e) {
-    e.stopPropagation();
-    Audio.ensureAudio();
-    menuModal.style.display = 'none';
-    paused = false;
-    setPauseButton(false);
-    document.getElementById('banner').style.display = 'none';
-    scheduleTick();
-  };
-
-  document.getElementById('btnToMain').onclick = function(e) {
-    e.stopPropagation();
-    Audio.ensureAudio();
-    menuModal.style.display = 'none';
-    Hub.exitToMenu();
-  };
+  var btnToMain = document.getElementById('btnToMain');
+  if (btnToMain && menuModal) {
+    btnToMain.onclick = function(e) {
+      e.stopPropagation();
+      Audio.ensureAudio();
+      menuModal.style.display = 'none';
+      Hub.exitToMenu();
+    };
+  }
 
   var modeBtns = document.querySelectorAll('.mode-btn');
   for (var i = 0; i < modeBtns.length; i++) {
@@ -481,7 +493,7 @@
       currentModeName = this.getAttribute('data-mode');
       baseDelay = parseInt(this.getAttribute('data-speed'), 10);
       updateUI();
-      menuModal.style.display = 'none';
+      if (menuModal) menuModal.style.display = 'none';
       paused = false;
       setPauseButton(false);
       engine3D.triggerSpeedSparksExplosion();
@@ -501,7 +513,6 @@
     else if (e.key === 'p' || e.key === 'P') togglePause();
   });
 
-  // ---------- Подключение к порталу ----------
   Hub.registerGame('tetris', {
     onOpen: function() {
       inGame = true;
@@ -510,9 +521,9 @@
       } else {
         paused = false;
         setPauseButton(false);
-        document.getElementById('banner').style.display = 'none';
+        var b = document.getElementById('banner');
+        if (b) b.style.display = 'none';
         scheduleTick();
-        notify("🦁 В ИГРЕ: " + Hub.getPlayerName() + "!");
       }
       engine3D.triggerSpeedSparksExplosion();
       draw();
@@ -534,3 +545,4 @@
       startGame(true);
     }
   });
+})();
