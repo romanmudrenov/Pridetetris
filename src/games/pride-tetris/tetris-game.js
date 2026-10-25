@@ -1,3 +1,4 @@
+```javascript
 (function() {
   var Config = window.PrideCore.TetrisConfig;
   var Audio = window.PrideCore.Audio;
@@ -450,6 +451,7 @@
     Audio.ensureAudio();
     paused = true;
     if (timer) clearTimeout(timer);
+    if (Audio.syncVolumeSlidersUI) Audio.syncVolumeSlidersUI();
     menuModal.style.display = 'flex';
   };
 
@@ -536,3 +538,4 @@
 
   startGame(true);
 })();
+```
