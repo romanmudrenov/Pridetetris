@@ -1,4 +1,3 @@
-```javascript
 window.PrideCore = window.PrideCore || {};
 
 (function() {
@@ -641,4 +640,3 @@ window.PrideCore = window.PrideCore || {};
     getAllCatalogItems: getAllCatalogItems
   };
 })();
-```
