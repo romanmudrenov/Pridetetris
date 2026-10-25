@@ -7,99 +7,80 @@ window.PrideCore = window.PrideCore || {};
 (function() {
   var audioCtx = null;
   var sfxEnabled = true;
-  var currentTrack = "s1";
-  var lastActiveTrack = "s1";
-  var synthInterval = null;
-  var synthStep = 0;
+  var currentTrack = "off";
+  var lastActiveTrack = "m1";
   var isGamePausedOrOver = function() { return false; };
+  var statusText = "🔇 Музыка выключена";
 
-  var TRACK_ORDER = ["s1", "s2", "s3", "s4", "s5", "s6", "m1", "m2", "m3", "m4", "m5", "m6"];
+  var CUSTOM_RADIO_KEY = "pride_custom_radio_v1";
 
-  var TRACK_NAMES = {
-    "s1": "🎹 1. Cyber Bass",
-    "s2": "🎹 2. Korobeiniki",
-    "s3": "🎹 3. Neon Arp",
-    "s4": "🎹 4. Overdrive",
-    "s5": "🎹 5. Synthwave",
-    "s6": "🎹 6. Matrix Boss",
-    "m1": "🎵 7. Cyber Pride",
-    "m2": "🎵 8. Neon Agency",
-    "m3": "🎵 9. Techno Rush",
-    "m4": "🎵 10. Horizon",
-    "m5": "🎵 11. Print Shop",
-    "m6": "🎵 12. Billboard",
-    "off": "🔇 Выкл"
+  // 1. Твои ИИ-треки из папки ./music/ в репозитории
+  // Если файл в папку music/ ещё не загружен, автоматически включится backup-ссылка
+  var LOCAL_TRACKS = {
+    "m1": { name: "🎵 1. Cyber Pride AI",   src: "./music/track1.mp3", backup: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+    "m2": { name: "🎵 2. Neon Agency AI",   src: "./music/track2.mp3", backup: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+    "m3": { name: "🎵 3. Techno Rush AI",   src: "./music/track3.mp3", backup: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+    "m4": { name: "🎵 4. Digital Horizon",  src: "./music/track4.mp3", backup: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+    "m5": { name: "🎵 5. Night Print Shop", src: "./music/track5.mp3", backup: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+    "m6": { name: "🎵 6. Mega Billboard",   src: "./music/track6.mp3", backup: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" }
   };
 
-  var SYNTH_PATTERNS = {
-    "s1": {
-      wave: "sawtooth", tempo: 210,
-      notes: [
-        110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83,
-        130.81, 130.81, 164.81, 196.00, 146.83, 146.83, 220.00, 196.00,
-        110, 146.83, 164.81, 220.00, 196.00, 164.81, 146.83, 130.81,
-        123.47, 146.83, 185.00, 220.00, 164.81, 146.83, 130.81, 110
-      ]
-    },
-    "s2": {
-      wave: "square", tempo: 185,
-      notes: [
-        329.63, 246.94, 261.63, 293.66, 261.63, 246.94, 220.00, 220.00,
-        261.63, 329.63, 293.66, 261.63, 246.94, 246.94, 261.63, 293.66,
-        329.63, 261.63, 220.00, 220.00, 293.66, 349.23, 440.00, 392.00,
-        349.23, 329.63, 261.63, 329.63, 293.66, 261.63, 246.94, 293.66,
-        329.63, 261.63, 220.00, 220.00
-      ]
-    },
-    "s3": {
-      wave: "triangle", tempo: 165,
-      notes: [
-        220, 261.63, 329.63, 440, 329.63, 261.63, 196, 246.94,
-        293.66, 392, 293.66, 246.94, 174.61, 220, 261.63, 349.23,
-        261.63, 220, 164.81, 196, 246.94, 329.63, 246.94, 196,
-        220, 277.18, 329.63, 440, 392, 329.63, 261.63, 220
-      ]
-    },
-    "s4": {
-      wave: "sawtooth", tempo: 150,
-      notes: [
-        146.83, 146.83, 293.66, 146.83, 174.61, 146.83, 220.00, 196.00,
-        146.83, 146.83, 329.63, 146.83, 261.63, 220.00, 196.00, 174.61,
-        164.81, 164.81, 329.63, 164.81, 196.00, 164.81, 246.94, 220.00,
-        130.81, 164.81, 196.00, 261.63, 246.94, 220.00, 196.00, 164.81
-      ]
-    },
-    "s5": {
-      wave: "sawtooth", tempo: 220,
-      notes: [
-        98.00, 196.00, 146.83, 196.00, 110.00, 220.00, 164.81, 220.00,
-        130.81, 261.63, 196.00, 261.63, 146.83, 293.66, 220.00, 293.66,
-        164.81, 329.63, 246.94, 329.63, 146.83, 293.66, 220.00, 293.66,
-        130.81, 261.63, 196.00, 246.94, 110.00, 220.00, 146.83, 196.00
-      ]
-    },
-    "s6": {
-      wave: "square", tempo: 170,
-      notes: [
-        130.81, 196.00, 261.63, 196.00, 155.56, 233.08, 311.13, 233.08,
-        174.61, 261.63, 349.23, 261.63, 146.83, 220.00, 293.66, 220.00,
-        130.81, 261.63, 311.13, 392.00, 349.23, 311.13, 261.63, 233.08,
-        196.00, 233.08, 261.63, 311.13, 293.66, 261.63, 196.00, 130.81
-      ]
-    }
+  // 2. Бесплатные онлайн-радиостанции (HTTPS потоки)
+  var RADIO_STATIONS = {
+    "r1": { name: "📻 Nightride Synthwave", genre: "Retrowave / Cyber", url: "https://stream.nightride.fm/nightride.m4a" },
+    "r2": { name: "📻 Chillsynth FM",       genre: "Chill / Lo-Fi",     url: "https://stream.nightride.fm/chillsynth.m4a" },
+    "r3": { name: "📻 Groove Salad",        genre: "Ambient / Work",    url: "https://ice2.somafm.com/groovesalad-128-mp3" },
+    "r4": { name: "📻 DEF CON Radio",       genre: "Electro / Hacker",  url: "https://ice2.somafm.com/defcon-128-mp3" },
+    "r5": { name: "📻 Secret Agent",        genre: "Lounge / Spy",      url: "https://ice2.somafm.com/secretagent-128-mp3" },
+    "r6": { name: "📻 Space Station",       genre: "Deep Space",        url: "https://ice2.somafm.com/spacestation-128-mp3" }
   };
 
-  var FREE_TRACKS = {
-    "m1": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    "m2": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
-    "m3": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    "m4": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    "m5": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-    "m6": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
-  };
+  var TRACK_ORDER = ["m1", "m2", "m3", "m4", "m5", "m6", "r1", "r2", "r3", "r4", "r5", "r6"];
+
+  function getCustomRadioUrl() {
+    try { return localStorage.getItem(CUSTOM_RADIO_KEY) || ""; } catch (e) { return ""; }
+  }
+
+  function saveCustomRadioUrl(url) {
+    try { localStorage.setItem(CUSTOM_RADIO_KEY, url); } catch (e) {}
+  }
+
+  function getTrackTitle(key) {
+    if (key === "off") return "🔇 Выкл";
+    if (LOCAL_TRACKS[key]) return LOCAL_TRACKS[key].name;
+    if (RADIO_STATIONS[key]) return RADIO_STATIONS[key].name;
+    if (key === "rcustom") return "📻 Свой поток";
+    return "🎵 Музыка";
+  }
+
+  function isRadio(key) {
+    return key === "rcustom" || !!RADIO_STATIONS[key];
+  }
+
+  function isMp3Track(key) {
+    return key !== "off" && (!!LOCAL_TRACKS[key] || isRadio(key));
+  }
 
   function getBgAudio() {
     return document.getElementById('bgAudio');
+  }
+
+  function setStatus(txt) {
+    statusText = txt;
+    var el1 = document.getElementById('musicStatusBar');
+    if (el1) el1.textContent = txt;
+    var el2 = document.getElementById('menuMusicStatusBar');
+    if (el2) el2.textContent = txt;
+  }
+
+  function updateTrackUI() {
+    var lbl = document.getElementById('sideTrackLbl');
+    if (lbl) lbl.innerText = getTrackTitle(currentTrack);
+    var allTrackBtns = document.querySelectorAll('.track-btn[data-track]');
+    for (var k = 0; k < allTrackBtns.length; k++) {
+      var tk = allTrackBtns[k].getAttribute('data-track');
+      allTrackBtns[k].classList.toggle('active', tk === currentTrack);
+    }
   }
 
   function ensureAudio() {
@@ -112,6 +93,7 @@ window.PrideCore = window.PrideCore || {};
     }
   }
 
+  // Звуковые эффекты игры (SFX)
   function playSfx(type) {
     if (!sfxEnabled) return;
     ensureAudio();
@@ -151,7 +133,7 @@ window.PrideCore = window.PrideCore || {};
       osc3.start(now); osc3.stop(now + 0.14);
     } else if (type === 'laser') {
       var oscL = audioCtx.createOscillator();
-      var gL = audioCtx.createGain();
+      var gL = audioCtx.createOscillator ? audioCtx.createGain() : null;
       oscL.type = 'sawtooth';
       oscL.frequency.setValueAtTime(980, now);
       oscL.frequency.exponentialRampToValueAtTime(90, now + 0.38);
@@ -176,61 +158,118 @@ window.PrideCore = window.PrideCore || {};
     }
   }
 
-  function updateTrackUI() {
-    var lbl = document.getElementById('sideTrackLbl');
-    if (lbl) lbl.innerText = TRACK_NAMES[currentTrack] || "🎵 Музыка";
-    var allTrackBtns = document.querySelectorAll('.track-btn[data-track]');
-    for (var k = 0; k < allTrackBtns.length; k++) {
-      var tk = allTrackBtns[k].getAttribute('data-track');
-      allTrackBtns[k].classList.toggle('active', tk === currentTrack);
-    }
+  function stopStream(bgAudio) {
+    if (!bgAudio) return;
+    bgAudio.onplaying = null;
+    bgAudio.onerror = null;
+    bgAudio.onwaiting = null;
+    try {
+      bgAudio.pause();
+      bgAudio.removeAttribute('src');
+      bgAudio.load();
+    } catch (e) {}
   }
 
   function startMusic(trackKey) {
+    var bgAudio = getBgAudio();
     currentTrack = trackKey;
     if (trackKey !== 'off') lastActiveTrack = trackKey;
 
-    if (synthInterval) {
-      clearInterval(synthInterval);
-      synthInterval = null;
-    }
-    var bgAudio = getBgAudio();
-    if (bgAudio) bgAudio.pause();
     updateTrackUI();
 
-    if (trackKey === 'off') return;
+    if (trackKey === 'off') {
+      stopStream(bgAudio);
+      setStatus("🔇 Музыка и радио выключены");
+      return;
+    }
 
-    if (SYNTH_PATTERNS[trackKey]) {
-      ensureAudio();
-      var pat = SYNTH_PATTERNS[trackKey];
-      synthStep = 0;
-      synthInterval = setInterval(function() {
-        var welcomeModal = document.getElementById('welcomeModal');
-        var welcomeOpen = welcomeModal && welcomeModal.style.display !== 'none';
-        if ((isGamePausedOrOver() && !welcomeOpen) || !audioCtx || audioCtx.state !== 'running') return;
-        var now = audioCtx.currentTime;
-        var freq = pat.notes[synthStep % pat.notes.length];
-        synthStep++;
-        var osc = audioCtx.createOscillator();
-        var gain = audioCtx.createGain();
-        osc.type = pat.wave;
-        osc.frequency.setValueAtTime(freq, now);
-        gain.gain.setValueAtTime(0.04, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + (pat.tempo / 1000) * 0.9);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + (pat.tempo / 1000) * 0.9);
-      }, pat.tempo);
-    } else if (FREE_TRACKS[trackKey] && bgAudio) {
-      bgAudio.src = FREE_TRACKS[trackKey];
-      bgAudio.volume = 0.45;
-      bgAudio.play().catch(function() {});
+    if (!bgAudio) return;
+    stopStream(bgAudio);
+
+    // 1. Локальный ИИ-трек из папки ./music/ (с резервом)
+    if (LOCAL_TRACKS[trackKey]) {
+      var item = LOCAL_TRACKS[trackKey];
+      var triedBackup = false;
+      bgAudio.loop = true;
+      bgAudio.volume = 0.5;
+      setStatus("⏳ Загрузка: " + item.name + "...");
+
+      bgAudio.onplaying = function() {
+        setStatus((triedBackup ? "🎵 Демо-трек: " : "🎵 Играет из /music: ") + item.name);
+      };
+      bgAudio.onerror = function() {
+        if (!triedBackup && item.backup) {
+          triedBackup = true;
+          bgAudio.src = item.backup;
+          bgAudio.play().catch(function() {
+            setStatus("⚠️ Нажми Пуск для воспроизведения");
+          });
+        } else {
+          setStatus("⚠️ Файл " + item.src + " не найден");
+        }
+      };
+
+      bgAudio.src = item.src;
+      bgAudio.play().catch(function() {
+        if (!triedBackup && item.backup) {
+          triedBackup = true;
+          bgAudio.src = item.backup;
+          bgAudio.play().catch(function() {});
+        }
+      });
+      return;
+    }
+
+    // 2. Онлайн-радиостанция
+    if (isRadio(trackKey)) {
+      var rUrl = "";
+      var rName = "";
+      if (trackKey === "rcustom") {
+        rUrl = getCustomRadioUrl();
+        rName = "📻 Свой радиопоток";
+        if (!rUrl) {
+          setStatus("⚠️ Сначала вставь ссылку на поток ниже");
+          return;
+        }
+      } else {
+        rUrl = RADIO_STATIONS[trackKey].url;
+        rName = RADIO_STATIONS[trackKey].name;
+      }
+
+      bgAudio.loop = false;
+      bgAudio.volume = 0.55;
+      setStatus("⏳ Подключение к эфиру: " + rName + "...");
+
+      bgAudio.onwaiting = function() {
+        setStatus("⏳ Буферизация: " + rName + "...");
+      };
+      bgAudio.onplaying = function() {
+        setStatus("🔴 В ЭФИРЕ: " + rName);
+      };
+      bgAudio.onerror = function() {
+        setStatus("⚠️ Станция недоступна (выбери другую)");
+      };
+
+      bgAudio.src = rUrl;
+      bgAudio.play().catch(function() {
+        setStatus("⚠️ Не удалось запустить поток (проверь интернет)");
+      });
     }
   }
 
+  function playCustomRadio(url) {
+    var clean = String(url || "").trim();
+    if (!clean) {
+      setStatus("⚠️ Введи HTTPS-ссылку на аудиопоток");
+      return;
+    }
+    saveCustomRadioUrl(clean);
+    startMusic("rcustom");
+  }
+
   function cycleTrack(dir) {
-    var idx = TRACK_ORDER.indexOf(currentTrack === 'off' ? lastActiveTrack : currentTrack);
+    var base = currentTrack === 'off' ? lastActiveTrack : currentTrack;
+    var idx = TRACK_ORDER.indexOf(base);
     if (idx === -1) idx = 0;
     var nextIdx = (idx + dir + TRACK_ORDER.length) % TRACK_ORDER.length;
     startMusic(TRACK_ORDER[nextIdx]);
@@ -238,7 +277,7 @@ window.PrideCore = window.PrideCore || {};
 
   function togglePlayPauseMusic() {
     if (currentTrack === 'off') {
-      startMusic(lastActiveTrack || 's1');
+      startMusic(lastActiveTrack || 'm1');
     } else {
       startMusic('off');
     }
@@ -248,12 +287,16 @@ window.PrideCore = window.PrideCore || {};
     ensureAudio: ensureAudio,
     playSfx: playSfx,
     startMusic: startMusic,
+    playCustomRadio: playCustomRadio,
+    getCustomRadioUrl: getCustomRadioUrl,
     cycleTrack: cycleTrack,
     togglePlayPauseMusic: togglePlayPauseMusic,
     setPauseChecker: function(fn) { isGamePausedOrOver = fn; },
     getCurrentTrack: function() { return currentTrack; },
     getLastActiveTrack: function() { return lastActiveTrack; },
-    isMp3Track: function(tk) { return !!FREE_TRACKS[tk]; },
+    getStatusText: function() { return statusText; },
+    isMp3Track: isMp3Track,
+    isRadio: isRadio,
     toggleSfx: function() {
       sfxEnabled = !sfxEnabled;
       if (sfxEnabled) playSfx('rotate');
