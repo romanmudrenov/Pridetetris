@@ -6,9 +6,7 @@
   var canvas = document.getElementById('board');
   var boardWrap = document.getElementById('boardWrap');
   var nextCan = document.getElementById('nextCanvas');
-  var nextCtx = nextCan ? nextCan.getContext('2d') : null;
-
-  if (!Config || !canvas || !boardWrap) return;
+  var nextCtx = nextCan.getContext('2d');
 
   var COLS = Config.COLS;
   var ROWS = Config.ROWS;
@@ -31,9 +29,8 @@
   var baseDelay = 480;
   var speedBoostLevel = 0;
 
-  if (Audio && Audio.setPauseChecker) {
-    Audio.setPauseChecker(function() { return inGame && (paused || over); });
-  }
+  // Музыка не глушится, пока игрок в меню портала; в игре на паузе — глушится
+  Audio.setPauseChecker(function() { return inGame && (paused || over); });
 
   function makeGrid() {
     grid = [];
@@ -64,7 +61,6 @@
 
   function notify(msg) {
     var b = document.getElementById('banner');
-    if (!b) return;
     b.innerText = msg;
     b.style.display = 'block';
     setTimeout(function() { b.style.display = 'none'; }, 1400);
@@ -101,13 +97,10 @@
   }
 
   function draw() {
-    if (engine3D && engine3D.draw) {
-      engine3D.draw(grid, cur, getGhostY());
-    }
+    engine3D.draw(grid, cur, getGhostY());
   }
 
   function drawNext() {
-    if (!nextCtx) return;
     nextCtx.clearRect(0, 0, nextCan.width, nextCan.height);
     if (!nextP) return;
     var s = 14;
@@ -128,19 +121,15 @@
 
   function setUlt(val) {
     ult = Math.min(100, Math.max(0, val));
-    var bar = document.getElementById('ultBar');
-    if (bar) bar.style.width = ult + "%";
+    document.getElementById('ultBar').style.width = ult + "%";
     var btn = document.getElementById('btnUlt');
-    if (btn) btn.className = ult >= 100 ? "btn-ult active" : "btn-ult";
+    btn.className = ult >= 100 ? "btn-ult active" : "btn-ult";
   }
 
   function updateUI() {
-    var sVal = document.getElementById('scoreVal');
-    var lVal = document.getElementById('linesVal');
-    var mVal = document.getElementById('modeVal');
-    if (sVal) sVal.innerText = score + " ₽";
-    if (lVal) lVal.innerText = lines;
-    if (mVal) mVal.innerText = currentModeName;
+    document.getElementById('scoreVal').innerText = score + " ₽";
+    document.getElementById('linesVal').innerText = lines;
+    document.getElementById('modeVal').innerText = currentModeName;
   }
 
   function checkLines() {
@@ -153,7 +142,7 @@
         if (!grid[r][c]) { full = false; break; }
       }
       if (full) {
-        if (engine3D && engine3D.triggerLaserRowExplosion) engine3D.triggerLaserRowExplosion(r);
+        engine3D.triggerLaserRowExplosion(r);
         for (var k = 0; k < COLS; k++) {
           if (grid[r][k].type === "design") designBonus = true;
         }
@@ -183,7 +172,7 @@
       var newBoost = Math.floor(lines / 5);
       if (newBoost > speedBoostLevel) {
         speedBoostLevel = newBoost;
-        if (engine3D && engine3D.triggerSpeedSparksExplosion) engine3D.triggerSpeedSparksExplosion();
+        engine3D.triggerSpeedSparksExplosion();
         notify("⚡ НОВАЯ СКОРОСТЬ! УРОВЕНЬ " + (speedBoostLevel + 1));
       }
     }
@@ -191,7 +180,7 @@
   }
 
   function lockPiece() {
-    if (Audio && Audio.playSfx) Audio.playSfx('drop');
+    Audio.playSfx('drop');
     for (var dy = 0; dy < cur.shape.length; dy++) {
       for (var dx = 0; dx < cur.shape[dy].length; dx++) {
         if (cur.shape[dy][dx] && cur.y + dy >= 0) {
@@ -212,10 +201,8 @@
     cur = nextP || randPiece();
     nextP = randPiece();
     var tag = document.getElementById('serviceName');
-    if (tag) {
-      tag.innerText = cur.name;
-      tag.style.borderColor = cur.color;
-    }
+    tag.innerText = cur.name;
+    tag.style.borderColor = cur.color;
     drawNext();
 
     if (hits(cur, 0, 0)) {
@@ -230,11 +217,9 @@
     if (over || paused || !cur) return;
     if (!hits(cur, dir, 0)) {
       cur.x += dir;
-      if (engine3D) {
-        if (engine3D.tilt) engine3D.tilt(dir * 0.12);
-        if (engine3D.spawnFallingTrail) engine3D.spawnFallingTrail(cur, paused, over);
-      }
-      if (Audio && Audio.playSfx) Audio.playSfx('move');
+      engine3D.tilt(dir * 0.12);
+      Audio.playSfx('move');
+      engine3D.spawnFallingTrail(cur, paused, over);
       draw();
     }
   }
@@ -243,7 +228,7 @@
     if (over || paused || !cur) return;
     if (!hits(cur, 0, 1)) {
       cur.y++;
-      if (engine3D && engine3D.spawnFallingTrail) engine3D.spawnFallingTrail(cur, paused, over);
+      engine3D.spawnFallingTrail(cur, paused, over);
     } else {
       lockPiece();
     }
@@ -255,7 +240,7 @@
     while (!hits(cur, 0, 1)) {
       cur.y++;
       score += 5;
-      if (engine3D && engine3D.spawnFallingTrail) engine3D.spawnFallingTrail(cur, paused, over);
+      engine3D.spawnFallingTrail(cur, paused, over);
     }
     lockPiece();
     updateUI();
@@ -288,11 +273,9 @@
     }
 
     if (rotated) {
-      if (engine3D) {
-        if (engine3D.tilt) engine3D.tilt(0.16);
-        if (engine3D.spawnFallingTrail) engine3D.spawnFallingTrail(cur, paused, over);
-      }
-      if (Audio && Audio.playSfx) Audio.playSfx('rotate');
+      engine3D.tilt(0.16);
+      Audio.playSfx('rotate');
+      engine3D.spawnFallingTrail(cur, paused, over);
       draw();
     }
   }
@@ -312,25 +295,24 @@
       if (timer) clearTimeout(timer);
       if (bgAudio && !bgAudio.paused) bgAudio.pause();
       setPauseButton(true);
-      notify("⏸ ПАУЗА");
+      var b = document.getElementById('banner');
+      b.innerText = "⏸ ПАУЗА";
+      b.style.display = 'block';
     } else {
-      if (Audio && Audio.isMp3Track && Audio.getCurrentTrack && Audio.isMp3Track(Audio.getCurrentTrack()) && bgAudio) {
+      if (Audio.isMp3Track(Audio.getCurrentTrack()) && bgAudio) {
         bgAudio.play().catch(function() {});
       }
       setPauseButton(false);
-      var b = document.getElementById('banner');
-      if (b) b.style.display = 'none';
+      document.getElementById('banner').style.display = 'none';
       scheduleTick();
     }
   }
 
   function useUlt() {
     if (ult < 100 || over || paused) return;
-    if (engine3D && engine3D.triggerLaserRowExplosion) {
-      engine3D.triggerLaserRowExplosion(ROWS - 1);
-      engine3D.triggerLaserRowExplosion(ROWS - 2);
-      engine3D.triggerLaserRowExplosion(ROWS - 3);
-    }
+    engine3D.triggerLaserRowExplosion(ROWS - 1);
+    engine3D.triggerLaserRowExplosion(ROWS - 2);
+    engine3D.triggerLaserRowExplosion(ROWS - 3);
     grid.splice(ROWS - 3, 3);
     for (var i = 0; i < 3; i++) {
       var empty = [];
@@ -369,6 +351,7 @@
     nextP = randPiece();
     spawn();
     draw();
+    if (!paused) notify("🚀 ВПЕРЁД, " + Hub.getPlayerName() + "!");
   }
 
   function bindBtn(id, fn) {
@@ -377,13 +360,13 @@
     el.addEventListener('touchstart', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
+      Audio.ensureAudio();
       fn();
     }, {passive: false});
     el.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
+      Audio.ensureAudio();
       fn();
     });
   }
@@ -396,120 +379,111 @@
   bindBtn('btnUlt', function() { useUlt(); });
   bindBtn('btnRestart', function() { submitCurrent(false); startGame(false); });
   bindBtn('btnPause', function() { togglePause(); });
-  bindBtn('btnPrevTrack', function() { if (Audio && Audio.cycleTrack) Audio.cycleTrack(-1); });
-  bindBtn('btnPlayPauseTrack', function() { if (Audio && Audio.togglePlayPauseMusic) Audio.togglePlayPauseMusic(); });
-  bindBtn('btnNextTrack', function() { if (Audio && Audio.cycleTrack) Audio.cycleTrack(1); });
+
+  bindBtn('btnPrevTrack', function() { Audio.cycleTrack(-1); });
+  bindBtn('btnPlayPauseTrack', function() { Audio.togglePlayPauseMusic(); });
+  bindBtn('btnNextTrack', function() { Audio.cycleTrack(1); });
 
   var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
   var lastDragX = 0, lastDragY = 0, wasDragged = false;
   var lastTouchEndTime = 0;
 
-  if (boardWrap) {
-    boardWrap.addEventListener('touchstart', function(e) {
-      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
-      if (over || paused) return;
-      var t = e.touches[0];
-      touchStartX = t.clientX;
-      touchStartY = t.clientY;
-      lastDragX = touchStartX;
-      lastDragY = touchStartY;
-      touchStartTime = Date.now();
-      wasDragged = false;
-    }, {passive: true});
+  boardWrap.addEventListener('touchstart', function(e) {
+    Audio.ensureAudio();
+    if (over || paused) return;
+    var t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    lastDragX = touchStartX;
+    lastDragY = touchStartY;
+    touchStartTime = Date.now();
+    wasDragged = false;
+  }, {passive: true});
 
-    boardWrap.addEventListener('touchmove', function(e) {
-      if (over || paused) return;
-      e.preventDefault();
-      var t = e.touches[0];
-      var dx = t.clientX - lastDragX;
-      var dy = t.clientY - lastDragY;
+  boardWrap.addEventListener('touchmove', function(e) {
+    if (over || paused) return;
+    e.preventDefault();
+    var t = e.touches[0];
+    var dx = t.clientX - lastDragX;
+    var dy = t.clientY - lastDragY;
 
-      if (Math.abs(dx) > 22) {
-        moveX(dx > 0 ? 1 : -1);
-        lastDragX = t.clientX;
-        wasDragged = true;
-      }
-      if (dy > 26) {
-        stepDown();
-        lastDragY = t.clientY;
-        wasDragged = true;
-      }
-    }, {passive: false});
+    if (Math.abs(dx) > 22) {
+      moveX(dx > 0 ? 1 : -1);
+      lastDragX = t.clientX;
+      wasDragged = true;
+    }
+    if (dy > 26) {
+      stepDown();
+      lastDragY = t.clientY;
+      wasDragged = true;
+    }
+  }, {passive: false});
 
-    boardWrap.addEventListener('touchend', function(e) {
-      lastTouchEndTime = Date.now();
-      if (over || paused) return;
-      var dt = lastTouchEndTime - touchStartTime;
-      var ch = e.changedTouches[0];
-      var totalDx = Math.abs(ch.clientX - touchStartX);
-      var totalDy = ch.clientY - touchStartY;
+  boardWrap.addEventListener('touchend', function(e) {
+    lastTouchEndTime = Date.now();
+    if (over || paused) return;
+    var dt = lastTouchEndTime - touchStartTime;
+    var ch = e.changedTouches[0];
+    var totalDx = Math.abs(ch.clientX - touchStartX);
+    var totalDy = ch.clientY - touchStartY;
 
-      if (totalDy > 90 && dt < 220) {
-        dropFast();
-        return;
-      }
-      if (!wasDragged && totalDx < 30 && Math.abs(totalDy) < 30) {
-        rotate();
-      }
-    }, {passive: true});
+    if (totalDy > 90 && dt < 220) {
+      dropFast();
+      return;
+    }
+    if (!wasDragged && totalDx < 30 && Math.abs(totalDy) < 30) {
+      rotate();
+    }
+  }, {passive: true});
 
-    boardWrap.addEventListener('click', function() {
-      if (Date.now() - lastTouchEndTime < 450) return;
-      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
-      if (!over && !paused) rotate();
-    });
-  }
+  boardWrap.addEventListener('click', function() {
+    if (Date.now() - lastTouchEndTime < 450) return;
+    Audio.ensureAudio();
+    if (!over && !paused) rotate();
+  });
 
+  // ---------- Меню внутри игры ----------
   var menuModal = document.getElementById('menuModal');
-  var btnMenu = document.getElementById('btnMenu');
-  if (btnMenu && menuModal) {
-    btnMenu.onclick = function(e) {
-      e.stopPropagation();
-      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
-      paused = true;
-      if (timer) clearTimeout(timer);
-      menuModal.style.display = 'flex';
-    };
-  }
 
-  var btnCloseMenu = document.getElementById('btnCloseMenu');
-  if (btnCloseMenu && menuModal) {
-    btnCloseMenu.onclick = function(e) {
-      e.stopPropagation();
-      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
-      menuModal.style.display = 'none';
-      paused = false;
-      setPauseButton(false);
-      var b = document.getElementById('banner');
-      if (b) b.style.display = 'none';
-      scheduleTick();
-    };
-  }
+  document.getElementById('btnMenu').onclick = function(e) {
+    e.stopPropagation();
+    Audio.ensureAudio();
+    paused = true;
+    if (timer) clearTimeout(timer);
+    menuModal.style.display = 'flex';
+  };
 
-  var btnToMain = document.getElementById('btnToMain');
-  if (btnToMain && menuModal) {
-    btnToMain.onclick = function(e) {
-      e.stopPropagation();
-      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
-      menuModal.style.display = 'none';
-      Hub.exitToMenu();
-    };
-  }
+  document.getElementById('btnCloseMenu').onclick = function(e) {
+    e.stopPropagation();
+    Audio.ensureAudio();
+    menuModal.style.display = 'none';
+    paused = false;
+    setPauseButton(false);
+    document.getElementById('banner').style.display = 'none';
+    scheduleTick();
+  };
+
+  document.getElementById('btnToMain').onclick = function(e) {
+    e.stopPropagation();
+    Audio.ensureAudio();
+    menuModal.style.display = 'none';
+    Hub.exitToMenu();
+  };
 
   var modeBtns = document.querySelectorAll('.mode-btn');
   for (var i = 0; i < modeBtns.length; i++) {
     modeBtns[i].onclick = function(e) {
       e.stopPropagation();
-      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
+      Audio.ensureAudio();
       for (var j = 0; j < modeBtns.length; j++) modeBtns[j].classList.remove('selected');
       this.classList.add('selected');
       currentModeName = this.getAttribute('data-mode');
       baseDelay = parseInt(this.getAttribute('data-speed'), 10);
       updateUI();
-      if (menuModal) menuModal.style.display = 'none';
+      menuModal.style.display = 'none';
       paused = false;
       setPauseButton(false);
-      if (engine3D && engine3D.triggerSpeedSparksExplosion) engine3D.triggerSpeedSparksExplosion();
+      engine3D.triggerSpeedSparksExplosion();
       notify("💥 SPEED MODE: " + currentModeName);
       scheduleTick();
     };
@@ -526,21 +500,20 @@
     else if (e.key === 'p' || e.key === 'P') togglePause();
   });
 
-  startGame(true);
-
+  // ---------- Подключение к порталу ----------
   Hub.registerGame('tetris', {
     onOpen: function() {
       inGame = true;
-      if (over || !cur) {
+      if (over) {
         startGame(false);
       } else {
         paused = false;
         setPauseButton(false);
-        var b = document.getElementById('banner');
-        if (b) b.style.display = 'none';
+        document.getElementById('banner').style.display = 'none';
         scheduleTick();
+        notify("🦁 В ИГРЕ: " + Hub.getPlayerName() + "!");
       }
-      if (engine3D && engine3D.triggerSpeedSparksExplosion) engine3D.triggerSpeedSparksExplosion();
+      engine3D.triggerSpeedSparksExplosion();
       draw();
     },
     onClose: function() {
@@ -550,7 +523,7 @@
       if (timer) clearTimeout(timer);
       setPauseButton(true);
       var bgAudio = document.getElementById('bgAudio');
-      if (bgAudio && Audio && Audio.isMp3Track && Audio.isMp3Track(Audio.getCurrentTrack())) {
+      if (bgAudio && Audio.isMp3Track(Audio.getCurrentTrack())) {
         bgAudio.play().catch(function() {});
       }
     },
@@ -560,4 +533,6 @@
       startGame(true);
     }
   });
+
+  startGame(true);
 })();
