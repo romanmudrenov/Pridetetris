@@ -1,3 +1,4 @@
+javascript
 (function() {
   var Config = window.PrideCore.TetrisConfig;
   var Audio = window.PrideCore.Audio;
@@ -31,7 +32,9 @@
   var baseDelay = 480;
   var speedBoostLevel = 0;
 
-  Audio.setPauseChecker(function() { return inGame && (paused || over); });
+  if (Audio && Audio.setPauseChecker) {
+    Audio.setPauseChecker(function() { return inGame && (paused || over); });
+  }
 
   function makeGrid() {
     grid = [];
@@ -99,7 +102,9 @@
   }
 
   function draw() {
-    engine3D.draw(grid, cur, getGhostY());
+    if (engine3D && engine3D.draw) {
+      engine3D.draw(grid, cur, getGhostY());
+    }
   }
 
   function drawNext() {
@@ -149,7 +154,7 @@
         if (!grid[r][c]) { full = false; break; }
       }
       if (full) {
-        engine3D.triggerLaserRowExplosion(r);
+        if (engine3D && engine3D.triggerLaserRowExplosion) engine3D.triggerLaserRowExplosion(r);
         for (var k = 0; k < COLS; k++) {
           if (grid[r][k].type === "design") designBonus = true;
         }
@@ -179,7 +184,7 @@
       var newBoost = Math.floor(lines / 5);
       if (newBoost > speedBoostLevel) {
         speedBoostLevel = newBoost;
-        engine3D.triggerSpeedSparksExplosion();
+        if (engine3D && engine3D.triggerSpeedSparksExplosion) engine3D.triggerSpeedSparksExplosion();
         notify("⚡ НОВАЯ СКОРОСТЬ! УРОВЕНЬ " + (speedBoostLevel + 1));
       }
     }
@@ -187,7 +192,7 @@
   }
 
   function lockPiece() {
-    Audio.playSfx('drop');
+    if (Audio && Audio.playSfx) Audio.playSfx('drop');
     for (var dy = 0; dy < cur.shape.length; dy++) {
       for (var dx = 0; dx < cur.shape[dy].length; dx++) {
         if (cur.shape[dy][dx] && cur.y + dy >= 0) {
@@ -226,9 +231,11 @@
     if (over || paused || !cur) return;
     if (!hits(cur, dir, 0)) {
       cur.x += dir;
-      engine3D.tilt(dir * 0.12);
-      Audio.playSfx('move');
-      engine3D.spawnFallingTrail(cur, paused, over);
+      if (engine3D) {
+        if (engine3D.tilt) engine3D.tilt(dir * 0.12);
+        if (engine3D.spawnFallingTrail) engine3D.spawnFallingTrail(cur, paused, over);
+      }
+      if (Audio && Audio.playSfx) Audio.playSfx('move');
       draw();
     }
   }
@@ -237,7 +244,7 @@
     if (over || paused || !cur) return;
     if (!hits(cur, 0, 1)) {
       cur.y++;
-      engine3D.spawnFallingTrail(cur, paused, over);
+      if (engine3D && engine3D.spawnFallingTrail) engine3D.spawnFallingTrail(cur, paused, over);
     } else {
       lockPiece();
     }
@@ -249,7 +256,7 @@
     while (!hits(cur, 0, 1)) {
       cur.y++;
       score += 5;
-      engine3D.spawnFallingTrail(cur, paused, over);
+      if (engine3D && engine3D.spawnFallingTrail) engine3D.spawnFallingTrail(cur, paused, over);
     }
     lockPiece();
     updateUI();
@@ -282,9 +289,11 @@
     }
 
     if (rotated) {
-      engine3D.tilt(0.16);
-      Audio.playSfx('rotate');
-      engine3D.spawnFallingTrail(cur, paused, over);
+      if (engine3D) {
+        if (engine3D.tilt) engine3D.tilt(0.16);
+        if (engine3D.spawnFallingTrail) engine3D.spawnFallingTrail(cur, paused, over);
+      }
+      if (Audio && Audio.playSfx) Audio.playSfx('rotate');
       draw();
     }
   }
@@ -306,7 +315,7 @@
       setPauseButton(true);
       notify("⏸ ПАУЗА");
     } else {
-      if (Audio.isMp3Track(Audio.getCurrentTrack()) && bgAudio) {
+      if (Audio && Audio.isMp3Track && Audio.getCurrentTrack && Audio.isMp3Track(Audio.getCurrentTrack()) && bgAudio) {
         bgAudio.play().catch(function() {});
       }
       setPauseButton(false);
@@ -318,9 +327,11 @@
 
   function useUlt() {
     if (ult < 100 || over || paused) return;
-    engine3D.triggerLaserRowExplosion(ROWS - 1);
-    engine3D.triggerLaserRowExplosion(ROWS - 2);
-    engine3D.triggerLaserRowExplosion(ROWS - 3);
+    if (engine3D && engine3D.triggerLaserRowExplosion) {
+      engine3D.triggerLaserRowExplosion(ROWS - 1);
+      engine3D.triggerLaserRowExplosion(ROWS - 2);
+      engine3D.triggerLaserRowExplosion(ROWS - 3);
+    }
     grid.splice(ROWS - 3, 3);
     for (var i = 0; i < 3; i++) {
       var empty = [];
@@ -367,13 +378,13 @@
     el.addEventListener('touchstart', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      Audio.ensureAudio();
+      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
       fn();
     }, {passive: false});
     el.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      Audio.ensureAudio();
+      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
       fn();
     });
   }
@@ -393,7 +404,7 @@
 
   if (boardWrap) {
     boardWrap.addEventListener('touchstart', function(e) {
-      Audio.ensureAudio();
+      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
       if (over || paused) return;
       var t = e.touches[0];
       touchStartX = t.clientX;
@@ -442,7 +453,7 @@
 
     boardWrap.addEventListener('click', function() {
       if (Date.now() - lastTouchEndTime < 450) return;
-      Audio.ensureAudio();
+      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
       if (!over && !paused) rotate();
     });
   }
@@ -452,7 +463,7 @@
   if (btnMenu && menuModal) {
     btnMenu.onclick = function(e) {
       e.stopPropagation();
-      Audio.ensureAudio();
+      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
       paused = true;
       if (timer) clearTimeout(timer);
       menuModal.style.display = 'flex';
@@ -463,7 +474,7 @@
   if (btnCloseMenu && menuModal) {
     btnCloseMenu.onclick = function(e) {
       e.stopPropagation();
-      Audio.ensureAudio();
+      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
       menuModal.style.display = 'none';
       paused = false;
       setPauseButton(false);
@@ -477,7 +488,7 @@
   if (btnToMain && menuModal) {
     btnToMain.onclick = function(e) {
       e.stopPropagation();
-      Audio.ensureAudio();
+      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
       menuModal.style.display = 'none';
       Hub.exitToMenu();
     };
@@ -487,7 +498,7 @@
   for (var i = 0; i < modeBtns.length; i++) {
     modeBtns[i].onclick = function(e) {
       e.stopPropagation();
-      Audio.ensureAudio();
+      if (Audio && Audio.ensureAudio) Audio.ensureAudio();
       for (var j = 0; j < modeBtns.length; j++) modeBtns[j].classList.remove('selected');
       this.classList.add('selected');
       currentModeName = this.getAttribute('data-mode');
@@ -496,7 +507,7 @@
       if (menuModal) menuModal.style.display = 'none';
       paused = false;
       setPauseButton(false);
-      engine3D.triggerSpeedSparksExplosion();
+      if (engine3D && engine3D.triggerSpeedSparksExplosion) engine3D.triggerSpeedSparksExplosion();
       notify("💥 SPEED MODE: " + currentModeName);
       scheduleTick();
     };
@@ -525,7 +536,7 @@
         if (b) b.style.display = 'none';
         scheduleTick();
       }
-      engine3D.triggerSpeedSparksExplosion();
+      if (engine3D && engine3D.triggerSpeedSparksExplosion) engine3D.triggerSpeedSparksExplosion();
       draw();
     },
     onClose: function() {
@@ -535,7 +546,7 @@
       if (timer) clearTimeout(timer);
       setPauseButton(true);
       var bgAudio = document.getElementById('bgAudio');
-      if (bgAudio && Audio.isMp3Track(Audio.getCurrentTrack())) {
+      if (bgAudio && Audio && Audio.isMp3Track && Audio.isMp3Track(Audio.getCurrentTrack())) {
         bgAudio.play().catch(function() {});
       }
     },
@@ -546,3 +557,5 @@
     }
   });
 })();
+
+ 
