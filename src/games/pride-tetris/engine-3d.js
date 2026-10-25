@@ -1,4 +1,3 @@
-```javascript
 window.PrideCore = window.PrideCore || {};
 
 window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
@@ -285,4 +284,3 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
     }
   };
 };
-```
