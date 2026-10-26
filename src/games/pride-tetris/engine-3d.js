@@ -10,6 +10,7 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
   var particles = [];
   var lasers = [];
   var shockwaves = [];
+  var boardSX = 1, boardSY = 1;   // растяжение поля под размер экрана
 
   if (useThree) {
     try {
@@ -68,11 +69,16 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         var t = Math.tan(camera.fov * Math.PI / 360);
-        var zH = (ROWS / 2 + 0.65) / t;
-        var zW = (COLS / 2 + 0.65) / (t * camera.aspect);
-        camera.position.set(0, 0, Math.max(zH, zW));
+        var m = 0.55;                                  // небольшой запас по краям
+        var dist = (ROWS / 2 + m) / t;                 // камера подобрана по высоте поля
+        camera.position.set(0, 0, dist);
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
+        var visH = 2 * dist * t;                       // видимая высота
+        var visW = visH * camera.aspect;               // видимая ширина
+        boardSY = 1;
+        boardSX = Math.max(0.55, Math.min(1.6, (visW - 2 * m) / COLS));
+        boardGroup.scale.set(boardSX, boardSY, boardSX);   // растягиваем поле на всю ширину
       };
       fitBoard();
       window.addEventListener('resize', fitBoard);
@@ -184,7 +190,7 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
         }
         if (pieceLight) {
           pieceLight.color.set(cur.color);
-          pieceLight.position.set(gridToWorldX(cur.x + 1), gridToWorldY(cur.y + 1), 2.5);
+          pieceLight.position.set(gridToWorldX(cur.x + 1) * boardSX, gridToWorldY(cur.y + 1) * boardSY, 2.5);
         }
       }
     },
