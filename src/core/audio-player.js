@@ -7,11 +7,6 @@ window.PrideCore = window.PrideCore || {};
 (function() {
   var audioCtx = null;
   var sfxEnabled = true;
-  var currentTrack = "s1";
-  var lastActiveTrack = "s1";
-  var synthInterval = null;
-  var synthStep = 0;
-  var isGamePausedOrOver = function() { return false; };
 
   var KEY_MV = 'pride_vol_music_v1';
   var KEY_SV = 'pride_vol_sfx_v1';
@@ -42,95 +37,6 @@ window.PrideCore = window.PrideCore || {};
     }
   }
 
-  var TRACK_ORDER = ["s1", "s2", "s3", "s4", "s5", "s6", "m1", "m2", "m3", "m4", "m5", "m6"];
-
-  var TRACK_NAMES = {
-    "s1": "🎹 1. Cyber Bass",
-    "s2": "🎹 2. Korobeiniki",
-    "s3": "🎹 3. Neon Arp",
-    "s4": "🎹 4. Overdrive",
-    "s5": "🎹 5. Synthwave",
-    "s6": "🎹 6. Matrix Boss",
-    "m1": "🎵 7. Cyber Pride",
-    "m2": "🎵 8. Neon Agency",
-    "m3": "🎵 9. Techno Rush",
-    "m4": "🎵 10. Horizon",
-    "m5": "🎵 11. Print Shop",
-    "m6": "🎵 12. Billboard",
-    "off": "🔇 Выкл"
-  };
-
-  var SYNTH_PATTERNS = {
-    "s1": {
-      wave: "sawtooth", tempo: 210,
-      notes: [
-        110, 110, 130.81, 146.83, 110, 110, 164.81, 146.83,
-        130.81, 130.81, 164.81, 196.00, 146.83, 146.83, 220.00, 196.00,
-        110, 146.83, 164.81, 220.00, 196.00, 164.81, 146.83, 130.81,
-        123.47, 146.83, 185.00, 220.00, 164.81, 146.83, 130.81, 110
-      ]
-    },
-    "s2": {
-      wave: "square", tempo: 185,
-      notes: [
-        329.63, 246.94, 261.63, 293.66, 261.63, 246.94, 220.00, 220.00,
-        261.63, 329.63, 293.66, 261.63, 246.94, 246.94, 261.63, 293.66,
-        329.63, 261.63, 220.00, 220.00, 293.66, 349.23, 440.00, 392.00,
-        349.23, 329.63, 261.63, 329.63, 293.66, 261.63, 246.94, 293.66,
-        329.63, 261.63, 220.00, 220.00
-      ]
-    },
-    "s3": {
-      wave: "triangle", tempo: 165,
-      notes: [
-        220, 261.63, 329.63, 440, 329.63, 261.63, 196, 246.94,
-        293.66, 392, 293.66, 246.94, 174.61, 220, 261.63, 349.23,
-        261.63, 220, 164.81, 196, 246.94, 329.63, 246.94, 196,
-        220, 277.18, 329.63, 440, 392, 329.63, 261.63, 220
-      ]
-    },
-    "s4": {
-      wave: "sawtooth", tempo: 150,
-      notes: [
-        146.83, 146.83, 293.66, 146.83, 174.61, 146.83, 220.00, 196.00,
-        146.83, 146.83, 329.63, 146.83, 261.63, 220.00, 196.00, 174.61,
-        164.81, 164.81, 329.63, 164.81, 196.00, 164.81, 246.94, 220.00,
-        130.81, 164.81, 196.00, 261.63, 246.94, 220.00, 196.00, 164.81
-      ]
-    },
-    "s5": {
-      wave: "sawtooth", tempo: 220,
-      notes: [
-        98.00, 196.00, 146.83, 196.00, 110.00, 220.00, 164.81, 220.00,
-        130.81, 261.63, 196.00, 261.63, 146.83, 293.66, 220.00, 293.66,
-        164.81, 329.63, 246.94, 329.63, 146.83, 293.66, 220.00, 293.66,
-        130.81, 261.63, 196.00, 246.94, 110.00, 220.00, 146.83, 196.00
-      ]
-    },
-    "s6": {
-      wave: "square", tempo: 170,
-      notes: [
-        130.81, 196.00, 261.63, 196.00, 155.56, 233.08, 311.13, 233.08,
-        174.61, 261.63, 349.23, 261.63, 146.83, 220.00, 293.66, 220.00,
-        130.81, 261.63, 311.13, 392.00, 349.23, 311.13, 261.63, 233.08,
-        196.00, 233.08, 261.63, 311.13, 293.66, 261.63, 196.00, 130.81
-      ]
-    }
-  };
-
-  var FREE_TRACKS = {
-    "m1": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    "m2": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
-    "m3": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    "m4": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    "m5": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-    "m6": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3"
-  };
-
-  function getBgAudio() {
-    return document.getElementById('bgAudio');
-  }
-
   function ensureAudio() {
     if (!audioCtx) {
       var AC = window.AudioContext || window.webkitAudioContext;
@@ -141,6 +47,7 @@ window.PrideCore = window.PrideCore || {};
     }
   }
 
+  // ---------- Звуковые эффекты ----------
   function playSfx(type) {
     if (!sfxEnabled || sfxVol < 0.02) return;
     ensureAudio();
@@ -206,86 +113,9 @@ window.PrideCore = window.PrideCore || {};
     }
   }
 
-  function updateTrackUI() {
-    var lbl = document.getElementById('sideTrackLbl');
-    if (lbl) lbl.innerText = TRACK_NAMES[currentTrack] || "🎵 Музыка";
-    var allTrackBtns = document.querySelectorAll('.track-btn[data-track]');
-    for (var k = 0; k < allTrackBtns.length; k++) {
-      var tk = allTrackBtns[k].getAttribute('data-track');
-      allTrackBtns[k].classList.toggle('active', tk === currentTrack);
-    }
-  }
-
-  function startMusic(trackKey) {
-    currentTrack = trackKey;
-    if (trackKey !== 'off') lastActiveTrack = trackKey;
-
-    if (synthInterval) {
-      clearInterval(synthInterval);
-      synthInterval = null;
-    }
-    var bgAudio = getBgAudio();
-    if (bgAudio) bgAudio.pause();
-    updateTrackUI();
-
-    if (trackKey === 'off') return;
-
-    // Игровая музыка включается — плеер и радио замолкают
-    if (externalStopper) {
-      try { externalStopper(); } catch (e) {}
-    }
-
-    if (SYNTH_PATTERNS[trackKey]) {
-      ensureAudio();
-      var pat = SYNTH_PATTERNS[trackKey];
-      synthStep = 0;
-      synthInterval = setInterval(function() {
-        var welcomeModal = document.getElementById('welcomeModal');
-        var welcomeOpen = welcomeModal && welcomeModal.style.display !== 'none';
-        if ((isGamePausedOrOver() && !welcomeOpen) || !audioCtx || audioCtx.state !== 'running') return;
-        var peak = 0.06 * musicVol;
-        var freq = pat.notes[synthStep % pat.notes.length];
-        synthStep++;
-        if (peak < 0.002) return;
-        var now = audioCtx.currentTime;
-        var osc = audioCtx.createOscillator();
-        var gain = audioCtx.createGain();
-        osc.type = pat.wave;
-        osc.frequency.setValueAtTime(freq, now);
-        gain.gain.setValueAtTime(peak, now);
-        gain.gain.exponentialRampToValueAtTime(0.0005, now + (pat.tempo / 1000) * 0.9);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + (pat.tempo / 1000) * 0.9);
-      }, pat.tempo);
-    } else if (FREE_TRACKS[trackKey] && bgAudio) {
-      bgAudio.src = FREE_TRACKS[trackKey];
-      bgAudio.volume = musicVol;
-      bgAudio.play().catch(function() {});
-    }
-  }
-
-  function cycleTrack(dir) {
-    var idx = TRACK_ORDER.indexOf(currentTrack === 'off' ? lastActiveTrack : currentTrack);
-    if (idx === -1) idx = 0;
-    var nextIdx = (idx + dir + TRACK_ORDER.length) % TRACK_ORDER.length;
-    startMusic(TRACK_ORDER[nextIdx]);
-  }
-
-  function togglePlayPauseMusic() {
-    if (currentTrack === 'off') {
-      startMusic(lastActiveTrack || 's1');
-    } else {
-      startMusic('off');
-    }
-  }
-
   function setMusicVolume(v) {
     musicVol = clamp01(v);
     saveVol(KEY_MV, musicVol);
-    var bg = getBgAudio();
-    if (bg) bg.volume = musicVol;
     fireVol();
   }
 
@@ -295,16 +125,11 @@ window.PrideCore = window.PrideCore || {};
     fireVol();
   }
 
+  function noop() {}
+
   window.PrideCore.Audio = {
     ensureAudio: ensureAudio,
     playSfx: playSfx,
-    startMusic: startMusic,
-    cycleTrack: cycleTrack,
-    togglePlayPauseMusic: togglePlayPauseMusic,
-    setPauseChecker: function(fn) { isGamePausedOrOver = fn; },
-    getCurrentTrack: function() { return currentTrack; },
-    getLastActiveTrack: function() { return lastActiveTrack; },
-    isMp3Track: function(tk) { return !!FREE_TRACKS[tk]; },
     toggleSfx: function() {
       sfxEnabled = !sfxEnabled;
       if (sfxEnabled) playSfx('rotate');
@@ -312,24 +137,28 @@ window.PrideCore = window.PrideCore || {};
     },
     isSfxEnabled: function() { return sfxEnabled; },
 
-    // Громкость
+    // Громкость (музыка = плеер и радио)
     getMusicVolume: function() { return musicVol; },
     setMusicVolume: setMusicVolume,
     getSfxVolume: function() { return sfxVol; },
     setSfxVolume: setSfxVolume,
     onVolume: function(fn) { volListeners.push(fn); },
 
-    // Плеер и радио регистрируют сюда функцию, которая их останавливает
+    // Плеер и радио регистрируют сюда функцию, которая их останавливает (при выходе из профиля)
     setExternalStopper: function(fn) { externalStopper = fn; },
     stopAll: function() {
-      startMusic('off');
       if (externalStopper) {
         try { externalStopper(); } catch (e) {}
       }
-    }
-  };
+    },
 
-  // Применяем сохранённую громкость к основному аудио-элементу
-  var bgInit = getBgAudio();
-  if (bgInit) bgInit.volume = musicVol;
+    // Заглушки для совместимости со старыми файлами (8-битная музыка удалена)
+    startMusic: noop,
+    cycleTrack: noop,
+    togglePlayPauseMusic: noop,
+    setPauseChecker: noop,
+    getCurrentTrack: function() { return 'off'; },
+    getLastActiveTrack: function() { return 'off'; },
+    isMp3Track: function() { return false; }
+  };
 })();
