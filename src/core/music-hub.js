@@ -25,30 +25,26 @@ window.PrideCore = window.PrideCore || {};
 
   // Радиостанции. Ссылки должны начинаться с https://
   // Если станция не играет — замени ссылку или удали строку.
+  var RU = 'Россия';
+  var WORLD = 'Мировое радио';
   var STATIONS = [
-    { group: 'SomaFM — электроника и чилл', icon: '🌿', name: 'Groove Salad', genre: 'Ambient / Downtempo', url: 'https://ice1.somafm.com/groovesalad-128-mp3' },
-    { group: 'SomaFM — электроника и чилл', icon: '🕵️', name: 'Secret Agent', genre: 'Lounge / Spy', url: 'https://ice1.somafm.com/secretagent-128-mp3' },
-    { group: 'SomaFM — электроника и чилл', icon: '🚀', name: 'Space Station Soma', genre: 'Space electronic', url: 'https://ice1.somafm.com/spacestation-128-mp3' },
-    { group: 'SomaFM — электроника и чилл', icon: '💻', name: 'DEF CON Radio', genre: 'Hacker / IDM', url: 'https://ice1.somafm.com/defcon-128-mp3' },
-    { group: 'SomaFM — электроника и чилл', icon: '🌸', name: 'Lush', genre: 'Chill / Vocals', url: 'https://ice1.somafm.com/lush-128-mp3' },
-    { group: 'SomaFM — электроника и чилл', icon: '🎛', name: 'Beat Blender', genre: 'Deep house / Downtempo', url: 'https://ice1.somafm.com/beatblender-128-mp3' },
-    { group: 'SomaFM — электроника и чилл', icon: '💧', name: 'Fluid', genre: 'Instrumental hip-hop', url: 'https://ice1.somafm.com/fluid-128-mp3' },
-    { group: 'SomaFM — электроника и чилл', icon: '🌌', name: 'Drone Zone', genre: 'Ambient', url: 'https://ice1.somafm.com/dronezone-128-mp3' },
-    { group: 'SomaFM — электроника и чилл', icon: '📼', name: 'Underground 80s', genre: 'New wave / Synth', url: 'https://ice1.somafm.com/u80s-128-mp3' },
+    { group: RU, icon: '🎙', name: 'Европа Плюс', genre: 'Pop', url: 'https://ep128.hostingradio.ru:8030/ep128' },
+    { group: RU, icon: '📻', name: 'Ретро FM', genre: 'Ретро', url: 'https://retroserver.streamr.ru:8043/retro128.mp3' },
+    { group: RU, icon: '💿', name: 'Радио Рекорд', genre: 'Dance', url: 'https://radiorecord.hostingradio.ru/rr_main96.aacp' },
+    { group: RU, icon: '🕺', name: 'DFM', genre: 'Dance', url: 'https://dfm.hostingradio.ru/dfm96.aacp' },
+    { group: RU, icon: '🇷🇺', name: 'Русское радио', genre: 'Русская музыка', url: 'https://rusradio.hostingradio.ru/rusradio128.mp3' },
+    { group: RU, icon: '🤘', name: 'Наше радио', genre: 'Рок', url: 'https://nashe1.hostingradio.ru/nashe-128.mp3' },
+    { group: RU, icon: '🔥', name: 'Хит FM', genre: 'Хиты', url: 'https://hitfm.hostingradio.ru/hitfm96.aacp' },
+    { group: RU, icon: '🎤', name: 'Радио Шансон', genre: 'Шансон', url: 'https://chanson.hostingradio.ru:8041/chanson128.mp3' },
+    { group: RU, icon: '🚗', name: 'Дорожное радио', genre: 'Хиты в дорогу', url: 'https://dorognoe.hostingradio.ru:8000/radio' },
 
-    { group: 'Radio Paradise — рок и разное', icon: '🌈', name: 'Main Mix', genre: 'Eclectic', url: 'https://stream.radioparadise.com/mp3-128' },
-    { group: 'Radio Paradise — рок и разное', icon: '🌙', name: 'Mellow Mix', genre: 'Mellow', url: 'https://stream.radioparadise.com/mellow-128' },
-    { group: 'Radio Paradise — рок и разное', icon: '🎸', name: 'Rock Mix', genre: 'Rock', url: 'https://stream.radioparadise.com/rock-128' },
-
-    { group: 'Россия (проверь, какие играют)', icon: '🎙', name: 'Европа Плюс', genre: 'Pop', url: 'https://ep128.hostingradio.ru:8030/ep128' },
-    { group: 'Россия (проверь, какие играют)', icon: '📻', name: 'Ретро FM', genre: 'Ретро', url: 'https://retroserver.streamr.ru:8043/retro128.mp3' },
-    { group: 'Россия (проверь, какие играют)', icon: '💿', name: 'Радио Рекорд', genre: 'Dance', url: 'https://radiorecord.hostingradio.ru/rr_main96.aacp' },
-    { group: 'Россия (проверь, какие играют)', icon: '🕺', name: 'DFM', genre: 'Dance', url: 'https://dfm.hostingradio.ru/dfm96.aacp' },
-    { group: 'Россия (проверь, какие играют)', icon: '🇷🇺', name: 'Русское радио', genre: 'Русская музыка', url: 'https://rusradio.hostingradio.ru/rusradio128.mp3' },
-    { group: 'Россия (проверь, какие играют)', icon: '🤘', name: 'Наше радио', genre: 'Рок', url: 'https://nashe1.hostingradio.ru/nashe-128.mp3' }
+    { group: WORLD, icon: '🌈', name: 'Radio Paradise: Main Mix', genre: 'Eclectic', url: 'https://stream.radioparadise.com/mp3-128' },
+    { group: WORLD, icon: '🌙', name: 'Radio Paradise: Mellow', genre: 'Mellow', url: 'https://stream.radioparadise.com/mellow-128' },
+    { group: WORLD, icon: '🎸', name: 'Radio Paradise: Rock', genre: 'Rock', url: 'https://stream.radioparadise.com/rock-128' }
   ];
 
   var KEY_CUSTOM = 'pride_radio_custom_v1';
+  var KEY_LAST_SRC = 'pride_last_src_v1';
 
   // =============== УТИЛИТЫ ===============
   function readCache(key) {
@@ -145,7 +141,6 @@ window.PrideCore = window.PrideCore || {};
   rAudio.preload = 'none';
 
   function claim(src) {
-    Audio.startMusic('off');                       // выключаем игровую музыку
     if (src !== 'player') pAudio.pause();
     if (src !== 'radio') stopRadio();
   }
@@ -176,6 +171,8 @@ window.PrideCore = window.PrideCore || {};
   }
 
   // =============== ПЛЕЕР ===============
+  var lastKind = null;      // 'player' или 'radio': чем управляют кнопки на панели игры
+  var lastStation = null;
   var tracks = [];
   var bgs = [];
   var idx = -1;
@@ -188,6 +185,10 @@ window.PrideCore = window.PrideCore || {};
   var bgOffset = 0;
   var bgFlip = false;
   var dragging = false;
+
+  function saveLast() {
+    writeCache(KEY_LAST_SRC, { kind: lastKind, url: lastStation ? lastStation.url : null });
+  }
 
   function sourceLabel() {
     if (libSource === 'api') return 'GitHub';
@@ -297,6 +298,8 @@ window.PrideCore = window.PrideCore || {};
     var n = tracks.length;
     i = ((i % n) + n) % n;
     claim('player');
+    lastKind = 'player';
+    saveLast();
     idx = i;
     errText = '';
     var t = tracks[i];
@@ -425,6 +428,9 @@ window.PrideCore = window.PrideCore || {};
 
   function playStation(st) {
     claim('radio');
+    lastKind = 'radio';
+    lastStation = st;
+    saveLast();
     rCur = st;
     rState = 'connecting';
     rAudio.src = st.url;
@@ -560,14 +566,101 @@ window.PrideCore = window.PrideCore || {};
     $('volMusic').value = m;
     $('volSfx').value = s;
     $('pfVol').value = m;
+    $('gmVolMusic').value = m;
+    $('gmVolSfx').value = s;
     $('volMusicVal').textContent = m + '%';
     $('volSfxVal').textContent = s + '%';
     paintRange($('volMusic'));
     paintRange($('volSfx'));
     paintRange($('pfVol'));
+    paintRange($('gmVolMusic'));
+    paintRange($('gmVolSfx'));
     pAudio.volume = Audio.getMusicVolume();
     rAudio.volume = Audio.getMusicVolume();
   }
+
+  // =============== УПРАВЛЕНИЕ ИЗ ИГРЫ (кнопки на верхней панели) ===============
+  function stationIndex(st) {
+    var list = allStations();
+    for (var i = 0; i < list.length; i++) if (st && list[i].url === st.url) return i;
+    return -1;
+  }
+  function curLabel() {
+    if (lastKind === 'radio' && rCur) return '📻 ' + rCur.name;
+    if (lastKind === 'player' && idx >= 0 && tracks[idx]) return '🎧 ' + tracks[idx].title;
+    return '';
+  }
+  function fallbackRadio() {
+    var list = allStations();
+    if (list.length) playStation(list[0]);
+  }
+  function startDefault() {
+    // Ничего ещё не играло: сначала свои треки из папки music, а если их нет — первая радиостанция
+    loadLibrary(false).then(function() {
+      if (tracks.length) playIndex(0); else fallbackRadio();
+    });
+    return '▶ Включаю музыку…';
+  }
+  function mToggle() {
+    Audio.ensureAudio();
+    if (lastKind === 'radio') {
+      if (rCur && (rState === 'playing' || rState === 'connecting')) {
+        stopRadio();
+        return '⏸ Радио выключено';
+      }
+      playStation(lastStation || allStations()[0]);
+      return '📻 ' + (rCur ? rCur.name : '');
+    }
+    if (lastKind === 'player') {
+      if (!tracks.length) {
+        loadLibrary(false).then(function() {
+          if (tracks.length) playIndex(0); else fallbackRadio();
+        });
+        return '▶ Включаю музыку…';
+      }
+      togglePlay();
+      return pAudio.paused ? '⏸ Пауза' : curLabel();
+    }
+    return startDefault();
+  }
+  function mStep(dir) {
+    Audio.ensureAudio();
+    if (lastKind === 'radio') {
+      var list = allStations();
+      if (!list.length) return '';
+      var i = stationIndex(rCur || lastStation);
+      var n = (i < 0) ? 0 : (((i + dir) % list.length) + list.length) % list.length;
+      playStation(list[n]);
+      return '📻 ' + list[n].name;
+    }
+    if (lastKind === 'player' && tracks.length) {
+      if (dir > 0) nextTrack(false); else prevTrack();
+      return curLabel();
+    }
+    return mToggle();
+  }
+
+  window.PrideCore.Music = {
+    toggle: mToggle,
+    next: function() { return mStep(1); },
+    prev: function() { return mStep(-1); },
+    label: curLabel,
+    isPlaying: function() {
+      return (!pAudio.paused && idx >= 0) || !!(rCur && rState === 'playing');
+    }
+  };
+
+  // Вспоминаем, что играло в прошлый раз
+  (function restoreLast() {
+    var ls = readCache(KEY_LAST_SRC);
+    if (!ls || !ls.kind) return;
+    lastKind = ls.kind;
+    if (ls.kind === 'radio' && ls.url) {
+      var list = allStations();
+      for (var i = 0; i < list.length; i++) if (list[i].url === ls.url) lastStation = list[i];
+      if (!lastStation) lastKind = null;
+    }
+  })();
 
   // =============== ПОДКЛЮЧЕНИЕ КНОПОК ===============
   function init() {
@@ -611,6 +704,9 @@ window.PrideCore = window.PrideCore || {};
 
     $('volMusic').addEventListener('input', function() { Audio.setMusicVolume($('volMusic').value / 100); });
     $('pfVol').addEventListener('input', function() { Audio.setMusicVolume($('pfVol').value / 100); });
+    $('gmVolMusic').addEventListener('input', function() { Audio.setMusicVolume($('gmVolMusic').value / 100); });
+    $('gmVolSfx').addEventListener('input', function() { Audio.setSfxVolume($('gmVolSfx').value / 100); });
+    $('gmVolSfx').addEventListener('change', function() { Audio.ensureAudio(); Audio.playSfx('rotate'); });
     $('volSfx').addEventListener('input', function() { Audio.setSfxVolume($('volSfx').value / 100); });
     $('volSfx').addEventListener('change', function() { Audio.ensureAudio(); Audio.playSfx('rotate'); });
     $('btnVolTest').onclick = function() { Audio.ensureAudio(); Audio.playSfx('sparks'); };
