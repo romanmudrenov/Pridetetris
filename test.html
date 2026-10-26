@@ -22,15 +22,15 @@
 <script>
 // Для каждого файла: какие фрагменты обязаны в нём быть (признак новой версии)
 var FILES = [
-  { url: "./index.html", marks: ['id="scrWelcome"', 'music-hub.js', 'id="playerFull"', 'id="gameScreen"'] },
-  { url: "./css/main.css", marks: ['[data-theme="royal"]', '.game-screen', '.screen.active'] },
-  { url: "./css/music.css", marks: ['.player-full', '.rng'] },
-  { url: "./src/core/audio-player.js", marks: ['setExternalStopper', 'getMusicVolume', 'stopAll'] },
-  { url: "./src/core/portal-hub.js", marks: ['registerGame', 'stopAll', 'showScreen'] },
-  { url: "./src/core/music-hub.js", marks: ['loadLibrary', 'playStation', 'STATIONS'] },
-  { url: "./src/games/pride-tetris/config.js", marks: ['TetrisConfig'] },
-  { url: "./src/games/pride-tetris/engine-3d.js", marks: ['createEngine3D'] },
-  { url: "./src/games/pride-tetris/tetris-game.js", marks: ['registerGame', 'btnToMain', 'submitScore'] }
+  { url: "./index.html", marks: ['id="scrWelcome"', 'music-hub.js', 'id="playerFull"', 'class="hb mus"', 'gmVolMusic'], bad: ['scrMusicGame', 'bgAudio'] },
+  { url: "./css/main.css", marks: ['[data-theme="royal"]', '.game-screen', '.hb.mus'], bad: [] },
+  { url: "./css/music.css", marks: ['.player-full', '.rng'], bad: [] },
+  { url: "./src/core/audio-player.js", marks: ['setExternalStopper', 'getMusicVolume', 'stopAll'], bad: ['SYNTH_PATTERNS', 'soundhelix'] },
+  { url: "./src/core/portal-hub.js", marks: ['registerGame', 'stopAll', 'showScreen'], bad: ['btnMusicPrev'] },
+  { url: "./src/core/music-hub.js", marks: ['loadLibrary', 'PrideCore.Music', 'gmVolMusic', 'hostingradio'], bad: ['somafm'] },
+  { url: "./src/games/pride-tetris/config.js", marks: ['TetrisConfig'], bad: [] },
+  { url: "./src/games/pride-tetris/engine-3d.js", marks: ['createEngine3D', 'boardSX'], bad: [] },
+  { url: "./src/games/pride-tetris/tetris-game.js", marks: ['musicAction', 'fmtScore', 'registerGame'], bad: ['cycleTrack'] }
 ];
 
 var sum = document.getElementById('sum');
@@ -78,9 +78,14 @@ function checkFile(f) {
       f.marks.forEach(function(m) {
         if (text.indexOf(m) === -1) missing.push(m);
       });
-      if (missing.length) {
+      var present = [];
+      (f.bad || []).forEach(function(m) {
+        if (text.toLowerCase().indexOf(m.toLowerCase()) !== -1) present.push(m);
+      });
+      if (missing.length || present.length) {
         problems++;
-        html += "<span class='bad'>СТАРАЯ ВЕРСИЯ: нет фрагментов: " + esc(missing.join(" | ")) + "</span>";
+        if (missing.length) html += "<span class='bad'>СТАРАЯ ВЕРСИЯ: нет фрагментов: " + esc(missing.join(" | ")) + "</span><br>";
+        if (present.length) html += "<span class='bad'>СТАРАЯ ВЕРСИЯ: остались устаревшие фрагменты: " + esc(present.join(" | ")) + "</span>";
       } else {
         html += "<span class='ok'>Версия: новая</span>";
       }
