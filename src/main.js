@@ -91,7 +91,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 6px;
+  padding: 3px;
   background: var(--bg);
 }
 .game-screen.active {
@@ -105,17 +105,20 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 4px;
   background: var(--panel);
   border: 2px solid var(--a1);
   border-radius: 10px;
-  padding: 4px 8px;
-  margin-bottom: 4px;
+  padding: 3px 5px;
+  margin-bottom: 3px;
   box-shadow: 0 0 12px var(--g1);
 }
 .brand-box {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .logo-svg {
   width: 28px;
@@ -136,11 +139,11 @@ html, body {
   flex-shrink: 0;
 }
 .brand-name {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 900;
   color: var(--a2);
   line-height: 1.05;
-  max-width: 165px;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -153,8 +156,9 @@ html, body {
 }
 .header-btns {
   display: flex;
-  gap: 5px;
+  gap: 3px;
   align-items: center;
+  flex-shrink: 0;
 }
 .btn-pause {
   background: var(--btn);
@@ -182,10 +186,45 @@ html, body {
   cursor: pointer;
   box-shadow: 0 0 10px var(--g1);
 }
+.hb {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hb.plain {
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.hb.mus {
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--a2);
+}
+.hb.plain:active,
+.hb.mus:active {
+  background: var(--a2);
+  color: var(--on-a2);
+}
+.nextcv {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 2px auto 0;
+}
 
 .game-area {
   display: flex;
-  gap: 5px;
+  gap: 3px;
   width: 100%;
   max-width: 480px;
   flex: 1 1 auto;
@@ -262,17 +301,18 @@ canvas#board {
   flex-direction: column;
   justify-content: space-between;
   gap: 3px;
-  width: 82px;
+  width: 54px;
   flex-shrink: 0;
 }
 .box {
   background: var(--box);
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 3px 4px;
+  padding: 3px 2px;
+  text-align: center;
 }
 .lbl {
-  font-size: 8px;
+  font-size: 7px;
   color: var(--muted);
   text-transform: uppercase;
   font-weight: 700;
@@ -281,14 +321,15 @@ canvas#board {
   text-overflow: ellipsis;
 }
 .val {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   color: var(--a4);
   margin-top: 1px;
+  white-space: nowrap;
 }
 .service-tag {
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 900;
   color: var(--text);
   background: var(--purbg);
   border: 1px solid var(--a5);
@@ -338,11 +379,12 @@ canvas#board {
 }
 .btn-ult {
   width: 100%;
-  padding: 4px 2px;
+  padding: 3px 2px;
   border: none;
   border-radius: 4px;
   font-weight: 900;
-  font-size: 9px;
+  font-size: 12px;
+  line-height: 1.1;
   background: var(--btn);
   color: var(--muted);
 }
@@ -355,12 +397,13 @@ canvas#board {
 
 .btn-side-drop {
   width: 100%;
-  padding: 8px 2px;
+  padding: 6px 1px;
   background: var(--pinkbg);
   border: 2px solid var(--a1);
   color: var(--text);
   font-weight: 900;
   font-size: 9px;
+  line-height: 1.2;
   border-radius: 6px;
   cursor: pointer;
   box-shadow: 0 0 10px var(--g1);
@@ -386,10 +429,10 @@ canvas#board {
   width: 100%;
   max-width: 480px;
   flex-shrink: 0;
-  margin-top: 4px;
+  margin-top: 3px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
+  gap: 4px;
 }
 .c-btn {
   background: var(--box);
