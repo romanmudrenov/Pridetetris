@@ -29,8 +29,8 @@
   var baseDelay = 480;
   var speedBoostLevel = 0;
 
-  // Музыка не глушится, пока игрок в меню портала; в игре на паузе — глушится
-  Audio.setPauseChecker(function() { return inGame && (paused || over); });
+  // Плеер и радио играют и во время игры, пауза игры их не останавливает
+  var Music = window.PrideCore.Music;
 
   function makeGrid() {
     grid = [];
@@ -126,10 +126,16 @@
     btn.className = ult >= 100 ? "btn-ult active" : "btn-ult";
   }
 
+  function fmtScore(n) {
+    if (n < 10000) return String(n);
+    if (n < 1000000) return (n / 1000).toFixed(n < 100000 ? 1 : 0).replace('.0', '') + 'к';
+    return (n / 1000000).toFixed(2).replace(/0$/, '') + 'М';
+  }
+
   function updateUI() {
-    document.getElementById('scoreVal').innerText = score + " ₽";
+    document.getElementById('scoreVal').innerText = fmtScore(score);
     document.getElementById('linesVal').innerText = lines;
-    document.getElementById('modeVal').innerText = currentModeName;
+    document.getElementById('modeVal').innerText = currentModeName.split(' ')[0];
   }
 
   function checkLines() {
@@ -201,7 +207,9 @@
     cur = nextP || randPiece();
     nextP = randPiece();
     var tag = document.getElementById('serviceName');
-    tag.innerText = cur.name;
+    var letter = /\((.)\)/.exec(cur.name);
+    tag.innerText = letter ? letter[1] : cur.name;
+    tag.title = cur.name;
     tag.style.borderColor = cur.color;
     drawNext();
 
@@ -283,25 +291,20 @@
   function setPauseButton(isPaused) {
     var btnP = document.getElementById('btnPause');
     if (!btnP) return;
-    btnP.innerText = isPaused ? "▶ ПУСК" : "⏸ ПАУЗА";
+    btnP.innerText = isPaused ? "▶" : "⏸";
     btnP.classList.toggle('paused', isPaused);
   }
 
   function togglePause() {
     if (over) return;
     paused = !paused;
-    var bgAudio = document.getElementById('bgAudio');
     if (paused) {
       if (timer) clearTimeout(timer);
-      if (bgAudio && !bgAudio.paused) bgAudio.pause();
       setPauseButton(true);
       var b = document.getElementById('banner');
       b.innerText = "⏸ ПАУЗА";
       b.style.display = 'block';
     } else {
-      if (Audio.isMp3Track(Audio.getCurrentTrack()) && bgAudio) {
-        bgAudio.play().catch(function() {});
-      }
       setPauseButton(false);
       document.getElementById('banner').style.display = 'none';
       scheduleTick();
@@ -380,9 +383,14 @@
   bindBtn('btnRestart', function() { submitCurrent(false); startGame(false); });
   bindBtn('btnPause', function() { togglePause(); });
 
-  bindBtn('btnPrevTrack', function() { Audio.cycleTrack(-1); });
-  bindBtn('btnPlayPauseTrack', function() { Audio.togglePlayPauseMusic(); });
-  bindBtn('btnNextTrack', function() { Audio.cycleTrack(1); });
+  function musicAction(name) {
+    if (!Music) { notify('Музыка не загрузилась'); return; }
+    var label = Music[name]();
+    if (label) notify(label);
+  }
+  bindBtn('btnPrevTrack', function() { musicAction('prev'); });
+  bindBtn('btnPlayPauseTrack', function() { musicAction('toggle'); });
+  bindBtn('btnNextTrack', function() { musicAction('next'); });
 
   var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
   var lastDragX = 0, lastDragY = 0, wasDragged = false;
@@ -522,10 +530,6 @@
       paused = true;
       if (timer) clearTimeout(timer);
       setPauseButton(true);
-      var bgAudio = document.getElementById('bgAudio');
-      if (bgAudio && Audio.isMp3Track(Audio.getCurrentTrack())) {
-        bgAudio.play().catch(function() {});
-      }
     },
     onReset: function() {
       inGame = false;
