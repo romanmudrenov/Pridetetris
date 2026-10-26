@@ -366,7 +366,7 @@ window.PrideCore = window.PrideCore || {};
   function logout() {
     if (!confirm('Выйти из профиля?')) return;
     removeKey(KEY_SESSION);
-    if (Audio.stopAll) Audio.stopAll(); else Audio.startMusic('off');
+    if (Audio.stopAll) Audio.stopAll();
     currentGame = null;
     for (var id in games) {
       if (games[id] && games[id].onReset) games[id].onReset();
@@ -519,16 +519,8 @@ window.PrideCore = window.PrideCore || {};
     Audio.playSfx('move');
   }
 
-  // =============== МУЗЫКА (игровые треки и эффекты) ===============
+  // =============== ЗВУКОВЫЕ ЭФФЕКТЫ ===============
   function bindMusic() {
-    var tb = document.querySelectorAll('.track-btn[data-track]');
-    for (var i = 0; i < tb.length; i++) {
-      tb[i].onclick = function(e) {
-        e.stopPropagation();
-        Audio.ensureAudio();
-        Audio.startMusic(this.getAttribute('data-track'));
-      };
-    }
     var sfx = document.querySelectorAll('.sfx-toggle');
     for (var j = 0; j < sfx.length; j++) {
       sfx[j].onclick = function(e) {
@@ -542,9 +534,6 @@ window.PrideCore = window.PrideCore || {};
         }
       };
     }
-    $('btnMusicPrev').onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(-1); };
-    $('btnMusicPlay').onclick = function() { Audio.ensureAudio(); Audio.togglePlayPauseMusic(); };
-    $('btnMusicNext').onclick = function() { Audio.ensureAudio(); Audio.cycleTrack(1); };
   }
 
   // =============== ЗАПУСК ===============
