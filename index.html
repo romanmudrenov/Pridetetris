@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>PRIDE — Корпоративный Игровой Портал</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="./css/main.css?v=13">
-<link rel="stylesheet" href="./css/music.css?v=13">
+<link rel="stylesheet" href="./css/main.css?v=14">
+<link rel="stylesheet" href="./css/music.css?v=14">
 </head>
 <body>
 
@@ -251,6 +251,7 @@
     </div>
   </div>
 
+  <!-- ИГРОВАЯ ОБЛАСТЬ: СЛЕВА ПОЛЕ НА МАКСИМУМ, СПРАВА УЗКАЯ ИНФО-КОЛОНКА -->
   <div class="game-area">
     <div class="board-wrap" id="boardWrap">
       <canvas id="board" width="264" height="440"></canvas>
@@ -258,17 +259,16 @@
       <div id="banner">WOW-ЭФФЕКТ!</div>
     </div>
 
-    </div>
-
-  <div class="infobar">
-    <div class="ib"><div class="lbl">Бюджет</div><div class="val" id="scoreVal">0</div></div>
-    <div class="ib"><div class="lbl">Проекты</div><div class="val" id="linesVal" style="color:var(--a2);">0</div></div>
-    <div class="ib"><div class="lbl">Режим</div><div class="val" id="modeVal" style="font-size:10px; color:var(--a3);">ASAP</div></div>
-    <div class="ib"><div class="lbl">Сейчас</div><div class="service-tag" id="serviceName">T</div></div>
-    <div class="ib"><div class="lbl">След.</div><canvas id="nextCanvas" class="nextcv" width="68" height="48"></canvas></div>
-    <div class="ib ult">
-      <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
-      <button class="btn-ult" id="btnUlt" title="Ульта: сдать под ключ">⚡</button>
+    <div class="infobar">
+      <div class="ib"><div class="lbl">Бюджет</div><div class="val" id="scoreVal">0</div></div>
+      <div class="ib"><div class="lbl">Проекты</div><div class="val" id="linesVal" style="color:var(--a2);">0</div></div>
+      <div class="ib"><div class="lbl">Режим</div><div class="val" id="modeVal" style="font-size:10px; color:var(--a3);">ASAP</div></div>
+      <div class="ib"><div class="lbl">Сейчас</div><div class="service-tag" id="serviceName">T</div></div>
+      <div class="ib"><div class="lbl">След.</div><canvas id="nextCanvas" class="nextcv" width="68" height="48"></canvas></div>
+      <div class="ib ult">
+        <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
+        <button class="btn-ult" id="btnUlt" title="Ульта: сдать под ключ">⚡</button>
+      </div>
     </div>
   </div>
 
@@ -377,11 +377,11 @@
   </div>
 </div>
 
-<script src="./src/core/audio-player.js?v=13"></script>
-<script src="./src/core/portal-hub.js?v=13"></script>
-<script src="./src/core/music-hub.js?v=13"></script>
-<script src="./src/games/pride-tetris/config.js?v=13"></script>
-<script src="./src/games/pride-tetris/engine-3d.js?v=13"></script>
-<script src="./src/games/pride-tetris/tetris-game.js?v=13"></script>
+<script src="./src/core/audio-player.js?v=14"></script>
+<script src="./src/core/portal-hub.js?v=14"></script>
+<script src="./src/core/music-hub.js?v=14"></script>
+<script src="./src/games/pride-tetris/config.js?v=14"></script>
+<script src="./src/games/pride-tetris/engine-3d.js?v=14"></script>
+<script src="./src/games/pride-tetris/tetris-game.js?v=14"></script>
 </body>
 </html>
