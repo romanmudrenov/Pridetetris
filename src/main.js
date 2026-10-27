@@ -91,7 +91,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 3px;
+  padding: 2px;
   background: var(--bg);
 }
 .game-screen.active {
@@ -110,7 +110,7 @@ html, body {
   border: 2px solid var(--a1);
   border-radius: 10px;
   padding: 3px 5px;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   box-shadow: 0 0 12px var(--g1);
 }
 .brand-box {
@@ -296,13 +296,64 @@ canvas#board {
   box-shadow: 0 0 20px rgba(252, 238, 9, 0.5);
 }
 
-.side {
+.infobar {
+  width: 100%;
+  max-width: 480px;
+  flex-shrink: 0;
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+}
+.ib {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 34px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 3px;
-  width: 54px;
-  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  background: var(--box);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 2px;
+  text-align: center;
+}
+.ib .lbl {
+  font-size: 7px;
+  line-height: 1;
+  max-width: 100%;
+}
+.ib .val {
+  font-size: 12px;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+.ib .service-tag {
+  margin: 1px 0 0;
+  padding: 0 7px;
+  font-size: 13px;
+  line-height: 1.25;
+}
+.ib .nextcv {
+  height: 24px;
+  width: auto;
+  margin: 1px 0 0;
+}
+.ib.ult {
+  flex: 1.7 1 0;
+  flex-direction: row;
+  gap: 4px;
+  padding: 2px 3px;
+}
+.ib.ult .ult-track {
+  flex: 1;
+  margin: 0;
+}
+.ib.ult .btn-ult {
+  width: 30px;
+  height: 100%;
+  padding: 0;
+  font-size: 15px;
 }
 .box {
   background: var(--box);
@@ -395,44 +446,17 @@ canvas#board {
   box-shadow: 0 0 10px var(--g3);
 }
 
-.btn-side-drop {
-  width: 100%;
-  padding: 6px 1px;
-  background: var(--pinkbg);
-  border: 2px solid var(--a1);
-  color: var(--text);
-  font-weight: 900;
-  font-size: 9px;
-  line-height: 1.2;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 0 10px var(--g1);
-  text-align: center;
-}
-.btn-side-drop:active {
-  background: var(--a1);
-  color: var(--on-a1);
-}
-.btn-side-restart {
-  width: 100%;
-  padding: 5px 2px;
-  background: var(--btn);
-  border: 1px solid var(--a2);
-  color: var(--text);
-  font-weight: 800;
-  font-size: 9px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
 .controls {
   width: 100%;
   max-width: 480px;
   flex-shrink: 0;
-  margin-top: 3px;
+  margin-top: 2px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 4px;
+}
+.c-btn.drop {
+  border-color: var(--a1);
 }
 .c-btn {
   background: var(--box);
