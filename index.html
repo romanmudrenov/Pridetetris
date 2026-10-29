@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>PRIDE — Корпоративный Игровой Портал</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="./css/main.css?v=21">
-<link rel="stylesheet" href="./css/music.css?v=21">
+<link rel="stylesheet" href="./css/main.css?v=25">
+<link rel="stylesheet" href="./css/music.css?v=25">
 </head>
 <body>
 ​<!-- ============ ЭКРАН 1: ПРИВЕТСТВИЕ ============ -->
@@ -208,9 +208,9 @@
 </div>
 </div>
 </div>
-​<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS (FULLSCREEN TOUCH LAYOUT) ============ -->
+​<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS ============ -->
 <div class="game-screen" id="gameScreen">
-<!-- ВЕРХНЯЯ УЗКАЯ ПОЛОСКА -->
+<!-- ВЕРХНЯЯ УЗКАЯ ПОЛОСКА: ТОЛЬКО ЗАНОВО И МЕНЮ -->
 <div class="header">
 <div class="brand-box">
 <div class="avatar-badge" id="headerAvatar">🦁</div>
@@ -221,33 +221,33 @@
 <button class="btn-menu hb" id="btnMenu" title="Меню">☰</button>
 </div>
 </div>
-​<!-- ИГРОВОЕ ПОЛЕ НА МАКСИМУМ ЭКРАНА -->
+​<!-- ИГРОВОЕ ПОЛЕ НА МАКСИМУМ ВЫСОТЫ -->
 <div class="game-area">
 <div class="board-wrap" id="boardWrap">
-<canvas id="board"></canvas>
-<div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ВЛЕВО/ВПРАВО • СВАЙП ВНИЗ — СБРОС</div>
+<canvas id="board" width="264" height="440"></canvas>
+<div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ • ВНИЗ — СБРОС</div>
 <div id="banner">WOW-ЭФФЕКТ!</div>
 </div>
 </div>
-​<!-- НИЖНЯЯ ПАНЕЛЬ: ПЛЕЕР, СЛЕДУЮЩАЯ ФИГУРА, БЮДЖЕТ -->
-<div class="bottom-playbar">
-<div class="bp-info">
-<div class="bp-next-box">
-<span class="bp-lbl">СЛЕД:</span>
-<canvas id="nextCanvas" class="nextcv" width="48" height="32"></canvas>
+​<!-- НИЖНЯЯ ПАНЕЛЬ: СЛЕДУЮЩАЯ ФИГУРА, ПЛЕЕР, БЮДЖЕТ И КНОПКИ -->
+<div class="controls-panel">
+<div class="controls-top-row">
+<div class="ib-next">
+<span class="ib-lbl">След:</span>
+<canvas id="nextCanvas" class="nextcv" width="68" height="48"></canvas>
 </div>
-​<div class="bp-music-box">
+​<div class="header-btns" style="display:flex; gap:6px;">
 <button class="hb mus" id="btnPrevTrack" title="Назад">⏮</button>
-<button class="hb mus" id="btnPlayPauseTrack" title="Пуск / Пауза">⏯</button>
-<button class="hb mus" id="btnNextTrack" title="Вперед">⏭</button>
+<button class="hb mus" id="btnPlayPauseTrack" title="Музыка: пуск и пауза">⏯</button>
+<button class="hb mus" id="btnNextTrack" title="Вперёд">⏭</button>
 </div>
-​<div class="bp-score-box">
-<span class="bp-lbl">БЮДЖЕТ</span>
-<span class="bp-val" id="scoreVal">0</span>
+​<div class="ib-score">
+<span class="ib-lbl">Бюджет</span>
+<span class="val" id="scoreVal">0</span>
 </div>
 </div>
-​<!-- Наэкранные кнопки (по умолчанию скрыты для чистого сенсора) -->
-<div class="controls" id="onScreenControls" style="display:none;">
+​<!-- Кнопки управления (скрываются на мобильных, если выбран сенсор) -->
+<div class="controls" id="controlsWrap">
 <button class="c-btn" id="btnLeft">◀</button>
 <button class="c-btn" id="btnRot">↻</button>
 <button class="c-btn" id="btnDown">▼</button>
@@ -255,8 +255,7 @@
 <button class="c-btn" id="btnRight">▶</button>
 </div>
 </div>
-</div>
-​<!-- Скрытые элементы для совместимости со скриптами -->
+​<!-- ОРИГИНАЛЬНЫЕ ЭЛЕМЕНТЫ (НЕВИДИМЫ ДЛЯ ГЛАЗ, НО СОХРАНЯЮТ 100% СОВМЕСТИМОСТЬ СО СКРИПТОМ) -->
 <div style="display:none !important;" aria-hidden="true">
 <div id="linesVal">0</div>
 <div id="modeVal">ASAP</div>
@@ -265,6 +264,7 @@
 <button id="btnUlt"></button>
 <button id="btnPause"></button>
 </div>
+</div>
 ​<!-- МЕНЮ ВНУТРИ ИГРЫ -->
 <div class="modal" id="menuModal">
 <div class="modal-box">
@@ -272,22 +272,22 @@
 ​<div class="sec-title">1. Сложность (скорость):</div>
 <div class="mode-list">
 <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
-<b>Redline</b> <span>Easy</span>
+<b>Redline</b> <span>Easy Mode</span>
 </button>
 <button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480">
-<b>ASAP</b> <span>Medium</span>
+<b>ASAP</b> <span>Medium Mode</span>
 </button>
 <button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240">
-<b>Deadline</b> <span>Hard</span>
+<b>Deadline</b> <span>Hard Mode</span>
 </button>
 </div>
-​<div class="sec-title">2. Управление:</div>
+​<div class="sec-title">2. Управление на экране:</div>
 <div class="mode-list">
-<button class="mode-btn selected" id="btnModeTouch" onclick="toggleControls(false)">
-<b>Только сенсор</b> <span>Экран без кнопок</span>
+<button class="mode-btn selected" id="btnOptTouch" onclick="setControlsMode('touch')">
+<b>Сенсорное</b> <span>Без стрелок</span>
 </button>
-<button class="mode-btn" id="btnModeButtons" onclick="toggleControls(true)">
-<b>Кнопки на экране</b> <span>Стрелки снизу</span>
+<button class="mode-btn" id="btnOptButtons" onclick="setControlsMode('buttons')">
+<b>Кнопки</b> <span>Со стрелками</span>
 </button>
 </div>
 ​<div class="sec-title">3. Громкость и звуки:</div>
@@ -297,11 +297,12 @@
 <div class="vol-head" style="margin-top:6px;"><span>💥 Эффекты</span></div>
 <input type="range" class="rng" id="gmVolSfx" min="0" max="100" value="80">
 <div class="sfx-row">
-<span>🔊 Эффекты:</span>
+<span>🔊 Звуковые эффекты (SFX):</span>
 <button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
 </div>
+<div class="note" style="margin:8px 0 0;">Музыку и радио выбирай в главном меню. Кнопки ⏮ ⏯ ⏭ — на нижней панели игры.</div>
 </div>
-​<button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px; font-weight:800; border:none; border-radius:8px;">ПРОДОЛЖИТЬ ИГРУ</button>
+​<button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px; font-weight:bold; border:none; border-radius:8px;">ПРОДОЛЖИТЬ ИГРУ</button>
 <button class="btn-secondary" id="btnToMain" style="margin-top:8px;">🏠 В ГЛАВНОЕ МЕНЮ</button>
 </div>
 </div>
@@ -361,27 +362,31 @@
 </div>
 </div>
 ​<script>
-function toggleControls(show) {
-var c = document.getElementById('onScreenControls');
-var btnT = document.getElementById('btnModeTouch');
-var btnB = document.getElementById('btnModeButtons');
-if (!c) return;
-if (show) {
-c.style.display = 'grid';
-if (btnB) btnB.classList.add('selected');
-if (btnT) btnT.classList.remove('selected');
+function setControlsMode(mode) {
+var wrap = document.getElementById('controlsWrap');
+var bTouch = document.getElementById('btnOptTouch');
+var bBtns = document.getElementById('btnOptButtons');
+if (!wrap) return;
+if (mode === 'touch') {
+wrap.style.display = 'none';
+if (bTouch) bTouch.classList.add('selected');
+if (bBtns) bBtns.classList.remove('selected');
 } else {
-c.style.display = 'none';
-if (btnT) btnT.classList.add('selected');
-if (btnB) btnB.classList.remove('selected');
+wrap.style.display = 'grid';
+if (bBtns) bBtns.classList.add('selected');
+if (bTouch) bTouch.classList.remove('selected');
 }
+}
+// На мобильных по умолчанию скрываем кнопки для чистого сенсора
+if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+setControlsMode('touch');
 }
 </script>
-​<script src="./src/core/audio-player.js?v=21"></script>
-<script src="./src/core/portal-hub.js?v=21"></script>
-<script src="./src/core/music-hub.js?v=21"></script>
-<script src="./src/games/pride-tetris/config.js?v=21"></script>
-<script src="./src/games/pride-tetris/engine-3d.js?v=21"></script>
-<script src="./src/games/pride-tetris/tetris-game.js?v=21"></script>
+​<script src="./src/core/audio-player.js?v=25"></script>
+<script src="./src/core/portal-hub.js?v=25"></script>
+<script src="./src/core/music-hub.js?v=25"></script>
+<script src="./src/games/pride-tetris/config.js?v=25"></script>
+<script src="./src/games/pride-tetris/engine-3d.js?v=25"></script>
+<script src="./src/games/pride-tetris/tetris-game.js?v=25"></script>
 </body>
 </html>
