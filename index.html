@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>PRIDE — Корпоративный Игровой Портал</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="./css/main.css?v=20">
-<link rel="stylesheet" href="./css/music.css?v=20">
+<link rel="stylesheet" href="./css/main.css?v=21">
+<link rel="stylesheet" href="./css/music.css?v=21">
 </head>
 <body>
 ​<!-- ============ ЭКРАН 1: ПРИВЕТСТВИЕ ============ -->
@@ -208,9 +208,9 @@
 </div>
 </div>
 </div>
-​<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS ============ -->
+​<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS (FULLSCREEN TOUCH LAYOUT) ============ -->
 <div class="game-screen" id="gameScreen">
-<!-- Верхняя узкая полоска: бренд, заново и меню -->
+<!-- ВЕРХНЯЯ УЗКАЯ ПОЛОСКА -->
 <div class="header">
 <div class="brand-box">
 <div class="avatar-badge" id="headerAvatar">🦁</div>
@@ -221,15 +221,15 @@
 <button class="btn-menu hb" id="btnMenu" title="Меню">☰</button>
 </div>
 </div>
-​<!-- Главное поле игры -->
+​<!-- ИГРОВОЕ ПОЛЕ НА МАКСИМУМ ЭКРАНА -->
 <div class="game-area">
 <div class="board-wrap" id="boardWrap">
-<canvas id="board" width="264" height="440"></canvas>
-<div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ • СВАЙП ВНИЗ — СБРОС</div>
+<canvas id="board"></canvas>
+<div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ВЛЕВО/ВПРАВО • СВАЙП ВНИЗ — СБРОС</div>
 <div id="banner">WOW-ЭФФЕКТ!</div>
 </div>
 </div>
-​<!-- Нижняя объединенная панель: плеер, след. фигура, бюджет и кнопка сброса -->
+​<!-- НИЖНЯЯ ПАНЕЛЬ: ПЛЕЕР, СЛЕДУЮЩАЯ ФИГУРА, БЮДЖЕТ -->
 <div class="bottom-playbar">
 <div class="bp-info">
 <div class="bp-next-box">
@@ -246,7 +246,7 @@
 <span class="bp-val" id="scoreVal">0</span>
 </div>
 </div>
-​<!-- Наэкранные кнопки (скрыты для чистого сенсора, можно включить в меню) -->
+​<!-- Наэкранные кнопки (по умолчанию скрыты для чистого сенсора) -->
 <div class="controls" id="onScreenControls" style="display:none;">
 <button class="c-btn" id="btnLeft">◀</button>
 <button class="c-btn" id="btnRot">↻</button>
@@ -256,7 +256,7 @@
 </div>
 </div>
 </div>
-​<!-- Необходимые скрытые узлы для скрипта tetris-game.js (чтобы не было ошибок null) -->
+​<!-- Скрытые элементы для совместимости со скриптами -->
 <div style="display:none !important;" aria-hidden="true">
 <div id="linesVal">0</div>
 <div id="modeVal">ASAP</div>
@@ -272,13 +272,13 @@
 ​<div class="sec-title">1. Сложность (скорость):</div>
 <div class="mode-list">
 <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
-<b>Redline</b> <span>Easy Mode</span>
+<b>Redline</b> <span>Easy</span>
 </button>
 <button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480">
-<b>ASAP</b> <span>Medium Mode</span>
+<b>ASAP</b> <span>Medium</span>
 </button>
 <button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240">
-<b>Deadline</b> <span>Hard Mode</span>
+<b>Deadline</b> <span>Hard</span>
 </button>
 </div>
 ​<div class="sec-title">2. Управление:</div>
@@ -297,11 +297,11 @@
 <div class="vol-head" style="margin-top:6px;"><span>💥 Эффекты</span></div>
 <input type="range" class="rng" id="gmVolSfx" min="0" max="100" value="80">
 <div class="sfx-row">
-<span>🔊 Звуковые эффекты:</span>
+<span>🔊 Эффекты:</span>
 <button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
 </div>
 </div>
-​<button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px;">ПРОДОЛЖИТЬ ИГРУ</button>
+​<button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px; font-weight:800; border:none; border-radius:8px;">ПРОДОЛЖИТЬ ИГРУ</button>
 <button class="btn-secondary" id="btnToMain" style="margin-top:8px;">🏠 В ГЛАВНОЕ МЕНЮ</button>
 </div>
 </div>
@@ -377,11 +377,11 @@ if (btnB) btnB.classList.remove('selected');
 }
 }
 </script>
-​<script src="./src/core/audio-player.js?v=20"></script>
-<script src="./src/core/portal-hub.js?v=20"></script>
-<script src="./src/core/music-hub.js?v=20"></script>
-<script src="./src/games/pride-tetris/config.js?v=20"></script>
-<script src="./src/games/pride-tetris/engine-3d.js?v=20"></script>
-<script src="./src/games/pride-tetris/tetris-game.js?v=20"></script>
+​<script src="./src/core/audio-player.js?v=21"></script>
+<script src="./src/core/portal-hub.js?v=21"></script>
+<script src="./src/core/music-hub.js?v=21"></script>
+<script src="./src/games/pride-tetris/config.js?v=21"></script>
+<script src="./src/games/pride-tetris/engine-3d.js?v=21"></script>
+<script src="./src/games/pride-tetris/tetris-game.js?v=21"></script>
 </body>
 </html>
