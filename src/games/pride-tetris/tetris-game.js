@@ -1,15 +1,12 @@
-```javascript
 (function() {
   var Config = window.PrideCore.TetrisConfig;
   var Audio = window.PrideCore.Audio;
   var Hub = window.PrideCore.Hub;
 
-  function safeEl(id) { return document.getElementById(id); }
-
-  var canvas = safeEl('board');
-  var boardWrap = safeEl('boardWrap');
-  var nextCan = safeEl('nextCanvas');
-  var nextCtx = nextCan ? nextCan.getContext('2d') : null;
+  var canvas = document.getElementById('board');
+  var boardWrap = document.getElementById('boardWrap');
+  var nextCan = document.getElementById('nextCanvas');
+  var nextCtx = nextCan.getContext('2d');
 
   var COLS = Config.COLS;
   var ROWS = Config.ROWS;
@@ -32,6 +29,7 @@
   var baseDelay = 480;
   var speedBoostLevel = 0;
 
+  // Плеер и радио играют и во время игры, пауза игры их не останавливает
   var Music = window.PrideCore.Music;
 
   function makeGrid() {
@@ -62,15 +60,10 @@
   }
 
   function notify(msg) {
-    var b = safeEl('banner');
-    if (!b) return;
+    var b = document.getElementById('banner');
     b.innerText = msg;
-    b.classList.add('show');
     b.style.display = 'block';
-    setTimeout(function() {
-      b.classList.remove('show');
-      b.style.display = 'none';
-    }, 1400);
+    setTimeout(function() { b.style.display = 'none'; }, 1400);
   }
 
   function submitCurrent(announce) {
@@ -108,10 +101,10 @@
   }
 
   function drawNext() {
-    if (!nextCtx || !nextCan || !nextP) return;
     nextCtx.clearRect(0, 0, nextCan.width, nextCan.height);
-    var s = 10;
-    var d = 2;
+    if (!nextP) return;
+    var s = 14;
+    var d = Math.max(2, Math.floor(s * 0.2));
     for (var dy = 0; dy < nextP.shape.length; dy++) {
       for (var dx = 0; dx < nextP.shape[dy].length; dx++) {
         if (nextP.shape[dy][dx]) {
@@ -126,13 +119,11 @@
     }
   }
 
-  // ЗАЩИТА: безопасное обновление ульты (строка 124 больше никогда не вызовет ошибку!)
   function setUlt(val) {
     ult = Math.min(100, Math.max(0, val));
-    var bar = safeEl('ultBar');
-    if (bar) bar.style.width = ult + "%";
-    var btn = safeEl('btnUlt');
-    if (btn) btn.className = ult >= 100 ? "btn-ult active" : "btn-ult";
+    document.getElementById('ultBar').style.width = ult + "%";
+    var btn = document.getElementById('btnUlt');
+    btn.className = ult >= 100 ? "btn-ult active" : "btn-ult";
   }
 
   function fmtScore(n) {
@@ -142,12 +133,9 @@
   }
 
   function updateUI() {
-    var sc = safeEl('scoreVal');
-    if (sc) sc.innerText = fmtScore(score);
-    var ln = safeEl('linesVal');
-    if (ln) ln.innerText = lines;
-    var md = safeEl('modeVal');
-    if (md) md.innerText = currentModeName.split(' ')[0];
+    document.getElementById('scoreVal').innerText = fmtScore(score);
+    document.getElementById('linesVal').innerText = lines;
+    document.getElementById('modeVal').innerText = currentModeName.split(' ')[0];
   }
 
   function checkLines() {
@@ -218,13 +206,11 @@
   function spawn() {
     cur = nextP || randPiece();
     nextP = randPiece();
-    var tag = safeEl('serviceName');
-    if (tag) {
-      var letter = /\((.)\)/.exec(cur.name);
-      tag.innerText = letter ? letter[1] : cur.name;
-      tag.title = cur.name;
-      tag.style.borderColor = cur.color;
-    }
+    var tag = document.getElementById('serviceName');
+    var letter = /\((.)\)/.exec(cur.name);
+    tag.innerText = letter ? letter[1] : cur.name;
+    tag.title = cur.name;
+    tag.style.borderColor = cur.color;
     drawNext();
 
     if (hits(cur, 0, 0)) {
@@ -303,7 +289,7 @@
   }
 
   function setPauseButton(isPaused) {
-    var btnP = safeEl('btnPause');
+    var btnP = document.getElementById('btnPause');
     if (!btnP) return;
     btnP.innerText = isPaused ? "▶" : "⏸";
     btnP.classList.toggle('paused', isPaused);
@@ -315,11 +301,12 @@
     if (paused) {
       if (timer) clearTimeout(timer);
       setPauseButton(true);
-      notify("⏸ ПАУЗА");
+      var b = document.getElementById('banner');
+      b.innerText = "⏸ ПАУЗА";
+      b.style.display = 'block';
     } else {
       setPauseButton(false);
-      var b = safeEl('banner');
-      if (b) b.style.display = 'none';
+      document.getElementById('banner').style.display = 'none';
       scheduleTick();
     }
   }
@@ -371,7 +358,7 @@
   }
 
   function bindBtn(id, fn) {
-    var el = safeEl(id);
+    var el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('touchstart', function(e) {
       e.preventDefault();
@@ -405,127 +392,103 @@
   bindBtn('btnPlayPauseTrack', function() { musicAction('toggle'); });
   bindBtn('btnNextTrack', function() { musicAction('next'); });
 
-  // Сенсорное управление пальцем по игровому полю
   var touchStartX = 0, touchStartY = 0, touchStartTime = 0;
   var lastDragX = 0, lastDragY = 0, wasDragged = false;
   var lastTouchEndTime = 0;
 
-  if (boardWrap) {
-    boardWrap.addEventListener('touchstart', function(e) {
-      Audio.ensureAudio();
-      if (over || paused) return;
-      var t = e.touches[0];
-      touchStartX = t.clientX;
-      touchStartY = t.clientY;
-      lastDragX = touchStartX;
-      lastDragY = touchStartY;
-      touchStartTime = Date.now();
-      wasDragged = false;
-    }, {passive: true});
+  boardWrap.addEventListener('touchstart', function(e) {
+    Audio.ensureAudio();
+    if (over || paused) return;
+    var t = e.touches[0];
+    touchStartX = t.clientX;
+    touchStartY = t.clientY;
+    lastDragX = touchStartX;
+    lastDragY = touchStartY;
+    touchStartTime = Date.now();
+    wasDragged = false;
+  }, {passive: true});
 
-    boardWrap.addEventListener('touchmove', function(e) {
-      if (over || paused) return;
-      var t = e.touches[0];
-      var dx = t.clientX - lastDragX;
-      var dy = t.clientY - lastDragY;
+  boardWrap.addEventListener('touchmove', function(e) {
+    if (over || paused) return;
+    e.preventDefault();
+    var t = e.touches[0];
+    var dx = t.clientX - lastDragX;
+    var dy = t.clientY - lastDragY;
 
-      if (Math.abs(dx) > 18) {
-        moveX(dx > 0 ? 1 : -1);
-        lastDragX = t.clientX;
-        wasDragged = true;
-      }
-      if (dy > 22) {
-        stepDown();
-        lastDragY = t.clientY;
-        wasDragged = true;
-      }
-    }, {passive: true});
+    if (Math.abs(dx) > 22) {
+      moveX(dx > 0 ? 1 : -1);
+      lastDragX = t.clientX;
+      wasDragged = true;
+    }
+    if (dy > 26) {
+      stepDown();
+      lastDragY = t.clientY;
+      wasDragged = true;
+    }
+  }, {passive: false});
 
-    boardWrap.addEventListener('touchend', function(e) {
-      lastTouchEndTime = Date.now();
-      if (over || paused) return;
-      var dt = lastTouchEndTime - touchStartTime;
-      var ch = e.changedTouches[0];
-      var totalDx = Math.abs(ch.clientX - touchStartX);
-      var totalDy = ch.clientY - touchStartY;
+  boardWrap.addEventListener('touchend', function(e) {
+    lastTouchEndTime = Date.now();
+    if (over || paused) return;
+    var dt = lastTouchEndTime - touchStartTime;
+    var ch = e.changedTouches[0];
+    var totalDx = Math.abs(ch.clientX - touchStartX);
+    var totalDy = ch.clientY - touchStartY;
 
-      // Быстрый свайп вниз — мгновенный сброс
-      if (totalDy > 75 && dt < 250) {
-        dropFast();
-        return;
-      }
-      // Короткий тап — поворот
-      if (!wasDragged && totalDx < 25 && Math.abs(totalDy) < 25) {
-        rotate();
-      }
-    }, {passive: true});
+    if (totalDy > 90 && dt < 220) {
+      dropFast();
+      return;
+    }
+    if (!wasDragged && totalDx < 30 && Math.abs(totalDy) < 30) {
+      rotate();
+    }
+  }, {passive: true});
 
-    boardWrap.addEventListener('click', function() {
-      if (Date.now() - lastTouchEndTime < 450) return;
-      Audio.ensureAudio();
-      if (!over && !paused) rotate();
-    });
-  }
+  boardWrap.addEventListener('click', function() {
+    if (Date.now() - lastTouchEndTime < 450) return;
+    Audio.ensureAudio();
+    if (!over && !paused) rotate();
+  });
 
-  // Меню внутри игры
-  var menuModal = safeEl('menuModal');
-  var btnMenu = safeEl('btnMenu');
-  if (btnMenu && menuModal) {
-    btnMenu.onclick = function(e) {
-      e.stopPropagation();
-      Audio.ensureAudio();
-      paused = true;
-      if (timer) clearTimeout(timer);
-      menuModal.classList.add('open');
-      menuModal.style.display = 'flex';
-    };
-  }
+  // ---------- Меню внутри игры ----------
+  var menuModal = document.getElementById('menuModal');
 
-  var btnCloseMenu = safeEl('btnCloseMenu');
-  if (btnCloseMenu && menuModal) {
-    btnCloseMenu.onclick = function(e) {
-      e.stopPropagation();
-      Audio.ensureAudio();
-      menuModal.classList.remove('open');
-      menuModal.style.display = 'none';
-      paused = false;
-      setPauseButton(false);
-      var b = safeEl('banner');
-      if (b) b.style.display = 'none';
-      scheduleTick();
-    };
-  }
+  document.getElementById('btnMenu').onclick = function(e) {
+    e.stopPropagation();
+    Audio.ensureAudio();
+    paused = true;
+    if (timer) clearTimeout(timer);
+    menuModal.style.display = 'flex';
+  };
 
-  var btnToMain = safeEl('btnToMain');
-  if (btnToMain && menuModal) {
-    btnToMain.onclick = function(e) {
-      e.stopPropagation();
-      Audio.ensureAudio();
-      menuModal.classList.remove('open');
-      menuModal.style.display = 'none';
-      Hub.exitToMenu();
-    };
-  }
+  document.getElementById('btnCloseMenu').onclick = function(e) {
+    e.stopPropagation();
+    Audio.ensureAudio();
+    menuModal.style.display = 'none';
+    paused = false;
+    setPauseButton(false);
+    document.getElementById('banner').style.display = 'none';
+    scheduleTick();
+  };
+
+  document.getElementById('btnToMain').onclick = function(e) {
+    e.stopPropagation();
+    Audio.ensureAudio();
+    menuModal.style.display = 'none';
+    Hub.exitToMenu();
+  };
 
   var modeBtns = document.querySelectorAll('.mode-btn');
   for (var i = 0; i < modeBtns.length; i++) {
     modeBtns[i].onclick = function(e) {
-      if (this.id === 'btnModeTouch' || this.id === 'btnModeButtons') return;
       e.stopPropagation();
       Audio.ensureAudio();
-      for (var j = 0; j < modeBtns.length; j++) {
-        if (modeBtns[j].id !== 'btnModeTouch' && modeBtns[j].id !== 'btnModeButtons') {
-          modeBtns[j].classList.remove('selected');
-        }
-      }
+      for (var j = 0; j < modeBtns.length; j++) modeBtns[j].classList.remove('selected');
       this.classList.add('selected');
       currentModeName = this.getAttribute('data-mode');
       baseDelay = parseInt(this.getAttribute('data-speed'), 10);
       updateUI();
-      if (menuModal) {
-        menuModal.classList.remove('open');
-        menuModal.style.display = 'none';
-      }
+      menuModal.style.display = 'none';
       paused = false;
       setPauseButton(false);
       engine3D.triggerSpeedSparksExplosion();
@@ -545,25 +508,16 @@
     else if (e.key === 'p' || e.key === 'P') togglePause();
   });
 
-  // Подключение к порталу
+  // ---------- Подключение к порталу ----------
   Hub.registerGame('tetris', {
     onOpen: function() {
       inGame = true;
-      // При открытии экрана делаем перерасчет 3D холста под реальный размер экрана телефона
-      setTimeout(function() {
-        if (engine3D && engine3D.fit) engine3D.fit();
-      }, 50);
-      setTimeout(function() {
-        if (engine3D && engine3D.fit) engine3D.fit();
-      }, 250);
-
       if (over) {
         startGame(false);
       } else {
         paused = false;
         setPauseButton(false);
-        var b = safeEl('banner');
-        if (b) b.style.display = 'none';
+        document.getElementById('banner').style.display = 'none';
         scheduleTick();
         notify("🦁 В ИГРЕ: " + Hub.getPlayerName() + "!");
       }
@@ -586,4 +540,3 @@
 
   startGame(true);
 })();
-```
