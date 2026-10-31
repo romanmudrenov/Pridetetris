@@ -72,7 +72,7 @@ window.PrideCore = window.PrideCore || {};
       osc2.type = 'sine';
       osc2.frequency.setValueAtTime(380, now);
       osc2.frequency.exponentialRampToValueAtTime(680, now + 0.08);
-      g.gain.setValueAtTime(0.12 * k, now);
+      g2.gain.setValueAtTime(0.12 * k, now);
       g2.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
       osc2.connect(g2); g2.connect(audioCtx.destination);
       osc2.start(now); osc2.stop(now + 0.08);
