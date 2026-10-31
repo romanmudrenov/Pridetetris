@@ -1,4 +1,3 @@
-```javascript
 window.PrideCore = window.PrideCore || {};
 
 window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
@@ -11,75 +10,46 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
   var particles = [];
   var lasers = [];
   var shockwaves = [];
-
-  var fitBoard = function() {
-    if (!renderer || !camera || !boardWrap) return;
-    var w = boardWrap.clientWidth;
-    var h = boardWrap.clientHeight;
-    // Если контейнер скрыт (display:none), берем видимые размеры окна
-    if (!w || !h || w < 20 || h < 20) {
-      w = window.innerWidth;
-      h = Math.floor(window.innerHeight * 0.72);
-    }
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-
-    var t = Math.tan(camera.fov * Math.PI / 360);
-    var margin = 0.6;
-    // Подбираем дистанцию камеры строго так, чтобы поле 10x20 полностью влезало и по высоте, и по ширине
-    var distH = (ROWS / 2 + margin) / t;
-    var distW = (COLS / 2 + margin) / (t * camera.aspect);
-    var dist = Math.max(distH, distW);
-
-    camera.position.set(0, 0, dist);
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
-
-    if (boardGroup) {
-      boardGroup.scale.set(1, 1, 1);
-    }
-  };
+  var boardSX = 1, boardSY = 1;   // растяжение поля под размер экрана
 
   if (useThree) {
     try {
       renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.setClearColor(0x07030e, 1);
+      renderer.setClearColor(0x05060a, 1);
 
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(42, COLS / ROWS, 0.1, 200);
+      camera = new THREE.PerspectiveCamera(40, COLS / ROWS, 0.1, 200);
 
-      scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.55));
 
-      var dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-      dirLight.position.set(8, 16, 20);
+      var dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+      dirLight.position.set(8, 16, 18);
       scene.add(dirLight);
 
-      var pinkLight = new THREE.PointLight(0xff007a, 0.8, 40);
-      pinkLight.position.set(-8, -6, 12);
+      var pinkLight = new THREE.PointLight(0xff007a, 0.7, 35);
+      pinkLight.position.set(-8, -6, 10);
       scene.add(pinkLight);
 
-      var cyanLight = new THREE.PointLight(0x00f0ff, 0.8, 40);
-      cyanLight.position.set(8, 8, 12);
+      var cyanLight = new THREE.PointLight(0x00f0ff, 0.7, 35);
+      cyanLight.position.set(8, 8, 10);
       scene.add(cyanLight);
 
-      pieceLight = new THREE.PointLight(0x00f0ff, 1.3, 10);
+      pieceLight = new THREE.PointLight(0x00f0ff, 1.2, 8);
       scene.add(pieceLight);
 
       boardGroup = new THREE.Group();
       scene.add(boardGroup);
 
-      // Задняя сетка поля
       var backGeo = new THREE.PlaneGeometry(COLS, ROWS, COLS, ROWS);
-      var backMat = new THREE.MeshBasicMaterial({ color: 0x1a1230, wireframe: true, transparent: true, opacity: 0.45 });
+      var backMat = new THREE.MeshBasicMaterial({ color: 0x1e1836, wireframe: true, transparent: true, opacity: 0.35 });
       var backMesh = new THREE.Mesh(backGeo, backMat);
       backMesh.position.set(0, 0, -0.5);
       boardGroup.add(backMesh);
 
-      // Неоновая светящаяся рамка вокруг стакана
-      var frameGeo = new THREE.BoxGeometry(COLS + 0.1, ROWS + 0.1, 1.0);
+      var frameGeo = new THREE.BoxGeometry(COLS + 0.2, ROWS + 0.2, 1.0);
       var frameEdges = new THREE.EdgesGeometry(frameGeo);
-      var frameLine = new THREE.LineSegments(frameEdges, new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.6 }));
+      var frameLine = new THREE.LineSegments(frameEdges, new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.45 }));
       boardGroup.add(frameLine);
 
       blocksGroup = new THREE.Group();
@@ -92,10 +62,25 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
       edgeGeo = new THREE.EdgesGeometry(cubeGeo);
       edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 });
 
+      var fitBoard = function() {
+        var w = boardWrap.clientWidth;
+        var h = boardWrap.clientHeight;
+        if (!w || !h) return;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        var t = Math.tan(camera.fov * Math.PI / 360);
+        var m = 0.55;                                  // небольшой запас по краям
+        var dist = (ROWS / 2 + m) / t;                 // камера подобрана по высоте поля
+        camera.position.set(0, 0, dist);
+        camera.lookAt(0, 0, 0);
+        camera.updateProjectionMatrix();
+        var visH = 2 * dist * t;                       // видимая высота
+        var visW = visH * camera.aspect;               // видимая ширина
+        boardSY = 1;
+        boardSX = Math.max(0.55, Math.min(1.6, (visW - 2 * m) / COLS));
+        boardGroup.scale.set(boardSX, boardSY, boardSX);   // растягиваем поле на всю ширину
+      };
       fitBoard();
-      setTimeout(fitBoard, 50);
-      setTimeout(fitBoard, 300);
-
       window.addEventListener('resize', fitBoard);
       window.addEventListener('orientationchange', function() { setTimeout(fitBoard, 200); });
     } catch (e) {
@@ -112,9 +97,9 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
       materialCache[key] = new THREE.MeshPhongMaterial({
         color: colorHex,
         emissive: colorHex,
-        emissiveIntensity: isGhost ? 0.08 : 0.28,
+        emissiveIntensity: isGhost ? 0.1 : 0.22,
         specular: 0xffffff,
-        shininess: 90,
+        shininess: 85,
         transparent: !!isGhost,
         opacity: isGhost ? 0.22 : 1.0
       });
@@ -183,7 +168,6 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
   requestAnimationFrame(animate3D);
 
   return {
-    fit: fitBoard,
     tilt: function(val) { targetRotY = val; },
     draw: function(grid, cur, ghostY) {
       if (!useThree) return;
@@ -206,7 +190,7 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
         }
         if (pieceLight) {
           pieceLight.color.set(cur.color);
-          pieceLight.position.set(gridToWorldX(cur.x + 1), gridToWorldY(cur.y + 1), 2.5);
+          pieceLight.position.set(gridToWorldX(cur.x + 1) * boardSX, gridToWorldY(cur.y + 1) * boardSY, 2.5);
         }
       }
     },
@@ -306,4 +290,3 @@ window.PrideCore.createEngine3D = function(canvas, boardWrap, COLS, ROWS) {
     }
   };
 };
-```
