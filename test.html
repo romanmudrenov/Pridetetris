@@ -22,8 +22,8 @@
 <script>
 // Для каждого файла: какие фрагменты обязаны в нём быть (признак новой версии)
 var FILES = [
-  { url: "./index.html", marks: ['id="scrWelcome"', 'music-hub.js', 'id="playerFull"', 'class="hb mus"', 'gmVolMusic'], bad: ['scrMusicGame', 'bgAudio'] },
-  { url: "./css/main.css", marks: ['[data-theme="royal"]', '.game-screen', '.hb.mus'], bad: [] },
+  { url: "./index.html", marks: ['id="scrWelcome"', 'music-hub.js', 'id="playerFull"', 'class="hb mus"', 'gmVolMusic', 'class="infobar"'], bad: ['scrMusicGame', 'bgAudio', 'class="side"'] },
+  { url: "./css/main.css", marks: ['[data-theme="royal"]', '.game-screen', '.hb.mus', '.infobar'], bad: ['.btn-side-drop'] },
   { url: "./css/music.css", marks: ['.player-full', '.rng'], bad: [] },
   { url: "./src/core/audio-player.js", marks: ['setExternalStopper', 'getMusicVolume', 'stopAll'], bad: ['SYNTH_PATTERNS', 'soundhelix'] },
   { url: "./src/core/portal-hub.js", marks: ['registerGame', 'stopAll', 'showScreen'], bad: ['btnMusicPrev'] },
