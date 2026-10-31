@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>PRIDE — Корпоративный Игровой Портал</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="./css/main.css?v=30">
-<link rel="stylesheet" href="./css/music.css?v=30">
+<link rel="stylesheet" href="./css/main.css?v=14">
+<link rel="stylesheet" href="./css/music.css?v=14">
 </head>
 <body>
 
@@ -234,73 +234,50 @@
   </div>
 </div>
 
-<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS (НОВЫЙ ДИЗАЙН) ============ -->
+<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS ============ -->
 <div class="game-screen" id="gameScreen">
-  <!-- ВЕРХНЯЯ УЗКАЯ ПОЛОСКА: ТОЛЬКО ЗАНОВО И МЕНЮ -->
-  <div class="header" style="justify-content: space-between; padding: 6px 12px;">
+  <div class="header">
     <div class="brand-box">
-      <div class="avatar-badge" id="headerAvatar" style="width:28px;height:28px;font-size:14px;">🦁</div>
-      <div class="brand-name" id="headerPlayerName" style="font-size:12px;">Игрок</div>
+      <div class="avatar-badge" id="headerAvatar">🦁</div>
+      <div class="brand-name" id="headerPlayerName">Игрок</div>
     </div>
-    <div class="header-btns" style="display:flex; gap:6px;">
-      <button class="hb plain" id="btnRestart" title="Начать заново" style="width:36px;height:36px;font-size:16px;">🔄</button>
-      <button class="btn-menu hb" id="btnMenu" title="Меню" style="width:36px;height:36px;font-size:16px;">☰</button>
+    <div class="header-btns">
+      <button class="hb plain" id="btnRestart" title="Начать заново">🔄</button>
+      <button class="hb mus" id="btnPrevTrack" title="Назад: трек или станция">⏮</button>
+      <button class="hb mus" id="btnPlayPauseTrack" title="Музыка или радио: пуск и пауза">⏯</button>
+      <button class="hb mus" id="btnNextTrack" title="Вперёд: трек или станция">⏭</button>
+      <button class="btn-pause hb" id="btnPause" title="Пауза в игре">⏸</button>
+      <button class="btn-menu hb" id="btnMenu" title="Меню">☰</button>
     </div>
   </div>
 
-  <!-- ИГРОВАЯ ОБЛАСТЬ: ПОЛЕ НА МАКСИМУМ -->
-  <div class="game-area" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden; padding:4px;">
-    <div class="board-wrap" id="boardWrap" style="width:100%; height:100%; max-height:calc(100vh - 160px); display:flex; justify-content:center; align-items:center;">
-      <canvas id="board" style="max-height: 100%; width: auto; object-fit: contain;"></canvas>
-      <div class="tap-hint" style="font-size:9px; opacity:0.7;">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
+  <div class="game-area">
+    <div class="board-wrap" id="boardWrap">
+      <canvas id="board" width="264" height="440"></canvas>
+      <div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
       <div id="banner">WOW-ЭФФЕКТ!</div>
     </div>
-  </div>
 
-  <!-- НИЖНЯЯ ПАНЕЛЬ: УПРАВЛЕНИЕ, МУЗЫКА, СЛЕДУЮЩАЯ ФИГУРА И СБРОС -->
-  <div class="controls-extended" style="background:var(--panel); border-top:2px solid var(--line); padding:8px 12px calc(8px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
-    
-    <!-- Ряд мини-информации и плеера -->
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;">
-      <!-- Следующая фигура -->
-      <div style="display:flex; align-items:center; gap:4px; background:var(--deep); padding:4px 8px; border-radius:8px; border:1px solid var(--line);">
-        <span style="font-size:10px; color:var(--muted);">След:</span>
-        <canvas id="nextCanvas" class="nextcv" width="48" height="32" style="width:40px; height:26px;"></canvas>
-      </div>
-
-      <!-- Кнопки плеера на нижней панели -->
-      <div style="display:flex; gap:4px; align-items:center;">
-        <button class="hb mus" id="btnPrevTrack" title="Предыдущий трек" style="width:32px;height:32px;font-size:13px; background:var(--btn); border:1px solid var(--line); border-radius:8px; color:var(--text);">⏮</button>
-        <button class="hb mus" id="btnPlayPauseTrack" title="Пуск/Пауза музыки" style="width:36px;height:32px;font-size:13px; background:var(--btn); border:1px solid var(--line); border-radius:8px; color:var(--text);">⏯</button>
-        <button class="hb mus" id="btnNextTrack" title="Следующий трек" style="width:32px;height:32px;font-size:13px; background:var(--btn); border:1px solid var(--line); border-radius:8px; color:var(--text);">⏭</button>
-      </div>
-
-      <!-- Счёт / Бюджет -->
-      <div style="text-align:right;">
-        <div style="font-size:9px; color:var(--muted);">Бюджет</div>
-        <div id="scoreVal" style="font-weight:900; font-size:13px; color:var(--a2);">0</div>
-      </div>
     </div>
 
-    <!-- Кнопки движения и кнопка СБРОС (🚀) -->
-    <div class="controls" id="controlsWrap" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; width:100%;">
-      <button class="c-btn" id="btnLeft" style="height:44px; font-size:18px;">◀</button>
-      <button class="c-btn" id="btnRot" style="height:44px; font-size:18px;">↻</button>
-      <button class="c-btn" id="btnDown" style="height:44px; font-size:18px;">▼</button>
-      <button class="c-btn drop" id="btnDrop" title="Сброс вниз" style="height:44px; font-size:18px; background:linear-gradient(135deg,var(--a1),var(--a2)); color:#fff;">🚀</button>
-      <button class="c-btn" id="btnRight" style="height:44px; font-size:18px;">▶</button>
+  <div class="infobar">
+    <div class="ib"><div class="lbl">Бюджет</div><div class="val" id="scoreVal">0</div></div>
+    <div class="ib"><div class="lbl">Проекты</div><div class="val" id="linesVal" style="color:var(--a2);">0</div></div>
+    <div class="ib"><div class="lbl">Режим</div><div class="val" id="modeVal" style="font-size:10px; color:var(--a3);">ASAP</div></div>
+    <div class="ib"><div class="lbl">Сейчас</div><div class="service-tag" id="serviceName">T</div></div>
+    <div class="ib"><div class="lbl">След.</div><canvas id="nextCanvas" class="nextcv" width="68" height="48"></canvas></div>
+    <div class="ib ult">
+      <div class="ult-track"><div class="ult-bar" id="ultBar"></div></div>
+      <button class="btn-ult" id="btnUlt" title="Ульта: сдать под ключ">⚡</button>
     </div>
-
   </div>
 
-  <!-- ФЕЙКОВЫЕ ЭЛЕМЕНТЫ ДЛЯ ЗАЩИТЫ ОТ ОШИБОК СКРИПТА -->
-  <div style="display:none !important;" aria-hidden="true">
-    <div id="linesVal">0</div>
-    <div id="modeVal">ASAP</div>
-    <div id="serviceName">T</div>
-    <div id="ultBar"></div>
-    <button id="btnUlt"></button>
-    <button id="btnPause"></button>
+  <div class="controls">
+    <button class="c-btn" id="btnLeft">◀</button>
+    <button class="c-btn" id="btnRot">↻</button>
+    <button class="c-btn" id="btnDown">▼</button>
+    <button class="c-btn drop" id="btnDrop" title="Сброс вниз">🚀</button>
+    <button class="c-btn" id="btnRight">▶</button>
   </div>
 </div>
 
@@ -322,17 +299,7 @@
       </button>
     </div>
 
-    <div class="sec-title">2. Управление на экране:</div>
-    <div class="mode-list">
-      <button class="mode-btn selected" id="btnOptTouch" onclick="setControlsMode('touch')">
-        <b>Сенсорное</b> <span>Без стрелок</span>
-      </button>
-      <button class="mode-btn" id="btnOptButtons" onclick="setControlsMode('buttons')">
-        <b>Кнопки</b> <span>Со стрелками</span>
-      </button>
-    </div>
-
-    <div class="sec-title">3. Громкость и звуки:</div>
+    <div class="sec-title">2. Громкость и звуки:</div>
     <div class="music-box">
       <div class="vol-head"><span>🎵 Музыка</span></div>
       <input type="range" class="rng" id="gmVolMusic" min="0" max="100" value="70">
@@ -342,9 +309,10 @@
         <span>🔊 Звуковые эффекты (SFX):</span>
         <button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
       </div>
+      <div class="note" style="margin:8px 0 0;">Музыку и радио выбирай в главном меню. Кнопки ⏮ ⏯ ⏭ — на верхней панели игры.</div>
     </div>
 
-    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px; font-weight:bold; border:none; border-radius:8px;">ПРОДОЛЖИТЬ ИГРУ</button>
+    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px;">ПРОДОЛЖИТЬ ИГРУ</button>
     <button class="btn-secondary" id="btnToMain" style="margin-top:8px;">🏠 В ГЛАВНОЕ МЕНЮ</button>
   </div>
 </div>
@@ -409,298 +377,11 @@
   </div>
 </div>
 
-<script>
-  function setControlsMode(mode) {
-    var wrap = document.getElementById('controlsWrap');
-    var bTouch = document.getElementById('btnOptTouch');
-    var bBtns = document.getElementById('btnOptButtons');
-    if (!wrap) return;
-    if (mode === 'touch') {
-      wrap.style.display = 'none';
-      if (bTouch) bTouch.classList.add('selected');
-      if (bBtns) bBtns.classList.remove('selected');
-    } else {
-      wrap.style.display = 'grid';
-      if (bBtns) bBtns.classList.add('selected');
-      if (bTouch) bTouch.classList.remove('selected');
-    }
-  }
-  // На мобильных по умолчанию скрываем кнопки для чистого сенсора
-  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    setControlsMode('touch');
-  }
-</script>
-
-<script src="./src/core/audio-player.js?v=30"></script>
-<script src="./src/core/portal-hub.js?v=30"></script>
-<script src="./src/core/music-hub.js?v=30"></script>
-<script src="./src/games/pride-tetris/config.js?v=30"></script>
-<script src="./src/games/pride-tetris/engine-3d.js?v=30"></script>
-<script src="./src/games/pride-tetris/tetris-game.js?v=30"></script>
+<script src="./src/core/audio-player.js?v=14"></script>
+<script src="./src/core/portal-hub.js?v=14"></script>
+<script src="./src/core/music-hub.js?v=14"></script>
+<script src="./src/games/pride-tetris/config.js?v=14"></script>
+<script src="./src/games/pride-tetris/engine-3d.js?v=14"></script>
+<script src="./src/games/pride-tetris/tetris-game.js?v=14"></script>
 </body>
 </html>
-```eof
-```css:css/main.css
-:root {
-  --bg: #0d0714;
-  --panel: #170d26;
-  --panel-2: #211338;
-  --deep: #0e071a;
-  --btn: #261642;
-  --line: rgba(255, 0, 122, 0.28);
-  --text: #ffffff;
-  --muted: #a69bb8;
-  --a1: #ff007a;
-  --a2: #00f0ff;
-  --a3: #fcee09;
-  --a4: #05ffa1;
-  --on-a1: #ffffff;
-  --on-a2: #050b14;
-  --selbg: rgba(0, 240, 255, 0.12);
-  --g1: rgba(255, 0, 122, 0.4);
-  --g2: rgba(0, 240, 255, 0.4);
-  --g3: rgba(252, 238, 9, 0.35);
-  --radius: 12px;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-html, body {
-  width: 100%;
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
-  overflow: hidden;
-  position: fixed;
-}
-
-/* ===================== ЭКРАНЫ ===================== */
-.screen {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: none;
-  background: radial-gradient(circle at 50% 20%, #1e0d36 0%, #0b0714 80%);
-}
-.screen.active {
-  display: block;
-}
-.screen.noscroll {
-  overflow: hidden;
-}
-.screen-inner {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 20px 16px 40px;
-  display: flex;
-  flex-direction: column;
-}
-.center-inner {
-  min-height: 100%;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.big-logo {
-  width: 84px;
-  height: 84px;
-  margin-bottom: 16px;
-  filter: drop-shadow(0 0 16px var(--g1));
-}
-.welcome-badge {
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: var(--a2);
-  font-weight: 900;
-  background: rgba(0,240,255,0.12);
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid var(--a2);
-  margin-bottom: 12px;
-}
-.hero-title {
-  font-size: 22px;
-  font-weight: 900;
-  margin-bottom: 10px;
-  line-height: 1.25;
-}
-.hero-sub {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.5;
-  margin-bottom: 24px;
-  max-width: 320px;
-}
-
-.btn-primary {
-  width: 100%;
-  background: linear-gradient(135deg, var(--a1), #b30056);
-  color: #fff;
-  border: none;
-  padding: 13px 18px;
-  border-radius: var(--radius);
-  font-weight: 800;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 4px 16px var(--g1);
-}
-.btn-secondary {
-  width: 100%;
-  background: var(--btn);
-  color: var(--text);
-  border: 1px solid var(--line);
-  padding: 11px 16px;
-  border-radius: var(--radius);
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-.back-btn {
-  background: transparent;
-  border: none;
-  color: var(--a2);
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  align-self: flex-start;
-  margin-bottom: 14px;
-  padding: 4px 0;
-}
-.screen-title {
-  font-size: 20px;
-  font-weight: 900;
-  margin-bottom: 16px;
-}
-.sec-title {
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--a2);
-  margin: 14px 0 6px;
-  letter-spacing: 0.5px;
-}
-.inp {
-  width: 100%;
-  background: var(--deep);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: #fff;
-  padding: 11px 14px;
-  font-size: 13px;
-  outline: none;
-  margin-bottom: 10px;
-}
-.inp:focus {
-  border-color: var(--a2);
-}
-.note {
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1.4;
-  margin: 8px 0;
-}
-.form-error {
-  color: #ff3366;
-  font-size: 12px;
-  font-weight: 700;
-  margin: 4px 0 8px;
-}
-
-.profile-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--panel);
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  padding: 12px;
-  margin-bottom: 16px;
-}
-.avatar-big {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--deep);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  border: 2px solid var(--a2);
-}
-.pc-info {
-  flex: 1;
-  min-width: 0;
-}
-.pc-name {
-  font-weight: 900;
-  font-size: 15px;
-}
-.pc-dept, .pc-best {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-.pc-edit {
-  background: var(--btn);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  width: 34px;
-  height: 34px;
-  font-size: 15px;
-  color: #fff;
-  cursor: pointer;
-}
-.menu-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 11px 14px;
-  color: var(--text);
-  cursor: pointer;
-}
-.menu-item:active {
-  background: var(--btn);
-}
-.mi-ico {
-  font-size: 20px;
-}
-.mi-txt {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-.mi-txt b {
-  font-size: 13px;
-}
-.mi-txt i {
-  font-size: 10px;
-  color: var(--muted);
-  font-style: normal;
-  margin-top: 2px;
-}
-.mi-arr {
-  color: var(--muted);
-  font-size: 16px;
-}
-.menu-item.danger {
-  border-color: rgba(255, 51, 102, 0.4
