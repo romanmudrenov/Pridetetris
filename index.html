@@ -5,388 +5,702 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>PRIDE — Корпоративный Игровой Портал</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="./css/main.css?v=25">
-<link rel="stylesheet" href="./css/music.css?v=25">
+<link rel="stylesheet" href="./css/main.css?v=30">
+<link rel="stylesheet" href="./css/music.css?v=30">
 </head>
 <body>
-​<!-- ============ ЭКРАН 1: ПРИВЕТСТВИЕ ============ -->
+
+<!-- ============ ЭКРАН 1: ПРИВЕТСТВИЕ ============ -->
 <div class="screen active" id="scrWelcome">
-<div class="screen-inner center-inner">
-<svg class="big-logo" viewBox="0 0 64 64">
-<polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="#ff007a" stroke-width="4" fill="#120924"/>
-<path d="M20,25 L32,14 L44,25 L39,44 L25,44 Z" stroke="#00f0ff" stroke-width="3" fill="none"/>
-<circle cx="27" cy="28" r="2.5" fill="#fcee09"/>
-<circle cx="37" cy="28" r="2.5" fill="#fcee09"/>
-<path d="M27,36 L32,39 L37,36" stroke="#fff" stroke-width="2.5" fill="none"/>
-</svg>
-<div class="welcome-badge">PRIDE // GAME PORTAL</div>
-<h1 class="hero-title">Добро пожаловать на портал PRIDE</h1>
-<p class="hero-sub">Играй, ставь рекорды, слушай музыку и общайся с коллегами. Создай свой профиль — это займёт минуту.</p>
-<button class="btn-primary" id="btnGoRegister">📝 РЕГИСТРАЦИЯ</button>
-<button class="btn-secondary" id="btnGoLogin" style="display:none;">🔑 Уже есть профиль? Войти</button>
+  <div class="screen-inner center-inner">
+    <svg class="big-logo" viewBox="0 0 64 64">
+      <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="#ff007a" stroke-width="4" fill="#120924"/>
+      <path d="M20,25 L32,14 L44,25 L39,44 L25,44 Z" stroke="#00f0ff" stroke-width="3" fill="none"/>
+      <circle cx="27" cy="28" r="2.5" fill="#fcee09"/>
+      <circle cx="37" cy="28" r="2.5" fill="#fcee09"/>
+      <path d="M27,36 L32,39 L37,36" stroke="#fff" stroke-width="2.5" fill="none"/>
+    </svg>
+    <div class="welcome-badge">PRIDE // GAME PORTAL</div>
+    <h1 class="hero-title">Добро пожаловать на портал PRIDE</h1>
+    <p class="hero-sub">Играй, ставь рекорды, слушай музыку и общайся с коллегами. Создай свой профиль — это займёт минуту.</p>
+    <button class="btn-primary" id="btnGoRegister">📝 РЕГИСТРАЦИЯ</button>
+    <button class="btn-secondary" id="btnGoLogin" style="display:none;">🔑 Уже есть профиль? Войти</button>
+  </div>
 </div>
-</div>
-​<!-- ============ ЭКРАН 2: РЕГИСТРАЦИЯ / РЕДАКТИРОВАНИЕ ПРОФИЛЯ ============ -->
+
+<!-- ============ ЭКРАН 2: РЕГИСТРАЦИЯ / РЕДАКТИРОВАНИЕ ПРОФИЛЯ ============ -->
 <div class="screen" id="scrForm">
-<div class="screen-inner">
-<button class="back-btn" id="btnFormBack">← Назад</button>
-<h2 class="screen-title" id="formTitle">Регистрация</h2>
-​<div class="sec-title">1. Ник</div>
-<input type="text" id="fNick" class="inp" maxlength="20" placeholder="Например: Лев Прайдов" autocomplete="off">
-​<div class="sec-title">2. Отдел</div>
-<select id="fDept" class="inp"></select>
-​<div class="sec-title">3. Аватар</div>
-<div class="avatar-creator">
-<div class="avatar-big-preview" id="fAvatarPreview">🦁</div>
-<div class="animal-grid" id="fAnimalGrid"></div>
-<div class="color-row" id="fColorRow"></div>
+  <div class="screen-inner">
+    <button class="back-btn" id="btnFormBack">← Назад</button>
+    <h2 class="screen-title" id="formTitle">Регистрация</h2>
+
+    <div class="sec-title">1. Ник</div>
+    <input type="text" id="fNick" class="inp" maxlength="20" placeholder="Например: Лев Прайдов" autocomplete="off">
+
+    <div class="sec-title">2. Отдел</div>
+    <select id="fDept" class="inp"></select>
+
+    <div class="sec-title">3. Аватар</div>
+    <div class="avatar-creator">
+      <div class="avatar-big-preview" id="fAvatarPreview">🦁</div>
+      <div class="animal-grid" id="fAnimalGrid"></div>
+      <div class="color-row" id="fColorRow"></div>
+    </div>
+
+    <div class="sec-title" id="fPassTitle">4. Пароль</div>
+    <input type="password" id="fPass" class="inp" placeholder="Пароль (минимум 4 символа)" autocomplete="new-password">
+    <input type="password" id="fPass2" class="inp" placeholder="Повтори пароль" autocomplete="new-password">
+
+    <div class="sec-title">5. Цветовая схема</div>
+    <div class="theme-grid" id="themeGrid"></div>
+
+    <div class="form-error" id="formError"></div>
+    <button class="btn-primary" id="btnFormSubmit">✅ СОЗДАТЬ ПРОФИЛЬ</button>
+  </div>
 </div>
-​<div class="sec-title" id="fPassTitle">4. Пароль</div>
-<input type="password" id="fPass" class="inp" placeholder="Пароль (минимум 4 символа)" autocomplete="new-password">
-<input type="password" id="fPass2" class="inp" placeholder="Повтори пароль" autocomplete="new-password">
-​<div class="sec-title">5. Цветовая схема</div>
-<div class="theme-grid" id="themeGrid"></div>
-​<div class="form-error" id="formError"></div>
-<button class="btn-primary" id="btnFormSubmit">✅ СОЗДАТЬ ПРОФИЛЬ</button>
-</div>
-</div>
-​<!-- ============ ЭКРАН 3: ВХОД ============ -->
+
+<!-- ============ ЭКРАН 3: ВХОД ============ -->
 <div class="screen" id="scrLogin">
-<div class="screen-inner">
-<button class="back-btn" data-go="scrWelcome">← Назад</button>
-<h2 class="screen-title">Вход</h2>
-<div class="sec-title">Ник</div>
-<input type="text" id="lNick" class="inp" maxlength="20" placeholder="Твой ник" autocomplete="username">
-<div class="sec-title">Пароль</div>
-<input type="password" id="lPass" class="inp" placeholder="Пароль" autocomplete="current-password">
-<div class="form-error" id="loginError"></div>
-<button class="btn-primary" id="btnLoginSubmit">🔑 ВОЙТИ</button>
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrWelcome">← Назад</button>
+    <h2 class="screen-title">Вход</h2>
+    <div class="sec-title">Ник</div>
+    <input type="text" id="lNick" class="inp" maxlength="20" placeholder="Твой ник" autocomplete="username">
+    <div class="sec-title">Пароль</div>
+    <input type="password" id="lPass" class="inp" placeholder="Пароль" autocomplete="current-password">
+    <div class="form-error" id="loginError"></div>
+    <button class="btn-primary" id="btnLoginSubmit">🔑 ВОЙТИ</button>
+  </div>
 </div>
-</div>
-​<!-- ============ ЭКРАН 4: ГЛАВНОЕ МЕНЮ ============ -->
+
+<!-- ============ ЭКРАН 4: ГЛАВНОЕ МЕНЮ ============ -->
 <div class="screen" id="scrMain">
-<div class="screen-inner">
-<div class="profile-card">
-<div class="avatar-big" id="mainAvatar">🦁</div>
-<div class="pc-info">
-<div class="pc-name" id="mainName">Игрок</div>
-<div class="pc-dept" id="mainDept"></div>
-<div class="pc-best" id="mainBest"></div>
+  <div class="screen-inner">
+    <div class="profile-card">
+      <div class="avatar-big" id="mainAvatar">🦁</div>
+      <div class="pc-info">
+        <div class="pc-name" id="mainName">Игрок</div>
+        <div class="pc-dept" id="mainDept"></div>
+        <div class="pc-best" id="mainBest"></div>
+      </div>
+      <button class="pc-edit" id="btnEditProfile" title="Редактировать профиль">✏️</button>
+    </div>
+
+    <div class="menu-list">
+      <button class="menu-item" data-go="scrMusic">
+        <span class="mi-ico">🎵</span>
+        <span class="mi-txt"><b>Музыка</b><i>Плеер и громкость</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrRadio">
+        <span class="mi-ico">📻</span>
+        <span class="mi-txt"><b>Радио</b><i>Интернет-радио, русские станции</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrGames">
+        <span class="mi-ico">🎮</span>
+        <span class="mi-txt"><b>Игры</b><i>PRIDE Tetris и другие</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrLeaders">
+        <span class="mi-ico">🏆</span>
+        <span class="mi-txt"><b>Таблица лидеров</b><i>Лучшие результаты</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrChat">
+        <span class="mi-ico">💬</span>
+        <span class="mi-txt"><b>Чат</b><i>Общение с коллегами</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item danger" id="btnLogout">
+        <span class="mi-ico">🚪</span>
+        <span class="mi-txt"><b>Выход</b><i>Выйти из профиля</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+    </div>
+  </div>
 </div>
-<button class="pc-edit" id="btnEditProfile" title="Редактировать профиль">✏️</button>
-</div>
-​<div class="menu-list">
-<button class="menu-item" data-go="scrMusic">
-<span class="mi-ico">🎵</span>
-<span class="mi-txt"><b>Музыка</b><i>Плеер и громкость</i></span>
-<span class="mi-arr">›</span>
-</button>
-<button class="menu-item" data-go="scrRadio">
-<span class="mi-ico">📻</span>
-<span class="mi-txt"><b>Радио</b><i>Интернет-радио, русские станции</i></span>
-<span class="mi-arr">›</span>
-</button>
-<button class="menu-item" data-go="scrGames">
-<span class="mi-ico">🎮</span>
-<span class="mi-txt"><b>Игры</b><i>PRIDE Tetris и другие</i></span>
-<span class="mi-arr">›</span>
-</button>
-<button class="menu-item" data-go="scrLeaders">
-<span class="mi-ico">🏆</span>
-<span class="mi-txt"><b>Таблица лидеров</b><i>Лучшие результаты</i></span>
-<span class="mi-arr">›</span>
-</button>
-<button class="menu-item" data-go="scrChat">
-<span class="mi-ico">💬</span>
-<span class="mi-txt"><b>Чат</b><i>Общение с коллегами</i></span>
-<span class="mi-arr">›</span>
-</button>
-<button class="menu-item danger" id="btnLogout">
-<span class="mi-ico">🚪</span>
-<span class="mi-txt"><b>Выход</b><i>Выйти из профиля</i></span>
-<span class="mi-arr">›</span>
-</button>
-</div>
-</div>
-</div>
-​<!-- ============ МУЗЫКА: ГЛАВНАЯ СТРАНИЦА РАЗДЕЛА ============ -->
+
+<!-- ============ МУЗЫКА: ГЛАВНАЯ СТРАНИЦА РАЗДЕЛА ============ -->
 <div class="screen" id="scrMusic">
-<div class="screen-inner">
-<button class="back-btn" data-go="scrMain">← В меню</button>
-<h2 class="screen-title">🎵 Музыка</h2>
-​<div class="now-strip" id="nowStrip" style="display:none;">
-<span id="nowText"></span>
-<button id="btnNowStop" title="Остановить">⏹</button>
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">🎵 Музыка</h2>
+
+    <div class="now-strip" id="nowStrip" style="display:none;">
+      <span id="nowText"></span>
+      <button id="btnNowStop" title="Остановить">⏹</button>
+    </div>
+
+    <div class="menu-list">
+      <button class="menu-item" id="miPlayer">
+        <span class="mi-ico">🎧</span>
+        <span class="mi-txt"><b>Плеер</b><i>Твои треки из папки music на весь экран</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+      <button class="menu-item" data-go="scrVolume">
+        <span class="mi-ico">🔊</span>
+        <span class="mi-txt"><b>Громкость</b><i>Музыка и звуковые эффекты</i></span>
+        <span class="mi-arr">›</span>
+      </button>
+    </div>
+  </div>
 </div>
-​<div class="menu-list">
-<button class="menu-item" id="miPlayer">
-<span class="mi-ico">🎧</span>
-<span class="mi-txt"><b>Плеер</b><i>Твои треки из папки music на весь экран</i></span>
-<span class="mi-arr">›</span>
-</button>
-<button class="menu-item" data-go="scrVolume">
-<span class="mi-ico">🔊</span>
-<span class="mi-txt"><b>Громкость</b><i>Музыка и звуковые эффекты</i></span>
-<span class="mi-arr">›</span>
-</button>
-</div>
-</div>
-</div>
-​<!-- ============ МУЗЫКА: ИНТЕРНЕТ-РАДИО ============ -->
+
+<!-- ============ МУЗЫКА: ИНТЕРНЕТ-РАДИО ============ -->
 <div class="screen" id="scrRadio">
-<div class="screen-inner">
-<button class="back-btn" data-go="scrMain">← В меню</button>
-<h2 class="screen-title">📻 Радио</h2>
-​<div class="radio-now" id="radioNow">
-<div class="rn-info">
-<div class="rn-name" id="rnName">—</div>
-<div class="rn-status" id="rnStatus"></div>
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">📻 Радио</h2>
+
+    <div class="radio-now" id="radioNow">
+      <div class="rn-info">
+        <div class="rn-name" id="rnName">—</div>
+        <div class="rn-status" id="rnStatus"></div>
+      </div>
+      <button class="rn-stop" id="btnRnStop" title="Остановить">⏹</button>
+    </div>
+
+    <div id="radioList"></div>
+
+    <div class="radio-add">
+      <div class="sec-title" style="margin-top:0;">➕ Добавить свою станцию</div>
+      <input type="text" id="rName" class="inp" maxlength="30" placeholder="Название станции">
+      <input type="text" id="rUrl" class="inp" placeholder="Ссылка на поток (https://...)" autocapitalize="none" autocorrect="off">
+      <div class="form-error" id="rAddErr"></div>
+      <button class="btn-secondary" id="btnAddStation">Добавить</button>
+      <div class="note" style="margin-bottom:0;">Работают только ссылки, которые начинаются с https://. Некоторые станции могут быть недоступны в твоём регионе.</div>
+    </div>
+  </div>
 </div>
-<button class="rn-stop" id="btnRnStop" title="Остановить">⏹</button>
-</div>
-​<div id="radioList"></div>
-​<div class="radio-add">
-<div class="sec-title" style="margin-top:0;">➕ Добавить свою станцию</div>
-<input type="text" id="rName" class="inp" maxlength="30" placeholder="Название станции">
-<input type="text" id="rUrl" class="inp" placeholder="Ссылка на поток (https://...)" autocapitalize="none" autocorrect="off">
-<div class="form-error" id="rAddErr"></div>
-<button class="btn-secondary" id="btnAddStation">Добавить</button>
-<div class="note" style="margin-bottom:0;">Работают только ссылки, которые начинаются с https://. Некоторые станции могут быть недоступны в твоём регионе.</div>
-</div>
-</div>
-</div>
-​<!-- ============ МУЗЫКА: ГРОМКОСТЬ ============ -->
+
+<!-- ============ МУЗЫКА: ГРОМКОСТЬ ============ -->
 <div class="screen" id="scrVolume">
-<div class="screen-inner">
-<button class="back-btn" data-go="scrMusic">← Музыка</button>
-<h2 class="screen-title">🔊 Громкость</h2>
-​<div class="vol-card">
-<div class="vol-head"><span>🎵 Музыка</span><span class="vol-val" id="volMusicVal">70%</span></div>
-<input type="range" class="rng" id="volMusic" min="0" max="100" value="70">
-<div class="vol-hint">Плеер, радио и игровая музыка</div>
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMusic">← Музыка</button>
+    <h2 class="screen-title">🔊 Громкость</h2>
+
+    <div class="vol-card">
+      <div class="vol-head"><span>🎵 Музыка</span><span class="vol-val" id="volMusicVal">70%</span></div>
+      <input type="range" class="rng" id="volMusic" min="0" max="100" value="70">
+      <div class="vol-hint">Плеер, радио и игровая музыка</div>
+    </div>
+
+    <div class="vol-card">
+      <div class="vol-head"><span>💥 Звуковые эффекты</span><span class="vol-val" id="volSfxVal">80%</span></div>
+      <input type="range" class="rng" id="volSfx" min="0" max="100" value="80">
+      <div class="vol-hint">Звуки в играх и в меню</div>
+      <div class="sfx-row" style="margin-top:10px;">
+        <span>Эффекты включены:</span>
+        <button class="track-btn active sfx-toggle" style="padding:6px 14px;">ВКЛ</button>
+      </div>
+    </div>
+
+    <button class="btn-secondary" id="btnVolTest">🔔 Проверить звук</button>
+  </div>
 </div>
-​<div class="vol-card">
-<div class="vol-head"><span>💥 Звуковые эффекты</span><span class="vol-val" id="volSfxVal">80%</span></div>
-<input type="range" class="rng" id="volSfx" min="0" max="100" value="80">
-<div class="vol-hint">Звуки в играх и в меню</div>
-<div class="sfx-row" style="margin-top:10px;">
-<span>Эффекты включены:</span>
-<button class="track-btn active sfx-toggle" style="padding:6px 14px;">ВКЛ</button>
-</div>
-</div>
-​<button class="btn-secondary" id="btnVolTest">🔔 Проверить звук</button>
-</div>
-</div>
-​<!-- ============ ИГРЫ ============ -->
+
+<!-- ============ ИГРЫ ============ -->
 <div class="screen" id="scrGames">
-<div class="screen-inner">
-<button class="back-btn" data-go="scrMain">← В меню</button>
-<h2 class="screen-title">🎮 Игры</h2>
-<div id="gamesList"></div>
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">🎮 Игры</h2>
+    <div id="gamesList"></div>
+  </div>
 </div>
-</div>
-​<!-- ============ ТАБЛИЦА ЛИДЕРОВ ============ -->
+
+<!-- ============ ТАБЛИЦА ЛИДЕРОВ ============ -->
 <div class="screen" id="scrLeaders">
-<div class="screen-inner">
-<button class="back-btn" data-go="scrMain">← В меню</button>
-<h2 class="screen-title">🏆 Таблица лидеров</h2>
-<div class="sec-title">🧱 PRIDE Tetris — лучший бюджет</div>
-<div id="leaderList"></div>
-<div class="note">Пока таблица считает результаты только тех, кто играл на этом устройстве. Чтобы коллеги видели общую таблицу, нужен общий сервер.</div>
+  <div class="screen-inner">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">🏆 Таблица лидеров</h2>
+    <div class="sec-title">🧱 PRIDE Tetris — лучший бюджет</div>
+    <div id="leaderList"></div>
+    <div class="note">Пока таблица считает результаты только тех, кто играл на этом устройстве. Чтобы коллеги видели общую таблицу, нужен общий сервер.</div>
+  </div>
 </div>
-</div>
-​<!-- ============ ЧАТ ============ -->
+
+<!-- ============ ЧАТ ============ -->
 <div class="screen noscroll" id="scrChat">
-<div class="chat-wrap">
-<button class="back-btn" data-go="scrMain">← В меню</button>
-<h2 class="screen-title">💬 Чат</h2>
-<div class="note">Пока чат работает только на этом устройстве. Чтобы переписываться с коллегами, нужен общий сервер.</div>
-<div class="chat-list" id="chatList"></div>
-<div class="chat-form">
-<input type="text" id="chatInput" class="inp" maxlength="300" placeholder="Напиши сообщение..." autocomplete="off">
-<button class="chat-send" id="btnChatSend">➤</button>
+  <div class="chat-wrap">
+    <button class="back-btn" data-go="scrMain">← В меню</button>
+    <h2 class="screen-title">💬 Чат</h2>
+    <div class="note">Пока чат работает только на этом устройстве. Чтобы переписываться с коллегами, нужен общий сервер.</div>
+    <div class="chat-list" id="chatList"></div>
+    <div class="chat-form">
+      <input type="text" id="chatInput" class="inp" maxlength="300" placeholder="Напиши сообщение..." autocomplete="off">
+      <button class="chat-send" id="btnChatSend">➤</button>
+    </div>
+  </div>
 </div>
-</div>
-</div>
-​<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS ============ -->
+
+<!-- ============ ЭКРАН ИГРЫ: PRIDE TETRIS (НОВЫЙ ДИЗАЙН) ============ -->
 <div class="game-screen" id="gameScreen">
-<!-- ВЕРХНЯЯ УЗКАЯ ПОЛОСКА: ТОЛЬКО ЗАНОВО И МЕНЮ -->
-<div class="header">
-<div class="brand-box">
-<div class="avatar-badge" id="headerAvatar">🦁</div>
-<div class="brand-name" id="headerPlayerName">Игрок</div>
+  <!-- ВЕРХНЯЯ УЗКАЯ ПОЛОСКА: ТОЛЬКО ЗАНОВО И МЕНЮ -->
+  <div class="header" style="justify-content: space-between; padding: 6px 12px;">
+    <div class="brand-box">
+      <div class="avatar-badge" id="headerAvatar" style="width:28px;height:28px;font-size:14px;">🦁</div>
+      <div class="brand-name" id="headerPlayerName" style="font-size:12px;">Игрок</div>
+    </div>
+    <div class="header-btns" style="display:flex; gap:6px;">
+      <button class="hb plain" id="btnRestart" title="Начать заново" style="width:36px;height:36px;font-size:16px;">🔄</button>
+      <button class="btn-menu hb" id="btnMenu" title="Меню" style="width:36px;height:36px;font-size:16px;">☰</button>
+    </div>
+  </div>
+
+  <!-- ИГРОВАЯ ОБЛАСТЬ: ПОЛЕ НА МАКСИМУМ -->
+  <div class="game-area" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden; padding:4px;">
+    <div class="board-wrap" id="boardWrap" style="width:100%; height:100%; max-height:calc(100vh - 160px); display:flex; justify-content:center; align-items:center;">
+      <canvas id="board" style="max-height: 100%; width: auto; object-fit: contain;"></canvas>
+      <div class="tap-hint" style="font-size:9px; opacity:0.7;">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ</div>
+      <div id="banner">WOW-ЭФФЕКТ!</div>
+    </div>
+  </div>
+
+  <!-- НИЖНЯЯ ПАНЕЛЬ: УПРАВЛЕНИЕ, МУЗЫКА, СЛЕДУЮЩАЯ ФИГУРА И СБРОС -->
+  <div class="controls-extended" style="background:var(--panel); border-top:2px solid var(--line); padding:8px 12px calc(8px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+    
+    <!-- Ряд мини-информации и плеера -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;">
+      <!-- Следующая фигура -->
+      <div style="display:flex; align-items:center; gap:4px; background:var(--deep); padding:4px 8px; border-radius:8px; border:1px solid var(--line);">
+        <span style="font-size:10px; color:var(--muted);">След:</span>
+        <canvas id="nextCanvas" class="nextcv" width="48" height="32" style="width:40px; height:26px;"></canvas>
+      </div>
+
+      <!-- Кнопки плеера на нижней панели -->
+      <div style="display:flex; gap:4px; align-items:center;">
+        <button class="hb mus" id="btnPrevTrack" title="Предыдущий трек" style="width:32px;height:32px;font-size:13px; background:var(--btn); border:1px solid var(--line); border-radius:8px; color:var(--text);">⏮</button>
+        <button class="hb mus" id="btnPlayPauseTrack" title="Пуск/Пауза музыки" style="width:36px;height:32px;font-size:13px; background:var(--btn); border:1px solid var(--line); border-radius:8px; color:var(--text);">⏯</button>
+        <button class="hb mus" id="btnNextTrack" title="Следующий трек" style="width:32px;height:32px;font-size:13px; background:var(--btn); border:1px solid var(--line); border-radius:8px; color:var(--text);">⏭</button>
+      </div>
+
+      <!-- Счёт / Бюджет -->
+      <div style="text-align:right;">
+        <div style="font-size:9px; color:var(--muted);">Бюджет</div>
+        <div id="scoreVal" style="font-weight:900; font-size:13px; color:var(--a2);">0</div>
+      </div>
+    </div>
+
+    <!-- Кнопки движения и кнопка СБРОС (🚀) -->
+    <div class="controls" id="controlsWrap" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; width:100%;">
+      <button class="c-btn" id="btnLeft" style="height:44px; font-size:18px;">◀</button>
+      <button class="c-btn" id="btnRot" style="height:44px; font-size:18px;">↻</button>
+      <button class="c-btn" id="btnDown" style="height:44px; font-size:18px;">▼</button>
+      <button class="c-btn drop" id="btnDrop" title="Сброс вниз" style="height:44px; font-size:18px; background:linear-gradient(135deg,var(--a1),var(--a2)); color:#fff;">🚀</button>
+      <button class="c-btn" id="btnRight" style="height:44px; font-size:18px;">▶</button>
+    </div>
+
+  </div>
+
+  <!-- ФЕЙКОВЫЕ ЭЛЕМЕНТЫ ДЛЯ ЗАЩИТЫ ОТ ОШИБОК СКРИПТА -->
+  <div style="display:none !important;" aria-hidden="true">
+    <div id="linesVal">0</div>
+    <div id="modeVal">ASAP</div>
+    <div id="serviceName">T</div>
+    <div id="ultBar"></div>
+    <button id="btnUlt"></button>
+    <button id="btnPause"></button>
+  </div>
 </div>
-<div class="header-btns">
-<button class="hb plain" id="btnRestart" title="Начать заново">🔄</button>
-<button class="btn-menu hb" id="btnMenu" title="Меню">☰</button>
-</div>
-</div>
-​<!-- ИГРОВОЕ ПОЛЕ НА МАКСИМУМ ВЫСОТЫ -->
-<div class="game-area">
-<div class="board-wrap" id="boardWrap">
-<canvas id="board" width="264" height="440"></canvas>
-<div class="tap-hint">ТАП — ПОВОРОТ • СВАЙП — ДВИЖЕНИЕ • ВНИЗ — СБРОС</div>
-<div id="banner">WOW-ЭФФЕКТ!</div>
-</div>
-</div>
-​<!-- НИЖНЯЯ ПАНЕЛЬ: СЛЕДУЮЩАЯ ФИГУРА, ПЛЕЕР, БЮДЖЕТ И КНОПКИ -->
-<div class="controls-panel">
-<div class="controls-top-row">
-<div class="ib-next">
-<span class="ib-lbl">След:</span>
-<canvas id="nextCanvas" class="nextcv" width="68" height="48"></canvas>
-</div>
-​<div class="header-btns" style="display:flex; gap:6px;">
-<button class="hb mus" id="btnPrevTrack" title="Назад">⏮</button>
-<button class="hb mus" id="btnPlayPauseTrack" title="Музыка: пуск и пауза">⏯</button>
-<button class="hb mus" id="btnNextTrack" title="Вперёд">⏭</button>
-</div>
-​<div class="ib-score">
-<span class="ib-lbl">Бюджет</span>
-<span class="val" id="scoreVal">0</span>
-</div>
-</div>
-​<!-- Кнопки управления (скрываются на мобильных, если выбран сенсор) -->
-<div class="controls" id="controlsWrap">
-<button class="c-btn" id="btnLeft">◀</button>
-<button class="c-btn" id="btnRot">↻</button>
-<button class="c-btn" id="btnDown">▼</button>
-<button class="c-btn drop" id="btnDrop" title="Сброс вниз">🚀</button>
-<button class="c-btn" id="btnRight">▶</button>
-</div>
-</div>
-​<!-- ОРИГИНАЛЬНЫЕ ЭЛЕМЕНТЫ (НЕВИДИМЫ ДЛЯ ГЛАЗ, НО СОХРАНЯЮТ 100% СОВМЕСТИМОСТЬ СО СКРИПТОМ) -->
-<div style="display:none !important;" aria-hidden="true">
-<div id="linesVal">0</div>
-<div id="modeVal">ASAP</div>
-<div id="serviceName">T</div>
-<div id="ultBar"></div>
-<button id="btnUlt"></button>
-<button id="btnPause"></button>
-</div>
-</div>
-​<!-- МЕНЮ ВНУТРИ ИГРЫ -->
+
+<!-- МЕНЮ ВНУТРИ ИГРЫ -->
 <div class="modal" id="menuModal">
-<div class="modal-box">
-<h3>🦁 МЕНЮ ИГРЫ</h3>
-​<div class="sec-title">1. Сложность (скорость):</div>
-<div class="mode-list">
-<button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
-<b>Redline</b> <span>Easy Mode</span>
-</button>
-<button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480">
-<b>ASAP</b> <span>Medium Mode</span>
-</button>
-<button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240">
-<b>Deadline</b> <span>Hard Mode</span>
-</button>
+  <div class="modal-box">
+    <h3>🦁 МЕНЮ ИГРЫ</h3>
+
+    <div class="sec-title">1. Сложность (скорость):</div>
+    <div class="mode-list">
+      <button class="mode-btn" data-mode="Redline (Easy)" data-speed="780">
+        <b>Redline</b> <span>Easy Mode</span>
+      </button>
+      <button class="mode-btn selected" data-mode="ASAP (Medium)" data-speed="480">
+        <b>ASAP</b> <span>Medium Mode</span>
+      </button>
+      <button class="mode-btn" data-mode="Deadline (Hard)" data-speed="240">
+        <b>Deadline</b> <span>Hard Mode</span>
+      </button>
+    </div>
+
+    <div class="sec-title">2. Управление на экране:</div>
+    <div class="mode-list">
+      <button class="mode-btn selected" id="btnOptTouch" onclick="setControlsMode('touch')">
+        <b>Сенсорное</b> <span>Без стрелок</span>
+      </button>
+      <button class="mode-btn" id="btnOptButtons" onclick="setControlsMode('buttons')">
+        <b>Кнопки</b> <span>Со стрелками</span>
+      </button>
+    </div>
+
+    <div class="sec-title">3. Громкость и звуки:</div>
+    <div class="music-box">
+      <div class="vol-head"><span>🎵 Музыка</span></div>
+      <input type="range" class="rng" id="gmVolMusic" min="0" max="100" value="70">
+      <div class="vol-head" style="margin-top:6px;"><span>💥 Эффекты</span></div>
+      <input type="range" class="rng" id="gmVolSfx" min="0" max="100" value="80">
+      <div class="sfx-row">
+        <span>🔊 Звуковые эффекты (SFX):</span>
+        <button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
+      </div>
+    </div>
+
+    <button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px; font-weight:bold; border:none; border-radius:8px;">ПРОДОЛЖИТЬ ИГРУ</button>
+    <button class="btn-secondary" id="btnToMain" style="margin-top:8px;">🏠 В ГЛАВНОЕ МЕНЮ</button>
+  </div>
 </div>
-​<div class="sec-title">2. Управление на экране:</div>
-<div class="mode-list">
-<button class="mode-btn selected" id="btnOptTouch" onclick="setControlsMode('touch')">
-<b>Сенсорное</b> <span>Без стрелок</span>
-</button>
-<button class="mode-btn" id="btnOptButtons" onclick="setControlsMode('buttons')">
-<b>Кнопки</b> <span>Со стрелками</span>
-</button>
-</div>
-​<div class="sec-title">3. Громкость и звуки:</div>
-<div class="music-box">
-<div class="vol-head"><span>🎵 Музыка</span></div>
-<input type="range" class="rng" id="gmVolMusic" min="0" max="100" value="70">
-<div class="vol-head" style="margin-top:6px;"><span>💥 Эффекты</span></div>
-<input type="range" class="rng" id="gmVolSfx" min="0" max="100" value="80">
-<div class="sfx-row">
-<span>🔊 Звуковые эффекты (SFX):</span>
-<button class="track-btn active sfx-toggle" style="padding:4px 12px;">ВКЛ</button>
-</div>
-<div class="note" style="margin:8px 0 0;">Музыку и радио выбирай в главном меню. Кнопки ⏮ ⏯ ⏭ — на нижней панели игры.</div>
-</div>
-​<button class="btn-menu" id="btnCloseMenu" style="width:100%; margin-top:12px; padding:11px; background:var(--a2); color:var(--on-a2); font-size:13px; font-weight:bold; border:none; border-radius:8px;">ПРОДОЛЖИТЬ ИГРУ</button>
-<button class="btn-secondary" id="btnToMain" style="margin-top:8px;">🏠 В ГЛАВНОЕ МЕНЮ</button>
-</div>
-</div>
-​<!-- ============ ПОЛНОЭКРАННЫЙ ПЛЕЕР ============ -->
+
+<!-- ============ ПОЛНОЭКРАННЫЙ ПЛЕЕР ============ -->
 <div class="player-full" id="playerFull">
-<div class="pf-base"></div>
-<div class="pf-bg" id="pfBgA"></div>
-<div class="pf-bg" id="pfBgB"></div>
-<div class="pf-shade"></div>
-​<div class="pf-ui">
-<div class="pf-top">
-<button class="pf-icon" id="pfClose" title="Свернуть">⌄</button>
-<div class="pf-top-title">PRIDE PLAYER</div>
-<div class="pf-top-right">
-<button class="pf-icon" id="pfBgBtn" title="Сменить фон">🖼</button>
-<button class="pf-icon" id="pfListBtn" title="Список треков">☰</button>
+  <div class="pf-base"></div>
+  <div class="pf-bg" id="pfBgA"></div>
+  <div class="pf-bg" id="pfBgB"></div>
+  <div class="pf-shade"></div>
+
+  <div class="pf-ui">
+    <div class="pf-top">
+      <button class="pf-icon" id="pfClose" title="Свернуть">⌄</button>
+      <div class="pf-top-title">PRIDE PLAYER</div>
+      <div class="pf-top-right">
+        <button class="pf-icon" id="pfBgBtn" title="Сменить фон">🖼</button>
+        <button class="pf-icon" id="pfListBtn" title="Список треков">☰</button>
+      </div>
+    </div>
+
+    <div class="pf-center">
+      <div class="pf-disc" id="pfDisc"><div class="pf-disc-label">🎵</div></div>
+      <div class="pf-title-row">
+        <div class="eq paused" id="pfEq"><span></span><span></span><span></span><span></span></div>
+        <div class="pf-title" id="pfTitle">Загрузка…</div>
+      </div>
+      <div class="pf-sub" id="pfSub"></div>
+      <div class="pf-empty" id="pfEmpty" style="display:none;">
+        <div id="pfEmptyText">В папке music на GitHub пока нет треков.</div>
+        <button class="pf-empty-btn" id="btnPfRefresh">🔄 Обновить список</button>
+      </div>
+    </div>
+
+    <div class="pf-bottom">
+      <div class="pf-time-row"><span id="pfCur">0:00</span><span id="pfDur">0:00</span></div>
+      <input type="range" class="rng" id="pfSeek" min="0" max="1000" value="0">
+      <div class="pf-controls">
+        <button class="pf-btn" id="pfShuffle" title="Перемешать">🔀</button>
+        <button class="pf-btn" id="pfPrev" title="Назад">⏮</button>
+        <button class="pf-btn pf-play" id="pfPlay" title="Пуск/Пауза">▶</button>
+        <button class="pf-btn" id="pfNext" title="Вперёд">⏭</button>
+        <button class="pf-btn" id="pfRepeat" title="Повтор">🔁</button>
+      </div>
+      <div class="pf-vol-row">
+        <span>🔈</span>
+        <input type="range" class="rng" id="pfVol" min="0" max="100" value="70">
+        <span>🔊</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pf-list" id="pfList">
+    <div class="pf-list-head">
+      <span>Треки <small id="pfListInfo"></small></span>
+      <span>
+        <button class="pf-icon" id="pfListRefresh" title="Обновить список">🔄</button>
+        <button class="pf-icon" id="pfListClose" title="Закрыть">✕</button>
+      </span>
+    </div>
+    <div class="pf-list-items" id="pfListItems"></div>
+  </div>
 </div>
-</div>
-​<div class="pf-center">
-<div class="pf-disc" id="pfDisc"><div class="pf-disc-label">🎵</div></div>
-<div class="pf-title-row">
-<div class="eq paused" id="pfEq"><span></span><span></span><span></span><span></span></div>
-<div class="pf-title" id="pfTitle">Загрузка…</div>
-</div>
-<div class="pf-sub" id="pfSub"></div>
-<div class="pf-empty" id="pfEmpty" style="display:none;">
-<div id="pfEmptyText">В папке music на GitHub пока нет треков.</div>
-<button class="pf-empty-btn" id="btnPfRefresh">🔄 Обновить список</button>
-</div>
-</div>
-​<div class="pf-bottom">
-<div class="pf-time-row"><span id="pfCur">0:00</span><span id="pfDur">0:00</span></div>
-<input type="range" class="rng" id="pfSeek" min="0" max="1000" value="0">
-<div class="pf-controls">
-<button class="pf-btn" id="pfShuffle" title="Перемешать">🔀</button>
-<button class="pf-btn" id="pfPrev" title="Назад">⏮</button>
-<button class="pf-btn pf-play" id="pfPlay" title="Пуск/Пауза">▶</button>
-<button class="pf-btn" id="pfNext" title="Вперёд">⏭</button>
-<button class="pf-btn" id="pfRepeat" title="Повтор">🔁</button>
-</div>
-<div class="pf-vol-row">
-<span>🔈</span>
-<input type="range" class="rng" id="pfVol" min="0" max="100" value="70">
-<span>🔊</span>
-</div>
-</div>
-</div>
-​<div class="pf-list" id="pfList">
-<div class="pf-list-head">
-<span>Треки <small id="pfListInfo"></small></span>
-<span>
-<button class="pf-icon" id="pfListRefresh" title="Обновить список">🔄</button>
-<button class="pf-icon" id="pfListClose" title="Закрыть">✕</button>
-</span>
-</div>
-<div class="pf-list-items" id="pfListItems"></div>
-</div>
-</div>
-​<script>
-function setControlsMode(mode) {
-var wrap = document.getElementById('controlsWrap');
-var bTouch = document.getElementById('btnOptTouch');
-var bBtns = document.getElementById('btnOptButtons');
-if (!wrap) return;
-if (mode === 'touch') {
-wrap.style.display = 'none';
-if (bTouch) bTouch.classList.add('selected');
-if (bBtns) bBtns.classList.remove('selected');
-} else {
-wrap.style.display = 'grid';
-if (bBtns) bBtns.classList.add('selected');
-if (bTouch) bTouch.classList.remove('selected');
-}
-}
-// На мобильных по умолчанию скрываем кнопки для чистого сенсора
-if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-setControlsMode('touch');
-}
+
+<script>
+  function setControlsMode(mode) {
+    var wrap = document.getElementById('controlsWrap');
+    var bTouch = document.getElementById('btnOptTouch');
+    var bBtns = document.getElementById('btnOptButtons');
+    if (!wrap) return;
+    if (mode === 'touch') {
+      wrap.style.display = 'none';
+      if (bTouch) bTouch.classList.add('selected');
+      if (bBtns) bBtns.classList.remove('selected');
+    } else {
+      wrap.style.display = 'grid';
+      if (bBtns) bBtns.classList.add('selected');
+      if (bTouch) bTouch.classList.remove('selected');
+    }
+  }
+  // На мобильных по умолчанию скрываем кнопки для чистого сенсора
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    setControlsMode('touch');
+  }
 </script>
-​<script src="./src/core/audio-player.js?v=25"></script>
-<script src="./src/core/portal-hub.js?v=25"></script>
-<script src="./src/core/music-hub.js?v=25"></script>
-<script src="./src/games/pride-tetris/config.js?v=25"></script>
-<script src="./src/games/pride-tetris/engine-3d.js?v=25"></script>
-<script src="./src/games/pride-tetris/tetris-game.js?v=25"></script>
+
+<script src="./src/core/audio-player.js?v=30"></script>
+<script src="./src/core/portal-hub.js?v=30"></script>
+<script src="./src/core/music-hub.js?v=30"></script>
+<script src="./src/games/pride-tetris/config.js?v=30"></script>
+<script src="./src/games/pride-tetris/engine-3d.js?v=30"></script>
+<script src="./src/games/pride-tetris/tetris-game.js?v=30"></script>
 </body>
 </html>
+```eof
+```css:css/main.css
+:root {
+  --bg: #0d0714;
+  --panel: #170d26;
+  --panel-2: #211338;
+  --deep: #0e071a;
+  --btn: #261642;
+  --line: rgba(255, 0, 122, 0.28);
+  --text: #ffffff;
+  --muted: #a69bb8;
+  --a1: #ff007a;
+  --a2: #00f0ff;
+  --a3: #fcee09;
+  --a4: #05ffa1;
+  --on-a1: #ffffff;
+  --on-a2: #050b14;
+  --selbg: rgba(0, 240, 255, 0.12);
+  --g1: rgba(255, 0, 122, 0.4);
+  --g2: rgba(0, 240, 255, 0.4);
+  --g3: rgba(252, 238, 9, 0.35);
+  --radius: 12px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  overflow: hidden;
+  position: fixed;
+}
+
+/* ===================== ЭКРАНЫ ===================== */
+.screen {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: none;
+  background: radial-gradient(circle at 50% 20%, #1e0d36 0%, #0b0714 80%);
+}
+.screen.active {
+  display: block;
+}
+.screen.noscroll {
+  overflow: hidden;
+}
+.screen-inner {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+  display: flex;
+  flex-direction: column;
+}
+.center-inner {
+  min-height: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.big-logo {
+  width: 84px;
+  height: 84px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 16px var(--g1));
+}
+.welcome-badge {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--a2);
+  font-weight: 900;
+  background: rgba(0,240,255,0.12);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--a2);
+  margin-bottom: 12px;
+}
+.hero-title {
+  font-size: 22px;
+  font-weight: 900;
+  margin-bottom: 10px;
+  line-height: 1.25;
+}
+.hero-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 24px;
+  max-width: 320px;
+}
+
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, var(--a1), #b30056);
+  color: #fff;
+  border: none;
+  padding: 13px 18px;
+  border-radius: var(--radius);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px var(--g1);
+}
+.btn-secondary {
+  width: 100%;
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid var(--line);
+  padding: 11px 16px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.back-btn {
+  background: transparent;
+  border: none;
+  color: var(--a2);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-bottom: 14px;
+  padding: 4px 0;
+}
+.screen-title {
+  font-size: 20px;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+.sec-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--a2);
+  margin: 14px 0 6px;
+  letter-spacing: 0.5px;
+}
+.inp {
+  width: 100%;
+  background: var(--deep);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: #fff;
+  padding: 11px 14px;
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 10px;
+}
+.inp:focus {
+  border-color: var(--a2);
+}
+.note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 8px 0;
+}
+.form-error {
+  color: #ff3366;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 4px 0 8px;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.avatar-big {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  border: 2px solid var(--a2);
+}
+.pc-info {
+  flex: 1;
+  min-width: 0;
+}
+.pc-name {
+  font-weight: 900;
+  font-size: 15px;
+}
+.pc-dept, .pc-best {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.pc-edit {
+  background: var(--btn);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  font-size: 15px;
+  color: #fff;
+  cursor: pointer;
+}
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 11px 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+.menu-item:active {
+  background: var(--btn);
+}
+.mi-ico {
+  font-size: 20px;
+}
+.mi-txt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.mi-txt b {
+  font-size: 13px;
+}
+.mi-txt i {
+  font-size: 10px;
+  color: var(--muted);
+  font-style: normal;
+  margin-top: 2px;
+}
+.mi-arr {
+  color: var(--muted);
+  font-size: 16px;
+}
+.menu-item.danger {
+  border-color: rgba(255, 51, 102, 0.4
