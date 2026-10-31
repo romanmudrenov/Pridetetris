@@ -15,15 +15,16 @@ window.PrideCore = window.PrideCore || {};
     return e;
   }
 
-  // =============== НАСТРОЙКИ (проверяет обе папки: src/core/music и music) ===============
-  var MUSIC_DIRS = ['src/core/music', 'music'];
-  var BG_DIRS = ['src/core/player-bg', 'player-bg'];
+  // =============== НАСТРОЙКИ (можно менять) ===============
+  var MUSIC_DIR = 'music';       // папка с треками в репозитории
+  var BG_DIR = 'player-bg';      // папка с фоновыми картинками плеера
   var BRANCH = 'main';
-  var CACHE_MS = 2 * 60 * 1000;  // список файлов кэшируется на 2 минуты
+  var CACHE_MS = 5 * 60 * 1000;  // список файлов кэшируется на 5 минут
   var AUDIO_EXT = ['mp3', 'm4a', 'ogg', 'oga', 'wav', 'aac', 'flac', 'opus', 'weba'];
   var IMG_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
 
   // Радиостанции. Ссылки должны начинаться с https://
+  // Если станция не играет — замени ссылку или удали строку.
   var RU = 'Россия';
   var WORLD = 'Мировое радио';
   var STATIONS = [
@@ -53,7 +54,7 @@ window.PrideCore = window.PrideCore || {};
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
   }
   function naturalSort(a, b) {
-    return a.name.localeCompare(b.name, 'ru', { numeric: true, sensitivity: 'base' });
+    return a.localeCompare(b, 'ru', { numeric: true, sensitivity: 'base' });
   }
   function extOf(n) {
     var i = n.lastIndexOf('.');
@@ -70,15 +71,11 @@ window.PrideCore = window.PrideCore || {};
     return m + ':' + ('0' + sec).slice(-2);
   }
   function paintRange(r) {
-    if (!r) return;
     var min = parseFloat(r.min) || 0;
     var max = parseFloat(r.max) || 100;
     var pct = ((parseFloat(r.value) - min) / (max - min)) * 100;
     if (isNaN(pct)) pct = 0;
     r.style.setProperty('--pct', pct + '%');
-  }
-  function encodePath(dir) {
-    return dir.split('/').map(encodeURIComponent).join('/');
   }
   function repoInfo() {
     var host = location.hostname;
@@ -92,57 +89,48 @@ window.PrideCore = window.PrideCore || {};
   }
 
   // =============== СПИСОК ФАЙЛОВ С GITHUB ===============
-  function fetchSingleDir(dir, exts) {
-    var info = repoInfo();
-    var url = 'https://api.github.com/repos/' + info.owner + '/' + info.repo + '/contents/' + encodePath(dir) + '?ref=' + BRANCH;
-    return fetch(url).then(function(r) {
-      if (r.status === 404) return [];
-      if (!r.ok) throw new Error('api ' + r.status);
-      return r.json().then(function(arr) {
-        var out = [];
-        if (arr && arr.forEach) {
-          arr.forEach(function(it) {
-            if (it.type === 'file' && exts.indexOf(extOf(it.name)) >= 0) {
-              out.push({
-                name: it.name,
-                dir: dir,
-                url: './' + encodePath(dir) + '/' + encodeURIComponent(it.name)
-              });
-            }
-          });
-        }
-        return out;
-      });
+  function fetchManifest() {
+    return fetch('./' + MUSIC_DIR + '/playlist.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r) {
+      if (!r.ok) throw new Error('no manifest');
+      return r.json();
     });
   }
 
-  function listFilesMulti(dirs, exts, cacheKey, force) {
-    var ck = 'pride_dirs_v2_' + cacheKey;
+  function listFiles(dir, exts, manifestKey, force) {
+    var ck = 'pride_dir_v1_' + dir;
     var cached = readCache(ck);
-    if (!force && cached && cached.items && cached.items.length && (Date.now() - cached.t) < CACHE_MS) {
-      return Promise.resolve({ items: cached.items, source: 'cache' });
+    if (!force && cached && (Date.now() - cached.t) < CACHE_MS) {
+      return Promise.resolve({ files: cached.files, source: 'cache' });
     }
-    return Promise.all(dirs.map(function(d) {
-      return fetchSingleDir(d, exts).catch(function() { return []; });
-    })).then(function(results) {
-      var merged = [];
-      var seen = {};
-      results.forEach(function(list) {
-        list.forEach(function(item) {
-          if (!seen[item.name]) {
-            seen[item.name] = true;
-            merged.push(item);
-          }
-        });
+    var info = repoInfo();
+    var url = 'https://api.github.com/repos/' + info.owner + '/' + info.repo + '/contents/' + encodeURIComponent(dir) + '?ref=' + BRANCH;
+    return fetch(url).then(function(r) {
+      if (r.status === 404) return { files: [], source: 'api' };
+      if (!r.ok) throw new Error('api ' + r.status);
+      return r.json().then(function(arr) {
+        var files = [];
+        if (arr && arr.forEach) {
+          arr.forEach(function(it) {
+            if (it.type === 'file' && exts.indexOf(extOf(it.name)) >= 0) files.push(it.name);
+          });
+        }
+        files.sort(naturalSort);
+        writeCache(ck, { t: Date.now(), files: files });
+        return { files: files, source: 'api' };
       });
-      merged.sort(naturalSort);
-      if (merged.length) {
-        writeCache(ck, { t: Date.now(), items: merged });
-      }
-      return { items: merged, source: 'api' };
     }).catch(function() {
-      if (cached && cached.items) return { items: cached.items, source: 'cache' };
-      return { items: [], source: 'none' };
+      return fetchManifest().then(function(m) {
+        var files = [];
+        if (m && m[manifestKey] && m[manifestKey].forEach) {
+          m[manifestKey].forEach(function(n) {
+            if (typeof n === 'string' && exts.indexOf(extOf(n)) >= 0) files.push(n);
+          });
+        }
+        return { files: files, source: 'manifest' };
+      }).catch(function() {
+        if (cached) return { files: cached.files, source: 'cache' };
+        return { files: [], source: 'none' };
+      });
     });
   }
 
@@ -183,13 +171,13 @@ window.PrideCore = window.PrideCore || {};
   }
 
   // =============== ПЛЕЕР ===============
-  var lastKind = null;
+  var lastKind = null;      // 'player' или 'radio': чем управляют кнопки на панели игры
   var lastStation = null;
   var tracks = [];
   var bgs = [];
   var idx = -1;
   var shuffle = false;
-  var repeat = 'all';
+  var repeat = 'all';      // 'off' | 'all' | 'one'
   var loaded = false;
   var lastLoad = 0;
   var libSource = 'none';
@@ -204,6 +192,7 @@ window.PrideCore = window.PrideCore || {};
 
   function sourceLabel() {
     if (libSource === 'api') return 'GitHub';
+    if (libSource === 'manifest') return 'playlist.json';
     if (libSource === 'cache') return 'кэш';
     return 'не найдено';
   }
@@ -211,15 +200,15 @@ window.PrideCore = window.PrideCore || {};
   function loadLibrary(force) {
     if (!loaded) $('pfSub').textContent = 'Загружаю список…';
     return Promise.all([
-      listFilesMulti(MUSIC_DIRS, AUDIO_EXT, 'music', force),
-      listFilesMulti(BG_DIRS, IMG_EXT, 'bg', force)
+      listFiles(MUSIC_DIR, AUDIO_EXT, 'tracks', force),
+      listFiles(BG_DIR, IMG_EXT, 'backgrounds', force)
     ]).then(function(res) {
       var prevName = (idx >= 0 && tracks[idx]) ? tracks[idx].name : null;
-      tracks = res[0].items.map(function(it) {
-        return { name: it.name, url: it.url, title: prettyTitle(it.name) };
+      tracks = res[0].files.map(function(n) {
+        return { name: n, url: './' + MUSIC_DIR + '/' + encodeURIComponent(n), title: prettyTitle(n) };
       });
-      bgs = res[1].items.map(function(it) {
-        return it.url;
+      bgs = res[1].files.map(function(n) {
+        return './' + BG_DIR + '/' + encodeURIComponent(n);
       });
       libSource = res[0].source;
       loaded = true;
@@ -275,8 +264,8 @@ window.PrideCore = window.PrideCore || {};
     $('pfEmpty').style.display = empty ? 'block' : 'none';
     if (empty) {
       $('pfEmptyText').textContent = (libSource === 'none')
-        ? 'Не удалось получить список треков с GitHub. Нажми «Обновить» чуть позже.'
-        : 'В папке src/core/music (или music) на GitHub пока нет треков. Загрузи туда mp3-файлы и нажми «Обновить список».';
+        ? 'Не удалось получить список треков с GitHub (возможно, временный лимит). Нажми «Обновить» чуть позже или создай файл music/playlist.json со списком.'
+        : 'В папке music на GitHub пока нет треков. Загрузи туда mp3-файлы — они появятся здесь.';
     }
 
     $('pfDisc').classList.toggle('playing', playing);
@@ -410,7 +399,7 @@ window.PrideCore = window.PrideCore || {};
 
   // =============== РАДИО ===============
   var rCur = null;
-  var rState = 'idle';
+  var rState = 'idle';     // idle | connecting | playing | paused | error
 
   function loadCustom() {
     var arr = readCache(KEY_CUSTOM);
@@ -606,6 +595,7 @@ window.PrideCore = window.PrideCore || {};
     if (list.length) playStation(list[0]);
   }
   function startDefault() {
+    // Ничего ещё не играло: сначала свои треки из папки music, а если их нет — первая радиостанция
     loadLibrary(false).then(function() {
       if (tracks.length) playIndex(0); else fallbackRadio();
     });
@@ -660,6 +650,7 @@ window.PrideCore = window.PrideCore || {};
     }
   };
 
+  // Вспоминаем, что играло в прошлый раз
   (function restoreLast() {
     var ls = readCache(KEY_LAST_SRC);
     if (!ls || !ls.kind) return;
